@@ -104,8 +104,6 @@ namespace Pixellum.Views
 
                 belowPixels[i] = (uint)((a << 24) | (r << 16) | (g << 8) | b);
             }
-
-            // Delete the active layer
             _canvas.DeleteLayer(activeIndex);
             RefreshLayersList();
         }
