@@ -2,15 +2,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Pixellum.Views.CanvasView">
     
-    <Grid Background="Gray" 
+    <Grid Background="#1e1e1e" 
           HorizontalAlignment="Stretch" 
-          VerticalAlignment="Stretch">
+          VerticalAlignment="Stretch"
+          Name="CanvasGrid"
+          ClipToBounds="True">
         
         <Image Name="CanvasImage"
                Stretch="None"
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
                RenderOptions.BitmapInterpolationMode="None">
+            <Image.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="ScaleTransform" ScaleX="1" ScaleY="1" />
+                    <TranslateTransform x:Name="TranslateTransform" X="0" Y="0" />
+                </TransformGroup>
+            </Image.RenderTransform>
         </Image>
     </Grid>
     

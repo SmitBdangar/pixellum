@@ -68,7 +68,38 @@ namespace Pixellum.Rendering
 
         public void ApplyEraser(Layer layer, int centerX, int centerY, float radius)
         {
-            ApplyBrush(layer, centerX, centerY, 0x00000000, radius);
+            // Stamp transparency
+            centerX = Math.Clamp(centerX, 0, layer.Width - 1);
+            centerY = Math.Clamp(centerY, 0, layer.Height - 1);
+
+            uint[] layerPixels = layer.GetPixels();
+
+            int minX = Math.Max(0, (int)(centerX - radius));
+            int minY = Math.Max(0, (int)(centerY - radius));
+
+            int maxX = Math.Min(layer.Width, (int)(centerX + radius) + 1);
+            int maxY = Math.Min(layer.Height, (int)(centerY + radius) + 1);
+
+            float radiusSq = radius * radius;
+
+            for (int y = minY; y < maxY; y++)
+            {
+                for (int x = minX; x < maxX; x++)
+                {
+                    float dX = x - centerX;
+                    float dY = y - centerY;
+                    
+                    // Soft edge eraser or hard edge? Let's do simple hardness for now logic
+                    float distSq = dX * dX + dY * dY;
+                    if (distSq <= radiusSq)
+                    {
+                        // In a real soft-eraser, we'd multiply alpha by distance.
+                        // Here we just clear the pixel directly if it's inside the circle.
+                        int index = y * layer.Width + x;
+                        layerPixels[index] = 0x00000000;
+                    }
+                }
+            }
         }
     }
 }

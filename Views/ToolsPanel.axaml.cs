@@ -36,6 +36,18 @@ namespace Pixellum.Views
                     _canvas = window.GetVisualDescendants()
                                     .OfType<CanvasView>()
                                     .FirstOrDefault();
+                                        
+                    if (_canvas != null)
+                    {
+                        _canvas.ColorPicked += (_, color) =>
+                        {
+                            _primaryColor = color;
+                            UpdatePrimaryColorPreview();
+                            UpdateHexInput();
+                            _canvas.ActiveColor = _primaryColor;
+                        };
+                        _canvas.ActiveTool = _activeTool;
+                    }
                 }
 
                 InitializeQuickColors();
@@ -260,6 +272,11 @@ namespace Pixellum.Views
                     FillToolButton.Background = activeColor;
                     break;
             }
+            
+            if (_canvas != null)
+            {
+                _canvas.ActiveTool = _activeTool;
+            }
         }
 
         private void OnClearCanvasClicked(object? sender, RoutedEventArgs e)
@@ -296,6 +313,35 @@ namespace Pixellum.Views
                 }
 
                 System.Diagnostics.Debug.WriteLine("🎨 Canvas filled with color");
+            }
+        }
+
+        private void OnBrushPresetChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (BrushPresetsComboBox != null && BrushPresetsComboBox.SelectedItem is ComboBoxItem item && _activeTool == "Brush")
+            {
+                string preset = item.Content?.ToString() ?? "";
+                switch (preset)
+                {
+                    case "Standard Brush":
+                        BrushSizeSlider.Value = 15;
+                        OpacitySlider.Value = 1.0;
+                        HardnessSlider.Value = 1.0;
+                        FlowSlider.Value = 1.0;
+                        break;
+                    case "Soft Airbrush":
+                        BrushSizeSlider.Value = 40;
+                        OpacitySlider.Value = 0.3;
+                        HardnessSlider.Value = 0.0;
+                        FlowSlider.Value = 0.2;
+                        break;
+                    case "Inking Pen":
+                        BrushSizeSlider.Value = 5;
+                        OpacitySlider.Value = 1.0;
+                        HardnessSlider.Value = 1.0;
+                        FlowSlider.Value = 1.0;
+                        break;
+                }
             }
         }
     }

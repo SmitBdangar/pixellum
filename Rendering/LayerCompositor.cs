@@ -12,34 +12,62 @@ namespace Pixellum.Rendering
     /// </summary>
     public static class LayerCompositor
     {
-        /// <summary>
-        /// Composites the provided layers into the Document's main pixel buffer.
-        /// </summary>
-        /// <param name="document">The target document whose buffer will be updated.</param>
-        /// <param name="layers">The collection of layers to composite (assumed top-down order).</param>
         public static void Composite(Document document, IEnumerable<Layer> layers)
         {
             uint[] documentPixels = document.GetPixelsRaw();
             
-            // Find the top-most visible layer to render for the MVP
-            var topLayer = layers.FirstOrDefault(l => l.Visible); 
-            
-            if (topLayer == null)
-            {
-                // If no layers are visible, clear the document buffer to transparent.
-                Array.Clear(documentPixels, 0, documentPixels.Length);
+            // Clear document buffer to transparent black initially
+            Array.Clear(documentPixels, 0, documentPixels.Length);
+
+            // Get layers in bottom-to-top order for rendering
+            var visibleLayers = layers.Where(l => l.Visible).Reverse().ToList();
+
+            if (visibleLayers.Count == 0)
                 return;
+
+            foreach (var layer in visibleLayers)
+            {
+                uint[] layerPixels = layer.GetPixels();
+                float layerOpacity = layer.Opacity;
+
+                if (layerOpacity <= 0.001f)
+                    continue;
+
+                // Fast path for 100% opaque layers overriding everything below (if we tracked opaque regions)
+                // For now, alpha blend every pixel
+                for (int i = 0; i < documentPixels.Length; i++)
+                {
+                    uint src = layerPixels[i];
+                    uint dst = documentPixels[i];
+
+                    // Premultiplied alpha blend
+                    float srcA = ((src >> 24) & 0xFF) / 255.0f * layerOpacity;
+                    if (srcA <= 0.001f) continue; // Skip transparent pixels
+
+                    float dstA = ((dst >> 24) & 0xFF) / 255.0f;
+                    float invSrcA = 1.0f - srcA;
+
+                    float srcR = ((src >> 16) & 0xFF) / 255.0f * layerOpacity; // Apply layer opacity to colors too if not already premul
+                    float srcG = ((src >> 8) & 0xFF) / 255.0f * layerOpacity;
+                    float srcB = (src & 0xFF) / 255.0f * layerOpacity;
+
+                    float dstR = ((dst >> 16) & 0xFF) / 255.0f;
+                    float dstG = ((dst >> 8) & 0xFF) / 255.0f;
+                    float dstB = (dst & 0xFF) / 255.0f;
+
+                    float outR = srcR + dstR * invSrcA;
+                    float outG = srcG + dstG * invSrcA;
+                    float outB = srcB + dstB * invSrcA;
+                    float outA = srcA + dstA * invSrcA;
+
+                    uint a = (uint)Math.Clamp(outA * 255.0f, 0, 255);
+                    uint r = (uint)Math.Clamp(outR * 255.0f, 0, 255);
+                    uint g = (uint)Math.Clamp(outG * 255.0f, 0, 255);
+                    uint b = (uint)Math.Clamp(outB * 255.0f, 0, 255);
+
+                    documentPixels[i] = (a << 24) | (r << 16) | (g << 8) | b;
+                }
             }
-
-            // --- Phase 1 MVP Logic: Direct Copy ---
-            // In Phase 1, we just copy the pixels from the active layer to the document's buffer.
-            uint[] layerPixels = topLayer.GetPixels();
-
-            // Use fast Array.Copy
-            Array.Copy(layerPixels, documentPixels, layerPixels.Length);
-            
-            // NOTE: Phase 2 will involve iterating through all layers and pixel-by-pixel blending 
-            // (using BlendModes.cs) based on their blend mode and opacity.
         }
     }
 }

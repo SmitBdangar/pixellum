@@ -138,6 +138,15 @@
                                Foreground="White" 
                                FontSize="14" 
                                FontWeight="SemiBold"/>
+                               
+                    <ComboBox x:Name="BrushPresetsComboBox"
+                              HorizontalAlignment="Stretch"
+                              Margin="0,0,0,10"
+                              SelectionChanged="OnBrushPresetChanged">
+                        <ComboBoxItem Content="Standard Brush" IsSelected="True"/>
+                        <ComboBoxItem Content="Soft Airbrush"/>
+                        <ComboBoxItem Content="Inking Pen"/>
+                    </ComboBox>
                     
                     <!-- Brush Size -->
                     <StackPanel Spacing="5">
