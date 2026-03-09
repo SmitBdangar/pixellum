@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Input;
 using Avalonia;
 using Pixellum.Core;
+using Avalonia.Media;
 using Pixellum.Rendering;
 using Avalonia.Platform;
 
@@ -44,7 +46,9 @@ namespace Pixellum.Views
 
         private double _zoom = 1.0;
         private Point _panTranslation = new Point(0, 0);
+        private bool _isDrawing = false;
         private bool _isPanning = false;
+        private bool _spaceHeld = false;
         private Point _lastPanPoint;
         private ScaleTransform? _scaleTransform;
         private TranslateTransform? _translateTransform;
@@ -69,14 +73,21 @@ namespace Pixellum.Views
                 _canvasImage.Source = _canvasBitmap;
             }
 
-            _scaleTransform = this.FindControl<ScaleTransform>("ScaleTransform");
-            _translateTransform = this.FindControl<TranslateTransform>("TranslateTransform");
+            if (_canvasImage?.RenderTransform is TransformGroup tg)
+            {
+                _scaleTransform = tg.Children.OfType<ScaleTransform>().FirstOrDefault();
+                _translateTransform = tg.Children.OfType<TranslateTransform>().FirstOrDefault();
+            }
 
             PointerPressed += CanvasView_PointerPressed;
             PointerMoved += CanvasView_PointerMoved;
             PointerReleased += CanvasView_PointerReleased;
             PointerWheelChanged += CanvasView_PointerWheelChanged;
 
+            KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Space) _spaceHeld = true; };
+            KeyUp += (_, e) => { if (e.Key == Avalonia.Input.Key.Space) _spaceHeld = false; };
+            Focusable = true;
+    
             RedrawCanvas();
         }
 
@@ -170,7 +181,7 @@ namespace Pixellum.Views
 
             var p = e.GetCurrentPoint(this);
 
-            if (p.Properties.IsMiddleButtonPressed || (p.Properties.IsLeftButtonPressed && e.KeyModifiers.HasFlag(KeyModifiers.Space)))
+            if (p.Properties.IsMiddleButtonPressed || (p.Properties.IsLeftButtonPressed && _spaceHeld))
             {
                 _isPanning = true;
                 _lastPanPoint = p.Position;
