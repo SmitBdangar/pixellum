@@ -1,111 +1,167 @@
 <UserControl
     x:Class="Pixellum.Views.LayersPanel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    FontFamily="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif">
 
-    <Border Padding="10" Background="#2a2a2a">
-        <StackPanel Spacing="10">
-            <!-- Header -->
-            <TextBlock Text="Layers" 
-                       Foreground="White" 
-                       FontSize="16" 
-                       FontWeight="Bold"
-                       Margin="0,0,0,5"/>
+    <UserControl.Styles>
+        <Style Selector="TextBlock.section-header">
+            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="LetterSpacing" Value="1.5"/>
+        </Style>
+        <Style Selector="Button.icon-btn">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Foreground" Value="#aaa"/>
+            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.icon-btn:pointerover">
+            <Setter Property="Background" Value="#3a3a3a"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.add-btn">
+            <Setter Property="Background" Value="#1b3324"/>
+            <Setter Property="Foreground" Value="#4CAF50"/>
+            <Setter Property="BorderBrush" Value="#2e5e3e"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.add-btn:pointerover">
+            <Setter Property="Background" Value="#264a34"/>
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </UserControl.Styles>
 
-            <!-- Layer Controls -->
-            <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,10">
-                <!-- Add Layer Button -->
-                <Button Grid.Column="0"
-                        x:Name="AddLayerButton"
-                        Content="+"
-                        FontSize="20"
-                        FontWeight="Bold"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        Height="35"
-                        Background="#4CAF50"
-                        Foreground="White"
-                        CornerRadius="5"
-                        Margin="0,0,5,0"
-                        Click="OnAddLayerClicked"
-                        ToolTip.Tip="Add new layer"/>
+    <Border Background="#1e1e1e"
+            BorderBrush="#2e2e2e"
+            BorderThickness="1,0,0,0">
+        <DockPanel>
 
-                <!-- Duplicate Layer Button -->
-                <Button Grid.Column="1"
-                        x:Name="DuplicateLayerButton"
-                        Content="⎘"
-                        FontSize="18"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        Height="35"
-                        Background="#555"
-                        Foreground="White"
-                        CornerRadius="5"
-                        Margin="0,0,5,0"
-                        Click="OnDuplicateLayerClicked"
-                        ToolTip.Tip="Duplicate active layer"/>
+            <!-- ── Header ─────────────────────────────────────────────── -->
+            <Border DockPanel.Dock="Top"
+                    Padding="14,12"
+                    BorderBrush="#2e2e2e"
+                    BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="LAYERS"
+                               Classes="section-header"
+                               VerticalAlignment="Center"/>
 
-                <!-- Merge Down Button -->
-                <Button Grid.Column="2"
-                        x:Name="MergeDownButton"
-                        Content="⬇"
-                        FontSize="18"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        Height="35"
-                        Background="#555"
-                        Foreground="White"
-                        CornerRadius="5"
-                        Click="OnMergeDownClicked"
-                        ToolTip.Tip="Merge with layer below"/>
-            </Grid>
+                    <!-- Merge down -->
+                    <Button Grid.Column="1"
+                            x:Name="MergeDownButton"
+                            Classes="icon-btn"
+                            Content="⬇"
+                            FontSize="14"
+                            Width="28" Height="28"
+                            Margin="0,0,4,0"
+                            Click="OnMergeDownClicked"
+                            ToolTip.Tip="Merge with layer below"/>
 
-            <!-- Active Layer Info -->
-            <Border Background="#333" 
-                    Padding="8" 
-                    CornerRadius="5"
-                    Margin="0,0,0,5">
-                <StackPanel Spacing="5">
-                    <TextBlock x:Name="ActiveLayerName" 
-                               Text="Active: Layer 1" 
-                               Foreground="White" 
-                               FontSize="12"
+                    <!-- Duplicate -->
+                    <Button Grid.Column="2"
+                            x:Name="DuplicateLayerButton"
+                            Classes="icon-btn"
+                            Content="⎘"
+                            FontSize="14"
+                            Width="28" Height="28"
+                            Margin="0,0,4,0"
+                            Click="OnDuplicateLayerClicked"
+                            ToolTip.Tip="Duplicate active layer"/>
+
+                    <!-- Add -->
+                    <Button Grid.Column="3"
+                            x:Name="AddLayerButton"
+                            Classes="add-btn"
+                            Content="+"
+                            FontSize="18"
+                            FontWeight="Bold"
+                            Width="28" Height="28"
+                            Click="OnAddLayerClicked"
+                            ToolTip.Tip="Add new layer  [+]"/>
+                </Grid>
+            </Border>
+
+            <!-- ── Active Layer Info ───────────────────────────────────── -->
+            <Border DockPanel.Dock="Top"
+                    Background="#181818"
+                    Padding="12,10"
+                    BorderBrush="#2e2e2e"
+                    BorderThickness="0,0,0,1">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="ActiveLayerName"
+                               Text="Layer 1"
+                               Foreground="#e0e0e0"
+                               FontSize="13"
                                FontWeight="SemiBold"/>
-                    
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-                        <TextBlock Grid.Column="0" 
-                                   Text="Opacity:" 
-                                   Foreground="#AAA" 
+
+                    <!-- Opacity row -->
+                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                        <TextBlock Grid.Column="0"
+                                   Text="Opacity"
+                                   Foreground="#888"
                                    FontSize="11"
                                    VerticalAlignment="Center"
                                    Margin="0,0,8,0"/>
-                        
                         <Slider Grid.Column="1"
                                 x:Name="LayerOpacitySlider"
-                                Minimum="0"
-                                Maximum="100"
-                                Value="100"
+                                Minimum="0" Maximum="100" Value="100"
                                 VerticalAlignment="Center"
                                 ValueChanged="OnLayerOpacityChanged"/>
-                        
-                        <TextBlock Grid.Column="2" 
+                        <TextBlock Grid.Column="2"
                                    x:Name="OpacityValueText"
-                                   Text="100%" 
-                                   Foreground="White" 
+                                   Text="100%"
+                                   Foreground="#888"
                                    FontSize="11"
                                    VerticalAlignment="Center"
                                    Margin="8,0,0,0"
-                                   MinWidth="40"
-                                   TextAlignment="Right"/>
+                                   MinWidth="36"/>
+                    </Grid>
+
+                    <!-- Blend mode row -->
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Grid.Column="0"
+                                   Text="Blend"
+                                   Foreground="#888"
+                                   FontSize="11"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"/>
+                        <ComboBox Grid.Column="1"
+                                  x:Name="BlendModeComboBox"
+                                  SelectionChanged="OnBlendModeChanged">
+                            <ComboBoxItem Content="Normal"   IsSelected="True"/>
+                            <ComboBoxItem Content="Multiply"/>
+                            <ComboBoxItem Content="Screen"/>
+                            <ComboBoxItem Content="Overlay"/>
+                        </ComboBox>
                     </Grid>
                 </StackPanel>
             </Border>
 
-            <!-- Layers List -->
-            <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="LayersStack" Spacing="5"/>
+            <!-- ── Layers List ─────────────────────────────────────────── -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="8">
+                <StackPanel x:Name="LayersStack" Spacing="4"/>
             </ScrollViewer>
-        </StackPanel>
+
+        </DockPanel>
     </Border>
 
 </UserControl>

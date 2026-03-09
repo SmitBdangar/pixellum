@@ -46,6 +46,14 @@ namespace Pixellum.Views
                             UpdateHexInput();
                             _canvas.ActiveColor = _primaryColor;
                         };
+                        // Wire keyboard shortcut X → swap colors
+                        _canvas.RequestColorSwap += (_, _) => SwapColors();
+                        // Wire tool shortcut keys → update button highlight
+                        _canvas.ToolChanged += (_, tool) =>
+                        {
+                            _activeTool = tool;
+                            UpdateToolButtons();
+                        };
                         _canvas.ActiveTool = _activeTool;   // ToolType enum
                     }
                 }
@@ -166,10 +174,10 @@ namespace Pixellum.Views
         private void UpdateHexInput()
         {
             byte r = (byte)((_primaryColor >> 16) & 0xFF);
-            byte g = (byte)((_primaryColor >> 8) & 0xFF);
-            byte b = (byte)(_primaryColor & 0xFF);
-
-            HexColorInput.Text = $"#{r:X2}{g:X2}{b:X2}";
+            byte g = (byte)((_primaryColor >>  8) & 0xFF);
+            byte b = (byte)( _primaryColor        & 0xFF);
+            // No leading # — the AXAML puts a '#' badge before the TextBox
+            HexColorInput.Text = $"{r:X2}{g:X2}{b:X2}";
         }
 
         private void SwapColors()
@@ -188,24 +196,21 @@ namespace Pixellum.Views
 
         private void OnHexColorChanged(object? sender, TextChangedEventArgs e)
         {
-            var input = HexColorInput.Text?.Trim();
-            if (string.IsNullOrEmpty(input) || !input.StartsWith("#"))
-                return;
+            var input = HexColorInput.Text?.Trim().TrimStart('#');
+            if (string.IsNullOrEmpty(input) || input.Length != 6) return;
 
             try
             {
-                var color = Color.Parse(input);
+                var color = Color.Parse("#" + input);
                 _primaryColor = (uint)((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B);
                 UpdatePrimaryColorPreview();
 
                 if (_canvas != null)
-                {
                     _canvas.ActiveColor = _primaryColor;
-                }
             }
             catch
             {
-                // Invalid hex color, ignore
+                // Invalid hex — ignore
             }
         }
 
@@ -248,22 +253,18 @@ namespace Pixellum.Views
 
         private void UpdateToolButtons()
         {
-            // Reset all tool buttons
-            BrushToolButton.Background = new SolidColorBrush(Color.Parse("#555"));
-            EraserToolButton.Background = new SolidColorBrush(Color.Parse("#555"));
-            EyedropperToolButton.Background = new SolidColorBrush(Color.Parse("#555"));
-            FillToolButton.Background = new SolidColorBrush(Color.Parse("#555"));
-
-            // Highlight active tool button
-            var activeColor = new SolidColorBrush(Color.Parse("#4CAF50"));
-
-            switch (_activeTool)
+            // Toggle CSS 'active' class — AXAML styles control appearance
+            void SetActive(Button? btn, bool active)
             {
-                case ToolType.Brush:      BrushToolButton.Background      = activeColor; break;
-                case ToolType.Eraser:     EraserToolButton.Background     = activeColor; break;
-                case ToolType.Eyedropper: EyedropperToolButton.Background = activeColor; break;
-                case ToolType.Fill:       FillToolButton.Background       = activeColor; break;
+                if (btn == null) return;
+                if (active) { if (!btn.Classes.Contains("active")) btn.Classes.Add("active"); }
+                else        { btn.Classes.Remove("active"); }
             }
+
+            SetActive(BrushToolButton,      _activeTool == ToolType.Brush);
+            SetActive(EraserToolButton,     _activeTool == ToolType.Eraser);
+            SetActive(EyedropperToolButton, _activeTool == ToolType.Eyedropper);
+            SetActive(FillToolButton,       _activeTool == ToolType.Fill);
 
             if (_canvas != null)
                 _canvas.ActiveTool = _activeTool;

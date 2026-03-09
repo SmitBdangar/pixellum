@@ -58,6 +58,11 @@ namespace Pixellum.Views
         public float BrushRadius  { get => _brushRadius;  set => _brushRadius  = value; }
         public float BrushOpacity { get => _brushOpacity; set => _brushOpacity = value; }
         public WriteableBitmap CanvasBitmap => _canvasBitmap;
+        public double Zoom => _zoom;
+
+        // Events for status bar updates
+        public event EventHandler<double>?  ZoomChanged;
+        public event EventHandler<ToolType>? ToolChanged;
 
         // ── Zoom / pan ────────────────────────────────────────────────────────
         private double           _zoom           = 1.0;
@@ -99,7 +104,7 @@ namespace Pixellum.Views
             PointerReleased     += CanvasView_PointerReleased;
             PointerWheelChanged += CanvasView_PointerWheelChanged;
 
-            KeyDown += (_, e) => { if (e.Key == Key.Space) _spaceHeld = true; };
+            KeyDown += CanvasView_KeyDown;
             KeyUp   += (_, e) => { if (e.Key == Key.Space) _spaceHeld = false; };
             Focusable = true;
 
@@ -151,6 +156,22 @@ namespace Pixellum.Views
 
         public List<Layer>  GetLayers()          => _layers;
         public int           GetActiveLayerIndex() => _activeLayerIndex;
+
+        /// <summary>Public entry point for LayersPanel (opacity/blend mode changes).</summary>
+        public void TriggerRedraw() => RedrawCanvas();
+
+        // ── Zoom control (called from MainWindow View menu) ─────────────────
+        public void ZoomIn()    => ApplyZoomDelta(1.25, new Point(Bounds.Width / 2, Bounds.Height / 2));
+        public void ZoomOut()   => ApplyZoomDelta(0.8,  new Point(Bounds.Width / 2, Bounds.Height / 2));
+        public void ZoomReset()
+        {
+            if (_scaleTransform == null || _translateTransform == null) return;
+            _zoom = 1.0;
+            _scaleTransform.ScaleX = _scaleTransform.ScaleY = 1.0;
+            _translateTransform.X  = _translateTransform.Y  = 0;
+            _panTranslation = new Point(0, 0);
+            ZoomChanged?.Invoke(this, _zoom);
+        }
 
         public void SetActiveLayer(int index)
         {
@@ -311,25 +332,73 @@ namespace Pixellum.Views
         private void CanvasView_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
         {
             if (_scaleTransform == null || _translateTransform == null) return;
+            double delta = e.Delta.Y > 0 ? 1.1 : 0.9;
+            ApplyZoomDelta(delta, e.GetPosition(this));
+            e.Handled = true;
+        }
 
-            double zoomDelta = e.Delta.Y > 0 ? 1.1 : 0.9;
-            double newZoom   = Math.Clamp(_zoom * zoomDelta, 0.1, 10.0);
-            if (newZoom == _zoom) return;
+        private void ApplyZoomDelta(double delta, Point pivot)
+        {
+            if (_scaleTransform == null || _translateTransform == null) return;
 
-            var p    = e.GetPosition(this);
-            var relX = p.X - _translateTransform.X;
-            var relY = p.Y - _translateTransform.Y;
-            var ratio = newZoom / _zoom;
+            double newZoom = Math.Clamp(_zoom * delta, 0.05, 20.0);
+            if (Math.Abs(newZoom - _zoom) < 1e-6) return;
 
-            _translateTransform.X = p.X - (relX * ratio);
-            _translateTransform.Y = p.Y - (relY * ratio);
+            double ratio = newZoom / _zoom;
+            double relX  = pivot.X - _translateTransform.X;
+            double relY  = pivot.Y - _translateTransform.Y;
+
+            _translateTransform.X = pivot.X - relX * ratio;
+            _translateTransform.Y = pivot.Y - relY * ratio;
             _panTranslation = new Point(_translateTransform.X, _translateTransform.Y);
 
-            _zoom                = newZoom;
+            _zoom                  = newZoom;
             _scaleTransform.ScaleX = _zoom;
             _scaleTransform.ScaleY = _zoom;
 
-            e.Handled = true;
+            ZoomChanged?.Invoke(this, _zoom);
+        }
+
+        // Keyboard shortcuts: B=Brush, E=Eraser, I=Eyedropper, G=Fill
+        //                     [/] = brush -/+ size, X = swap colors (routed via event)
+        private void CanvasView_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space) { _spaceHeld = true; e.Handled = true; return; }
+
+            // Ignore when a TextBox has focus
+            if (e.Source is TextBox) return;
+
+            switch (e.Key)
+            {
+                case Key.B: SetTool(ToolType.Brush);      e.Handled = true; break;
+                case Key.E: SetTool(ToolType.Eraser);     e.Handled = true; break;
+                case Key.I: SetTool(ToolType.Eyedropper); e.Handled = true; break;
+                case Key.G: SetTool(ToolType.Fill);       e.Handled = true; break;
+
+                case Key.OemOpenBrackets:   // [
+                    _brushRadius = Math.Max(1f, _brushRadius - 2f);
+                    e.Handled = true;
+                    break;
+                case Key.OemCloseBrackets:  // ]
+                    _brushRadius = Math.Min(300f, _brushRadius + 2f);
+                    e.Handled = true;
+                    break;
+
+                case Key.X:
+                    // Route swap to ToolsPanel via event — ToolsPanel owns primary/secondary colors
+                    RequestColorSwap?.Invoke(this, EventArgs.Empty);
+                    e.Handled = true;
+                    break;
+            }
+        }
+
+        /// <summary>Raised when the user presses X to swap primary/secondary color.</summary>
+        public event EventHandler? RequestColorSwap;
+
+        private void SetTool(ToolType tool)
+        {
+            ActiveTool = tool;
+            ToolChanged?.Invoke(this, tool);
         }
 
         // ── Drawing ──────────────────────────────────────────────────────────

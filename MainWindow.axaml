@@ -2,54 +2,133 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:Pixellum.Views"
         x:Class="Pixellum.MainWindow"
-        Title="Pixellum - Digital Painting"
-        Width="1200" Height="800"
-        WindowStartupLocation="CenterScreen">
+        Title="Pixellum"
+        Width="1400" Height="900"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="#1a1a1a"
+        FontFamily="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif">
+
+    <Window.Styles>
+        <!-- Global dark theme overrides -->
+        <Style Selector="Menu">
+            <Setter Property="Background" Value="#252525"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style Selector="MenuItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="Padding" Value="12,6"/>
+        </Style>
+        <Style Selector="MenuItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
+            <Setter Property="Background" Value="#3a3a3a"/>
+            <Setter Property="TextElement.Foreground" Value="White"/>
+        </Style>
+        <Style Selector="MenuItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
+            <Setter Property="Background" Value="#4a4a4a"/>
+        </Style>
+    </Window.Styles>
 
     <DockPanel>
 
-        <!-- Top Menu -->
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_New" Click="OnNewClicked"/>
-                <MenuItem Header="_Open" Click="OnOpenClicked"/>
-                <Separator/>
-                <MenuItem Header="_Save" Click="OnSaveClicked"/>
-                <MenuItem Header="E_xport PNG" Click="OnExportPngClicked"/>
-            </MenuItem>
+        <!-- ── Menu Bar ─────────────────────────────────────────────────── -->
+        <Border DockPanel.Dock="Top" Background="#252525" BorderBrush="#333" BorderThickness="0,0,0,1">
+            <Menu Background="Transparent" Padding="4,0">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_New Canvas"     Click="OnNewClicked"       InputGesture="Ctrl+N"/>
+                    <MenuItem Header="_Open…"           Click="OnOpenClicked"      InputGesture="Ctrl+O"/>
+                    <Separator Background="#444"/>
+                    <MenuItem Header="_Save"            Click="OnSaveClicked"      InputGesture="Ctrl+S"/>
+                    <MenuItem Header="Export _PNG…"    Click="OnExportPngClicked" InputGesture="Ctrl+E"/>
+                </MenuItem>
 
-            <MenuItem Header="_Edit">
-                <MenuItem Header="_Undo" Click="OnUndoClicked" InputGesture="Ctrl+Z"/>
-                <MenuItem Header="_Redo" Click="OnRedoClicked" InputGesture="Ctrl+Y"/>
-            </MenuItem>
-        </Menu>
+                <MenuItem Header="_Edit">
+                    <MenuItem Header="_Undo"  Click="OnUndoClicked" InputGesture="Ctrl+Z"/>
+                    <MenuItem Header="_Redo"  Click="OnRedoClicked" InputGesture="Ctrl+Y"/>
+                </MenuItem>
 
-        <!-- Status Bar -->
-        <Border DockPanel.Dock="Bottom" Background="#2a2a2a" Padding="6">
-            <TextBlock Name="StatusText" 
-                       Text="Ready | Zoom: 100% | Tool: Brush"
-                       VerticalAlignment="Center"
-                       Foreground="White" />
+                <MenuItem Header="_View">
+                    <MenuItem Header="Zoom In"    Click="OnZoomInClicked"    InputGesture="Ctrl+OemPlus"/>
+                    <MenuItem Header="Zoom Out"   Click="OnZoomOutClicked"   InputGesture="Ctrl+OemMinus"/>
+                    <MenuItem Header="Reset Zoom" Click="OnZoomResetClicked" InputGesture="Ctrl+D0"/>
+                </MenuItem>
+            </Menu>
         </Border>
 
-        <!-- Layout -->
-        <Grid ColumnDefinitions="250,*,250">
+        <!-- ── Status Bar ───────────────────────────────────────────────── -->
+        <Border DockPanel.Dock="Bottom"
+                Background="#1e1e1e"
+                BorderBrush="#333"
+                BorderThickness="0,1,0,0"
+                Padding="14,5">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                <TextBlock x:Name="StatusText"
+                           Grid.Column="0"
+                           Text="Ready"
+                           Foreground="#aaa"
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
+                <TextBlock x:Name="CursorPosText"
+                           Grid.Column="1"
+                           Text="—"
+                           Foreground="#666"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           Margin="0,0,20,0"/>
+                <TextBlock x:Name="CanvasSizeText"
+                           Grid.Column="2"
+                           Text="800 × 600"
+                           Foreground="#666"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           Margin="0,0,20,0"/>
+                <TextBlock x:Name="ActiveToolText"
+                           Grid.Column="3"
+                           Text="Tool: Brush"
+                           Foreground="#888"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           Margin="0,0,20,0"/>
+                <TextBlock x:Name="ZoomText"
+                           Grid.Column="4"
+                           Text="100%"
+                           Foreground="#888"
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- ── Main layout ──────────────────────────────────────────────── -->
+        <Grid ColumnDefinitions="240,*,220">
 
             <!-- Tools Panel (Left) -->
-            <views:ToolsPanel Grid.Column="0" Name="ToolsPanelControl" />
+            <views:ToolsPanel Grid.Column="0" x:Name="ToolsPanelControl"/>
 
-            <!-- Canvas (Center) -->
-            <Border Grid.Column="1" Background="#333" Padding="20">
-                <views:CanvasView Name="MainCanvasView"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center" />
+            <!-- Canvas Area (Centre) -->
+            <Border Grid.Column="1"
+                    Background="#2b2b2b"
+                    ClipToBounds="True">
+                <!-- Checkerboard drawn in code-behind via Canvas background brush -->
+                <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"
+                              Background="Transparent">
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Margin="30">
+                        <!-- Canvas drop shadow -->
+                        <Border BoxShadow="0 8 32 8 #AA000000"
+                                CornerRadius="2"
+                                Background="Transparent">
+                            <views:CanvasView x:Name="MainCanvasView"/>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
             </Border>
 
             <!-- Layers Panel (Right) -->
-            <views:LayersPanel Grid.Column="2" />
+            <views:LayersPanel Grid.Column="2" x:Name="LayersPanelControl"/>
 
         </Grid>
 
     </DockPanel>
-
 </Window>
