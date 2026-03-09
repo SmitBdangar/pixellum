@@ -1,69 +1,70 @@
 using Pixellum.Core;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Pixellum.Rendering
 {
     /// <summary>
-    /// Handles combining all layers in a Document into the final composite pixel buffer.
-    /// Phase 1: Simple copy of the active layer's pixels.
-    /// Phase 2: Will implement blend modes and opacity for each layer.
+    /// Combines all visible layers in a Document into the final composite pixel buffer,
+    /// iterating bottom-to-top using index-based access (no LINQ allocation per frame).
     /// </summary>
     public static class LayerCompositor
     {
-        public static void Composite(Document document, IEnumerable<Layer> layers)
+        public static void Composite(Document document, IReadOnlyList<Layer> layers)
         {
             uint[] documentPixels = document.GetPixelsRaw();
-            
-            // Clear document buffer to transparent black initially
+
+            // Clear document buffer to transparent black
             Array.Clear(documentPixels, 0, documentPixels.Length);
 
-            // Get layers in bottom-to-top order for rendering
-            var visibleLayers = layers.Where(l => l.Visible).Reverse().ToList();
-
-            if (visibleLayers.Count == 0)
-                return;
-
-            foreach (var layer in visibleLayers)
+            // Iterate bottom-to-top — layer[0] is the bottom layer
+            for (int li = 0; li < layers.Count; li++)
             {
-                uint[] layerPixels = layer.GetPixels();
-                float layerOpacity = layer.Opacity;
-
-                if (layerOpacity <= 0.001f)
+                var layer = layers[li];
+                if (!layer.Visible || layer.Opacity <= 0.001f)
                     continue;
 
-                // Fast path for 100% opaque layers overriding everything below (if we tracked opaque regions)
-                // For now, alpha blend every pixel
+                uint[] layerPixels = layer.GetPixels();
+                float  layerOpacity = layer.Opacity;
+
                 for (int i = 0; i < documentPixels.Length; i++)
                 {
                     uint src = layerPixels[i];
-                    uint dst = documentPixels[i];
 
-                    // Premultiplied alpha blend
+                    // Modulate layer alpha by layer opacity
                     float srcA = ((src >> 24) & 0xFF) / 255.0f * layerOpacity;
-                    if (srcA <= 0.001f) continue; // Skip transparent pixels
+                    if (srcA <= 0.001f) continue;
 
-                    float dstA = ((dst >> 24) & 0xFF) / 255.0f;
+                    uint  dst    = documentPixels[i];
+                    float dstA   = ((dst >> 24) & 0xFF) / 255.0f;
                     float invSrcA = 1.0f - srcA;
 
-                    float srcR = ((src >> 16) & 0xFF) / 255.0f * layerOpacity; // Apply layer opacity to colors too if not already premul
-                    float srcG = ((src >> 8) & 0xFF) / 255.0f * layerOpacity;
-                    float srcB = (src & 0xFF) / 255.0f * layerOpacity;
+                    // Straight-alpha Porter-Duff src-over
+                    float srcR = ((src >> 16) & 0xFF) / 255.0f;
+                    float srcG = ((src >>  8) & 0xFF) / 255.0f;
+                    float srcB = ( src        & 0xFF) / 255.0f;
 
                     float dstR = ((dst >> 16) & 0xFF) / 255.0f;
-                    float dstG = ((dst >> 8) & 0xFF) / 255.0f;
-                    float dstB = (dst & 0xFF) / 255.0f;
+                    float dstG = ((dst >>  8) & 0xFF) / 255.0f;
+                    float dstB = ( dst        & 0xFF) / 255.0f;
 
-                    float outR = srcR + dstR * invSrcA;
-                    float outG = srcG + dstG * invSrcA;
-                    float outB = srcB + dstB * invSrcA;
                     float outA = srcA + dstA * invSrcA;
+                    float outR, outG, outB;
+                    if (outA < 1e-6f)
+                    {
+                        outR = outG = outB = 0f;
+                    }
+                    else
+                    {
+                        outR = (srcR * srcA + dstR * dstA * invSrcA) / outA;
+                        outG = (srcG * srcA + dstG * dstA * invSrcA) / outA;
+                        outB = (srcB * srcA + dstB * dstA * invSrcA) / outA;
+                    }
 
-                    uint a = (uint)Math.Clamp(outA * 255.0f, 0, 255);
-                    uint r = (uint)Math.Clamp(outR * 255.0f, 0, 255);
-                    uint g = (uint)Math.Clamp(outG * 255.0f, 0, 255);
-                    uint b = (uint)Math.Clamp(outB * 255.0f, 0, 255);
+                    uint a = (uint)Math.Clamp(outA * 255f, 0, 255);
+                    uint r = (uint)Math.Clamp(outR * 255f, 0, 255);
+                    uint g = (uint)Math.Clamp(outG * 255f, 0, 255);
+                    uint b = (uint)Math.Clamp(outB * 255f, 0, 255);
 
                     documentPixels[i] = (a << 24) | (r << 16) | (g << 8) | b;
                 }

@@ -1,5 +1,5 @@
 using System;
-using Pixellum.Core.Core;
+using Pixellum.Core;
 
 namespace Pixellum.Core
 {

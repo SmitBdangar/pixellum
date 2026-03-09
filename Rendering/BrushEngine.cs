@@ -1,105 +1,124 @@
 using System;
-using Pixellum.Core; // ✅ correct namespace for Layer, Document
+using Pixellum.Core;
 
 namespace Pixellum.Rendering
 {
     public class BrushEngine
     {
+        /// <summary>
+        /// Applies a soft-edged, alpha-blended brush stamp to the layer.
+        /// </summary>
         public void ApplyBrush(Layer layer, int centerX, int centerY, uint brushColor, float radius)
         {
-            // Clamp center coordinates to valid range
-            centerX = Math.Clamp(centerX, 0, layer.Width - 1);
-            centerY = Math.Clamp(centerY, 0, layer.Height - 1);
-
             float srcA = ((brushColor >> 24) & 0xFF) / 255.0f;
-            uint[] layerPixels = layer.GetPixels();
 
-            int minX = Math.Max(0, (int)(centerX - radius));
-            int minY = Math.Max(0, (int)(centerY - radius));
+            // Pre-decode brush colour channels once (straight-alpha source)
+            float srcR = ((brushColor >> 16) & 0xFF) / 255.0f;
+            float srcG = ((brushColor >> 8)  & 0xFF) / 255.0f;
+            float srcB = ( brushColor        & 0xFF) / 255.0f;
 
-            int maxX = Math.Min(layer.Width, (int)(centerX + radius) + 1); // ✅ Clearer intent
-            int maxY = Math.Min(layer.Height, (int)(centerY + radius) + 1);
+            uint[] pixels = layer.GetPixels();
 
+            IterateCircle(layer, centerX, centerY, radius, (index, dist) =>
+            {
+                // Quadratic falloff: 1.0 at centre, 0.0 at edge — gives soft brush feel
+                float t = dist / radius;
+                float falloff = 1.0f - (t * t);
+                float stampA  = srcA * falloff;
 
-            float radiusSq = radius * radius;
+                pixels[index] = AlphaBlend(srcR, srcG, srcB, stampA, pixels[index]);
+            });
+        }
+
+        /// <summary>
+        /// Erases pixels within the brush radius with a soft edge.
+        /// </summary>
+        public void ApplyEraser(Layer layer, int centerX, int centerY, float radius)
+        {
+            uint[] pixels = layer.GetPixels();
+
+            IterateCircle(layer, centerX, centerY, radius, (index, dist) =>
+            {
+                float t        = dist / radius;
+                float falloff  = 1.0f - (t * t);   // same soft edge as the brush
+
+                uint  dst      = pixels[index];
+                float dstA     = ((dst >> 24) & 0xFF) / 255.0f;
+                float newA     = Math.Max(0f, dstA - falloff);
+
+                uint  dstR     = (dst >> 16) & 0xFF;
+                uint  dstG     = (dst >>  8) & 0xFF;
+                uint  dstB     =  dst        & 0xFF;
+                uint  outA     = (uint)Math.Clamp(newA * 255f, 0, 255);
+
+                pixels[index]  = (outA << 24) | (dstR << 16) | (dstG << 8) | dstB;
+            });
+        }
+
+        // ── Shared helpers ──────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Iterates all pixels inside the circle defined by (cx, cy, radius),
+        /// calling <paramref name="callback"/> with the flat pixel index and
+        /// the pixel's distance from the centre (not squared).
+        /// Zero allocations — avoids duplicating loop/bounds code between tools.
+        /// </summary>
+        private static void IterateCircle(Layer layer, int cx, int cy, float radius,
+            Action<int /*index*/, float /*distance*/> callback)
+        {
+            int minX = Math.Max(0, (int)(cx - radius));
+            int minY = Math.Max(0, (int)(cy - radius));
+            int maxX = Math.Min(layer.Width,  (int)MathF.Ceiling(cx + radius));
+            int maxY = Math.Min(layer.Height, (int)MathF.Ceiling(cy + radius));
 
             for (int y = minY; y < maxY; y++)
             {
                 for (int x = minX; x < maxX; x++)
                 {
-                    float dX = x - centerX;
-                    float dY = y - centerY;
-                    if (dX * dX + dY * dY <= radiusSq)
-                    {
-                        int index = y * layer.Width + x;
-                        uint dstPixel = layerPixels[index];
-                        uint resultPixel = AlphaBlendPremultiplied(brushColor, dstPixel, srcA);
-                        layerPixels[index] = resultPixel;
-                    }
+                    float dx   = x - cx;
+                    float dy   = y - cy;
+                    float dist = MathF.Sqrt(dx * dx + dy * dy);
+                    if (dist <= radius)
+                        callback(y * layer.Width + x, dist);
                 }
             }
         }
 
-        private uint AlphaBlendPremultiplied(uint src, uint dst, float srcA)
+        /// <summary>
+        /// Straight-alpha src-over composite.
+        /// Inputs: source RGB channels (0–1 range, straight alpha) and source alpha (0–1).
+        /// Destination pixel is unpacked / repacked here.
+        /// The bitmap uses AlphaFormat.Unpremul so no pre-multiplication is needed.
+        /// </summary>
+        private static uint AlphaBlend(float srcR, float srcG, float srcB, float srcA, uint dst)
         {
             float dstA = ((dst >> 24) & 0xFF) / 255.0f;
             float dstR = ((dst >> 16) & 0xFF) / 255.0f;
-            float dstG = ((dst >> 8) & 0xFF) / 255.0f;
-            float dstB = (dst & 0xFF) / 255.0f;
-
-            float srcR = ((src >> 16) & 0xFF) / 255.0f;
-            float srcG = ((src >> 8) & 0xFF) / 255.0f;
-            float srcB = (src & 0xFF) / 255.0f;
+            float dstG = ((dst >>  8) & 0xFF) / 255.0f;
+            float dstB = ( dst        & 0xFF) / 255.0f;
 
             float invSrcA = 1.0f - srcA;
 
-            float outR = srcR * srcA + dstR * invSrcA;
-            float outG = srcG * srcA + dstG * invSrcA;
-            float outB = srcB * srcA + dstB * invSrcA;
+            // Porter-Duff src-over (straight alpha)
             float outA = srcA + dstA * invSrcA;
+            float outR, outG, outB;
+            if (outA < 1e-6f)
+            {
+                outR = outG = outB = 0f;
+            }
+            else
+            {
+                outR = (srcR * srcA + dstR * dstA * invSrcA) / outA;
+                outG = (srcG * srcA + dstG * dstA * invSrcA) / outA;
+                outB = (srcB * srcA + dstB * dstA * invSrcA) / outA;
+            }
 
-            uint A = (uint)Math.Clamp(outA * 255.0f, 0, 255);
-            uint R = (uint)Math.Clamp(outR * 255.0f, 0, 255);
-            uint G = (uint)Math.Clamp(outG * 255.0f, 0, 255);
-            uint B = (uint)Math.Clamp(outB * 255.0f, 0, 255);
+            uint A = (uint)Math.Clamp(outA * 255f, 0, 255);
+            uint R = (uint)Math.Clamp(outR * 255f, 0, 255);
+            uint G = (uint)Math.Clamp(outG * 255f, 0, 255);
+            uint B = (uint)Math.Clamp(outB * 255f, 0, 255);
 
             return (A << 24) | (R << 16) | (G << 8) | B;
-        }
-
-        public void ApplyEraser(Layer layer, int centerX, int centerY, float radius)
-        {
-            // Stamp transparency
-            centerX = Math.Clamp(centerX, 0, layer.Width - 1);
-            centerY = Math.Clamp(centerY, 0, layer.Height - 1);
-
-            uint[] layerPixels = layer.GetPixels();
-
-            int minX = Math.Max(0, (int)(centerX - radius));
-            int minY = Math.Max(0, (int)(centerY - radius));
-
-            int maxX = Math.Min(layer.Width, (int)(centerX + radius) + 1);
-            int maxY = Math.Min(layer.Height, (int)(centerY + radius) + 1);
-
-            float radiusSq = radius * radius;
-
-            for (int y = minY; y < maxY; y++)
-            {
-                for (int x = minX; x < maxX; x++)
-                {
-                    float dX = x - centerX;
-                    float dY = y - centerY;
-                    
-                    // Soft edge eraser or hard edge? Let's do simple hardness for now logic
-                    float distSq = dX * dX + dY * dY;
-                    if (distSq <= radiusSq)
-                    {
-                        // In a real soft-eraser, we'd multiply alpha by distance.
-                        // Here we just clear the pixel directly if it's inside the circle.
-                        int index = y * layer.Width + x;
-                        layerPixels[index] = 0x00000000;
-                    }
-                }
-            }
         }
     }
 }

@@ -5,54 +5,70 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Input;
 using Avalonia;
-using Pixellum.Core;
 using Avalonia.Media;
-using Pixellum.Rendering;
 using Avalonia.Platform;
+using Avalonia.Threading;
+using Pixellum.Core;
+using Pixellum.Rendering;
 
 namespace Pixellum.Views
 {
+    // Q3 / M3: Enum replaces fragile magic strings for tool switching
+    public enum ToolType { Brush, Eraser, Fill, Eyedropper }
+
     public partial class CanvasView : UserControl
     {
+        // ── Document / layers ────────────────────────────────────────────────
         private Document _document;
         private readonly List<Layer> _layers = new();
         private int _activeLayerIndex = 0;
-        private Layer _activeLayer => _layers[_activeLayerIndex];
 
+        // B1: Null-safe ActiveLayer — never throws on empty list
+        private Layer? ActiveLayer =>
+            (_layers.Count > 0 && _activeLayerIndex < _layers.Count)
+                ? _layers[_activeLayerIndex]
+                : null;
+
+        // ── Rendering ────────────────────────────────────────────────────────
         private readonly BrushEngine _brushEngine = new();
-        private readonly Renderer _renderer = new();
+        private readonly Renderer    _renderer    = new();
         private WriteableBitmap _canvasBitmap;
-        private Image? _canvasImage;
-        private Point? _lastPoint = null;
+        private Image?          _canvasImage;
 
-        private readonly Stack<uint[]> _undoStack = new Stack<uint[]>();
-        private readonly Stack<uint[]> _redoStack = new Stack<uint[]>();
+        // ── Drawing state ────────────────────────────────────────────────────
+        private Point? _lastPoint = null;
+        private bool   _isDrawing = false;
+
+        // ── Undo / redo (raw snapshot stacks — Phase 2 will wire HistoryManager) ─
+        private readonly Stack<uint[]> _undoStack = new();
+        private readonly Stack<uint[]> _redoStack = new();
         private const int MAX_HISTORY = 30;
 
-        public string ActiveTool { get; set; } = "Brush";
+        // ── Tool / brush state ──────────────────────────────────────────────
+        // Q3 / M3: Strongly-typed tool; no more magic strings
+        public ToolType ActiveTool { get; set; } = ToolType.Brush;
+
         public event EventHandler<uint>? ColorPicked;
 
-        public bool ShowBrushPreview { get; set; }
-        public float PreviewBrushRadius { get; set; }
-
-        private uint _activeColor = 0xFFFF0000;
-        private float _brushRadius = 15f;
+        private uint  _activeColor  = 0xFFFF0000;
+        private float _brushRadius  = 15f;
         private float _brushOpacity = 1f;
 
-        public uint ActiveColor { get => _activeColor; set => _activeColor = value; }
-        public float BrushRadius { get => _brushRadius; set => _brushRadius = value; }
+        public uint  ActiveColor  { get => _activeColor;  set => _activeColor  = value; }
+        public float BrushRadius  { get => _brushRadius;  set => _brushRadius  = value; }
         public float BrushOpacity { get => _brushOpacity; set => _brushOpacity = value; }
         public WriteableBitmap CanvasBitmap => _canvasBitmap;
 
-        private double _zoom = 1.0;
-        private Point _panTranslation = new Point(0, 0);
-        private bool _isDrawing = false;
-        private bool _isPanning = false;
-        private bool _spaceHeld = false;
-        private Point _lastPanPoint;
-        private ScaleTransform? _scaleTransform;
+        // ── Zoom / pan ────────────────────────────────────────────────────────
+        private double           _zoom           = 1.0;
+        private Point            _panTranslation = new(0, 0);
+        private bool             _isPanning      = false;
+        private bool             _spaceHeld      = false;
+        private Point            _lastPanPoint;
+        private ScaleTransform?  _scaleTransform;
         private TranslateTransform? _translateTransform;
 
+        // ── Constructor ──────────────────────────────────────────────────────
         public CanvasView()
         {
             InitializeComponent();
@@ -61,37 +77,37 @@ namespace Pixellum.Views
             _document = new Document(W, H);
             _layers.Add(new Layer(W, H, "Layer 1"));
 
+            // BE1: Use AlphaFormat.Unpremul to match straight-alpha blend math in BrushEngine
             _canvasBitmap = new WriteableBitmap(
                 new PixelSize(W, H),
                 new Vector(96, 96),
                 PixelFormat.Bgra8888,
-                AlphaFormat.Premul);
+                AlphaFormat.Unpremul);
 
             _canvasImage = this.FindControl<Image>("CanvasImage");
             if (_canvasImage != null)
-            {
                 _canvasImage.Source = _canvasBitmap;
-            }
 
             if (_canvasImage?.RenderTransform is TransformGroup tg)
             {
-                _scaleTransform = tg.Children.OfType<ScaleTransform>().FirstOrDefault();
+                _scaleTransform     = tg.Children.OfType<ScaleTransform>().FirstOrDefault();
                 _translateTransform = tg.Children.OfType<TranslateTransform>().FirstOrDefault();
             }
 
-            PointerPressed += CanvasView_PointerPressed;
-            PointerMoved += CanvasView_PointerMoved;
-            PointerReleased += CanvasView_PointerReleased;
+            PointerPressed      += CanvasView_PointerPressed;
+            PointerMoved        += CanvasView_PointerMoved;
+            PointerReleased     += CanvasView_PointerReleased;
             PointerWheelChanged += CanvasView_PointerWheelChanged;
 
-            KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Space) _spaceHeld = true; };
-            KeyUp += (_, e) => { if (e.Key == Avalonia.Input.Key.Space) _spaceHeld = false; };
+            KeyDown += (_, e) => { if (e.Key == Key.Space) _spaceHeld = true; };
+            KeyUp   += (_, e) => { if (e.Key == Key.Space) _spaceHeld = false; };
             Focusable = true;
-    
+
             RedrawCanvas();
         }
 
-        // ✅ NEW LAYER MANAGEMENT METHODS
+        // ── Layer management ─────────────────────────────────────────────────
+
         public void AddLayer(string name)
         {
             var newLayer = new Layer(_document.Width, _document.Height, name);
@@ -115,13 +131,9 @@ namespace Pixellum.Views
                 _layers.RemoveAt(index);
 
                 if (_activeLayerIndex >= _layers.Count)
-                {
                     _activeLayerIndex = _layers.Count - 1;
-                }
                 else if (_activeLayerIndex > index)
-                {
                     _activeLayerIndex--;
-                }
 
                 RedrawCanvas();
                 System.Diagnostics.Debug.WriteLine($"✅ Deleted layer: {deletedName}");
@@ -137,30 +149,30 @@ namespace Pixellum.Views
             }
         }
 
-        public List<Layer> GetLayers() => _layers;
-
-        public int GetActiveLayerIndex() => _activeLayerIndex;
+        public List<Layer>  GetLayers()          => _layers;
+        public int           GetActiveLayerIndex() => _activeLayerIndex;
 
         public void SetActiveLayer(int index)
         {
             if (index >= 0 && index < _layers.Count)
             {
                 _activeLayerIndex = index;
-                System.Diagnostics.Debug.WriteLine($"✅ Active layer changed to: {_layers[index].Name}");
+                System.Diagnostics.Debug.WriteLine($"✅ Active layer: {_layers[index].Name}");
             }
         }
 
+        // ── Coordinate helpers ───────────────────────────────────────────────
+
         private Point? GetBitmapCoordinates(PointerEventArgs e)
         {
-            if (_canvasImage?.Bounds == null || _canvasBitmap == null)
-                return null;
+            if (_canvasImage?.Bounds == null) return null;
 
-            var pos = e.GetPosition(_canvasImage);
-            var imageBounds = _canvasImage.Bounds;
+            var pos         = e.GetPosition(_canvasImage);
             var bitmapWidth = _canvasBitmap.PixelSize.Width;
             var bitmapHeight = _canvasBitmap.PixelSize.Height;
+            var imageBounds = _canvasImage.Bounds;
 
-            double offsetX = (imageBounds.Width - bitmapWidth) / 2.0;
+            double offsetX = (imageBounds.Width  - bitmapWidth)  / 2.0;
             double offsetY = (imageBounds.Height - bitmapHeight) / 2.0;
 
             double bitmapX = pos.X - offsetX;
@@ -168,12 +180,12 @@ namespace Pixellum.Views
 
             if (bitmapX < 0 || bitmapY < 0 ||
                 bitmapX >= bitmapWidth || bitmapY >= bitmapHeight)
-            {
                 return null;
-            }
 
             return new Point(bitmapX, bitmapY);
         }
+
+        // ── Input handlers ───────────────────────────────────────────────────
 
         private void CanvasView_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
@@ -181,11 +193,12 @@ namespace Pixellum.Views
 
             var p = e.GetCurrentPoint(this);
 
-            if (p.Properties.IsMiddleButtonPressed || (p.Properties.IsLeftButtonPressed && _spaceHeld))
+            if (p.Properties.IsMiddleButtonPressed ||
+               (p.Properties.IsLeftButtonPressed && _spaceHeld))
             {
-                _isPanning = true;
+                _isPanning    = true;
                 _lastPanPoint = p.Position;
-                e.Handled = true;
+                e.Handled     = true;
                 return;
             }
 
@@ -194,7 +207,8 @@ namespace Pixellum.Views
             var coords = GetBitmapCoordinates(e);
             if (coords == null) return;
 
-            if (ActiveTool == "Eyedropper")
+            // Q3: Switch on enum, not magic strings
+            if (ActiveTool == ToolType.Eyedropper)
             {
                 int x = (int)coords.Value.X;
                 int y = (int)coords.Value.Y;
@@ -207,7 +221,7 @@ namespace Pixellum.Views
                 return;
             }
 
-            if (ActiveTool == "Fill")
+            if (ActiveTool == ToolType.Fill)
             {
                 SaveStateForUndo();
                 FloodFill((int)coords.Value.X, (int)coords.Value.Y);
@@ -220,7 +234,6 @@ namespace Pixellum.Views
             _lastPoint = coords.Value;
             SaveStateForUndo();
             DrawAtPoint(coords.Value.X, coords.Value.Y);
-
             e.Handled = true;
         }
 
@@ -243,7 +256,7 @@ namespace Pixellum.Views
                 }
 
                 _lastPanPoint = p.Position;
-                e.Handled = true;
+                e.Handled     = true;
                 return;
             }
 
@@ -252,17 +265,19 @@ namespace Pixellum.Views
             var coords = GetBitmapCoordinates(e);
             if (coords == null) return;
 
-            if (ActiveTool == "Brush" || ActiveTool == "Eraser")
+            if (ActiveTool == ToolType.Brush || ActiveTool == ToolType.Eraser)
             {
                 if (_lastPoint.HasValue)
                 {
-                    // Interpolate
-                    double dist = Math.Sqrt(Math.Pow(coords.Value.X - _lastPoint.Value.X, 2) + Math.Pow(coords.Value.Y - _lastPoint.Value.Y, 2));
-                    double steps = Math.Max(1, dist / (_brushRadius * 0.25)); // Stamp every 1/4th brush radius
+                    double dist  = Math.Sqrt(
+                        Math.Pow(coords.Value.X - _lastPoint.Value.X, 2) +
+                        Math.Pow(coords.Value.Y - _lastPoint.Value.Y, 2));
+                    double steps = Math.Max(1, dist / (_brushRadius * 0.25));
 
-                    for (int i = 1; i <= steps; i++)
+                    // BE4: Start from i=0 so the segment start point is always stamped
+                    for (int i = 0; i <= steps; i++)
                     {
-                        double t = i / steps;
+                        double t = steps == 0 ? 1.0 : i / steps;
                         double x = _lastPoint.Value.X + (coords.Value.X - _lastPoint.Value.X) * t;
                         double y = _lastPoint.Value.Y + (coords.Value.Y - _lastPoint.Value.Y) * t;
                         DrawAtPoint(x, y);
@@ -273,9 +288,9 @@ namespace Pixellum.Views
                     DrawAtPoint(coords.Value.X, coords.Value.Y);
                 }
             }
-            
+
             _lastPoint = coords.Value;
-            e.Handled = true;
+            e.Handled  = true;
         }
 
         private void CanvasView_PointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -283,15 +298,14 @@ namespace Pixellum.Views
             if (_isPanning)
             {
                 _isPanning = false;
-                e.Handled = true;
+                e.Handled  = true;
                 return;
             }
 
             if (!_isDrawing) return;
-
             _isDrawing = false;
             _lastPoint = null;
-            e.Handled = true;
+            e.Handled  = true;
         }
 
         private void CanvasView_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
@@ -299,130 +313,128 @@ namespace Pixellum.Views
             if (_scaleTransform == null || _translateTransform == null) return;
 
             double zoomDelta = e.Delta.Y > 0 ? 1.1 : 0.9;
-            double newZoom = Math.Clamp(_zoom * zoomDelta, 0.1, 10.0);
-            
+            double newZoom   = Math.Clamp(_zoom * zoomDelta, 0.1, 10.0);
             if (newZoom == _zoom) return;
 
-            var p = e.GetPosition(this);
-
+            var p    = e.GetPosition(this);
             var relX = p.X - _translateTransform.X;
             var relY = p.Y - _translateTransform.Y;
-
             var ratio = newZoom / _zoom;
 
             _translateTransform.X = p.X - (relX * ratio);
             _translateTransform.Y = p.Y - (relY * ratio);
             _panTranslation = new Point(_translateTransform.X, _translateTransform.Y);
 
-            _zoom = newZoom;
+            _zoom                = newZoom;
             _scaleTransform.ScaleX = _zoom;
             _scaleTransform.ScaleY = _zoom;
 
             e.Handled = true;
         }
 
+        // ── Drawing ──────────────────────────────────────────────────────────
+
         private void DrawAtPoint(double x, double y)
         {
-            int px = (int)Math.Clamp(x, 0, _document.Width - 1);
+            if (ActiveLayer == null) return;   // B1 guard
+
+            int px = (int)Math.Clamp(x, 0, _document.Width  - 1);
             int py = (int)Math.Clamp(y, 0, _document.Height - 1);
 
-            if (ActiveTool == "Brush")
+            if (ActiveTool == ToolType.Brush)
             {
-                uint newAlpha = (uint)(255 * _brushOpacity);
+                uint newAlpha    = (uint)(255 * _brushOpacity);
                 uint dynamicColor = (newAlpha << 24) | (_activeColor & 0x00FFFFFF);
-                _brushEngine.ApplyBrush(_activeLayer, px, py, dynamicColor, _brushRadius);
+                _brushEngine.ApplyBrush(ActiveLayer, px, py, dynamicColor, _brushRadius);
             }
-            else if (ActiveTool == "Eraser")
+            else if (ActiveTool == ToolType.Eraser)
             {
-                _brushEngine.ApplyEraser(_activeLayer, px, py, _brushRadius);
+                _brushEngine.ApplyEraser(ActiveLayer, px, py, _brushRadius);
             }
 
             RedrawCanvas();
         }
 
+        // B3: FloodFill uses value-tuple queue — no heavyweight Avalonia.Point allocations
         private void FloodFill(int startX, int startY)
         {
-            int w = _activeLayer.Width;
-            int h = _activeLayer.Height;
+            if (ActiveLayer == null) return;   // B1 guard
+
+            int    w       = ActiveLayer.Width;
+            int    h       = ActiveLayer.Height;
             if (startX < 0 || startX >= w || startY < 0 || startY >= h) return;
 
-            uint[] pixels = _activeLayer.GetPixels();
-            uint targetColor = pixels[startY * w + startX];
+            uint[] pixels  = ActiveLayer.GetPixels();
+            uint   targetColor = pixels[startY * w + startX];
 
-            // Don't fill if clicked the same color (approx - ignore alpha opacity nuance for pure color matching here)
-            // But we actually fill with _activeColor and 100% opacity for now
-            uint fillAlpha = (uint)(255 * _brushOpacity);
+            uint fillAlpha        = (uint)(255 * _brushOpacity);
             uint replacementColor = (fillAlpha << 24) | (_activeColor & 0x00FFFFFF);
 
             if (targetColor == replacementColor) return;
 
-            Queue<Point> q = new Queue<Point>();
-            q.Enqueue(new Point(startX, startY));
+            var q = new Queue<(int x, int y)>();
+            q.Enqueue((startX, startY));
 
             while (q.Count > 0)
             {
-                Point p = q.Dequeue();
-                int x = (int)p.X;
-                int y = (int)p.Y;
+                var (x, y) = q.Dequeue();
 
                 int index = y * w + x;
                 if (pixels[index] != targetColor) continue;
 
-                // Find left boundary
+                // Scan-line fill
                 int left = x;
-                while (left > 0 && pixels[y * w + (left - 1)] == targetColor)
-                    left--;
+                while (left > 0     && pixels[y * w + (left - 1)] == targetColor) left--;
 
-                // Find right boundary
                 int right = x;
-                while (right < w - 1 && pixels[y * w + (right + 1)] == targetColor)
-                    right++;
+                while (right < w - 1 && pixels[y * w + (right + 1)] == targetColor) right++;
 
                 for (int i = left; i <= right; i++)
                 {
                     pixels[y * w + i] = replacementColor;
 
-                    if (y > 0 && pixels[(y - 1) * w + i] == targetColor)
-                        q.Enqueue(new Point(i, y - 1));
-
-                    if (y < h - 1 && pixels[(y + 1) * w + i] == targetColor)
-                        q.Enqueue(new Point(i, y + 1));
+                    if (y > 0     && pixels[(y - 1) * w + i] == targetColor) q.Enqueue((i, y - 1));
+                    if (y < h - 1 && pixels[(y + 1) * w + i] == targetColor) q.Enqueue((i, y + 1));
                 }
             }
         }
+
+        // ── Rendering ────────────────────────────────────────────────────────
 
         private void RedrawCanvas()
         {
+            // Compositing and bitmap blit can happen on any thread
             LayerCompositor.Composite(_document, _layers);
             _renderer.Render(_document, _canvasBitmap);
 
-            if (_canvasImage != null)
-            {
-                _canvasImage.InvalidateVisual();
-            }
+            // T1: InvalidateVisual MUST run on the UI thread
+            Dispatcher.UIThread.Post(() => _canvasImage?.InvalidateVisual(),
+                DispatcherPriority.Render);
         }
+
+        // ── Undo / Redo ──────────────────────────────────────────────────────
 
         private void SaveStateForUndo()
         {
+            if (ActiveLayer == null) return;   // B1 guard
             try
             {
-                uint[] snapshot = new uint[_activeLayer.Width * _activeLayer.Height];
-                Array.Copy(_activeLayer.GetPixels(), snapshot, snapshot.Length);
-
+                uint[] snapshot = new uint[ActiveLayer.Width * ActiveLayer.Height];
+                Array.Copy(ActiveLayer.GetPixels(), snapshot, snapshot.Length);
                 _undoStack.Push(snapshot);
                 _redoStack.Clear();
 
+                // B2: Trim oldest entries — preserve correct LIFO order
                 if (_undoStack.Count > MAX_HISTORY)
                 {
-                    var tempList = new List<uint[]>(_undoStack);
+                    var items = _undoStack.ToArray(); // index 0 = most-recent (top of stack)
                     _undoStack.Clear();
-                    for (int i = 0; i < MAX_HISTORY; i++)
-                    {
-                        _undoStack.Push(tempList[i]);
-                    }
+                    // Re-push from oldest (end) to newest (start) so newest is on top
+                    for (int i = MAX_HISTORY - 1; i >= 0; i--)
+                        _undoStack.Push(items[i]);
                 }
 
-                System.Diagnostics.Debug.WriteLine($"✅ Saved undo state. Stack size: {_undoStack.Count}");
+                System.Diagnostics.Debug.WriteLine($"✅ Saved undo state. Stack: {_undoStack.Count}");
             }
             catch (Exception ex)
             {
@@ -432,7 +444,7 @@ namespace Pixellum.Views
 
         public void Undo()
         {
-            if (_undoStack.Count == 0)
+            if (_undoStack.Count == 0 || ActiveLayer == null)
             {
                 System.Diagnostics.Debug.WriteLine("⚠️ Nothing to undo");
                 return;
@@ -440,16 +452,16 @@ namespace Pixellum.Views
 
             try
             {
-                uint[] currentState = new uint[_activeLayer.Width * _activeLayer.Height];
-                Array.Copy(_activeLayer.GetPixels(), currentState, currentState.Length);
+                uint[] currentState = new uint[ActiveLayer.Width * ActiveLayer.Height];
+                Array.Copy(ActiveLayer.GetPixels(), currentState, currentState.Length);
                 _redoStack.Push(currentState);
 
                 uint[] previousState = _undoStack.Pop();
-                Array.Copy(previousState, _activeLayer.GetPixels(), previousState.Length);
+                Array.Copy(previousState, ActiveLayer.GetPixels(), previousState.Length);
 
                 RedrawCanvas();
-
-                System.Diagnostics.Debug.WriteLine($"✅ Undo successful. Undo stack: {_undoStack.Count}, Redo stack: {_redoStack.Count}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"✅ Undo. Undo:{_undoStack.Count} Redo:{_redoStack.Count}");
             }
             catch (Exception ex)
             {
@@ -459,7 +471,7 @@ namespace Pixellum.Views
 
         public void Redo()
         {
-            if (_redoStack.Count == 0)
+            if (_redoStack.Count == 0 || ActiveLayer == null)
             {
                 System.Diagnostics.Debug.WriteLine("⚠️ Nothing to redo");
                 return;
@@ -467,16 +479,16 @@ namespace Pixellum.Views
 
             try
             {
-                uint[] currentState = new uint[_activeLayer.Width * _activeLayer.Height];
-                Array.Copy(_activeLayer.GetPixels(), currentState, currentState.Length);
+                uint[] currentState = new uint[ActiveLayer.Width * ActiveLayer.Height];
+                Array.Copy(ActiveLayer.GetPixels(), currentState, currentState.Length);
                 _undoStack.Push(currentState);
 
                 uint[] redoState = _redoStack.Pop();
-                Array.Copy(redoState, _activeLayer.GetPixels(), redoState.Length);
+                Array.Copy(redoState, ActiveLayer.GetPixels(), redoState.Length);
 
                 RedrawCanvas();
-
-                System.Diagnostics.Debug.WriteLine($"✅ Redo successful. Undo stack: {_undoStack.Count}, Redo stack: {_redoStack.Count}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"✅ Redo. Undo:{_undoStack.Count} Redo:{_redoStack.Count}");
             }
             catch (Exception ex)
             {

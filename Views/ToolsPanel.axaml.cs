@@ -15,7 +15,7 @@ namespace Pixellum.Views
         private CanvasView? _canvas;
         private uint _primaryColor = 0xFF000000;   // Black
         private uint _secondaryColor = 0xFFFFFFFF; // White
-        private string _activeTool = "Brush";
+        private ToolType _activeTool = ToolType.Brush;
 
         // Quick color palette (12 common colors)
         private readonly string[] _quickColors = new[]
@@ -46,7 +46,7 @@ namespace Pixellum.Views
                             UpdateHexInput();
                             _canvas.ActiveColor = _primaryColor;
                         };
-                        _canvas.ActiveTool = _activeTool;
+                        _canvas.ActiveTool = _activeTool;   // ToolType enum
                     }
                 }
 
@@ -220,28 +220,28 @@ namespace Pixellum.Views
         // Tool Selection Handlers
         private void OnBrushToolClicked(object? sender, RoutedEventArgs e)
         {
-            _activeTool = "Brush";
+            _activeTool = ToolType.Brush;
             UpdateToolButtons();
             System.Diagnostics.Debug.WriteLine("🖌️ Brush tool selected");
         }
 
         private void OnEraserToolClicked(object? sender, RoutedEventArgs e)
         {
-            _activeTool = "Eraser";
+            _activeTool = ToolType.Eraser;
             UpdateToolButtons();
             System.Diagnostics.Debug.WriteLine("🧹 Eraser tool selected");
         }
 
         private void OnEyedropperToolClicked(object? sender, RoutedEventArgs e)
         {
-            _activeTool = "Eyedropper";
+            _activeTool = ToolType.Eyedropper;
             UpdateToolButtons();
             System.Diagnostics.Debug.WriteLine("💧 Eyedropper tool selected");
         }
 
         private void OnFillToolClicked(object? sender, RoutedEventArgs e)
         {
-            _activeTool = "Fill";
+            _activeTool = ToolType.Fill;
             UpdateToolButtons();
             System.Diagnostics.Debug.WriteLine("🪣 Fill tool selected");
         }
@@ -254,29 +254,19 @@ namespace Pixellum.Views
             EyedropperToolButton.Background = new SolidColorBrush(Color.Parse("#555"));
             FillToolButton.Background = new SolidColorBrush(Color.Parse("#555"));
 
-            // Highlight active tool
+            // Highlight active tool button
             var activeColor = new SolidColorBrush(Color.Parse("#4CAF50"));
-            
+
             switch (_activeTool)
             {
-                case "Brush":
-                    BrushToolButton.Background = activeColor;
-                    break;
-                case "Eraser":
-                    EraserToolButton.Background = activeColor;
-                    break;
-                case "Eyedropper":
-                    EyedropperToolButton.Background = activeColor;
-                    break;
-                case "Fill":
-                    FillToolButton.Background = activeColor;
-                    break;
+                case ToolType.Brush:      BrushToolButton.Background      = activeColor; break;
+                case ToolType.Eraser:     EraserToolButton.Background     = activeColor; break;
+                case ToolType.Eyedropper: EyedropperToolButton.Background = activeColor; break;
+                case ToolType.Fill:       FillToolButton.Background       = activeColor; break;
             }
-            
+
             if (_canvas != null)
-            {
                 _canvas.ActiveTool = _activeTool;
-            }
         }
 
         private void OnClearCanvasClicked(object? sender, RoutedEventArgs e)
@@ -318,7 +308,7 @@ namespace Pixellum.Views
 
         private void OnBrushPresetChanged(object? sender, SelectionChangedEventArgs e)
         {
-            if (BrushPresetsComboBox != null && BrushPresetsComboBox.SelectedItem is ComboBoxItem item && _activeTool == "Brush")
+            if (BrushPresetsComboBox != null && BrushPresetsComboBox.SelectedItem is ComboBoxItem item && _activeTool == ToolType.Brush)
             {
                 string preset = item.Content?.ToString() ?? "";
                 switch (preset)

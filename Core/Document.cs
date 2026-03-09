@@ -28,12 +28,9 @@ namespace Pixellum.Core
         }
 
         // Corresponds to the Document API.
-        public uint[] GetRectPixels(int x, int y, int w, int h)
-        {
-            // For MVP, we return the full buffer for simplicity.
-            // Phase 2 will implement delta records for optimization.
-            return _pixels;
-        }
+        /// <remarks>Phase 1 stub — ignores x/y/w/h and always returns the full buffer. Use GetPixelsRaw() instead.</remarks>
+        [System.Obsolete("GetRectPixels is not yet implemented correctly. Use GetPixelsRaw() until Phase 2.")]
+        public uint[] GetRectPixels(int x, int y, int w, int h) => _pixels;
 
         // Method to get the full raw buffer (used by Renderer/Layer Composer)
         public uint[] GetPixelsRaw() => _pixels;

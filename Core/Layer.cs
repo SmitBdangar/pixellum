@@ -12,7 +12,7 @@ namespace Pixellum.Core
 
     public class Layer
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public bool Visible { get; set; } = true;
 
         private float _opacity = 1.0f;

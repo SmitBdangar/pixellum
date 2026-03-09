@@ -1,52 +1,48 @@
 using System;
-using Pixellum.Core; 
-using Avalonia.Media.Imaging; // Required for WriteableBitmap
-using Avalonia; 
+using Pixellum.Core;
+using Avalonia.Media.Imaging;
+using Avalonia;
 using Avalonia.Platform;
 using System.Runtime.CompilerServices;
 
 namespace Pixellum.Rendering
 {
     /// <summary>
-    /// Handles mapping the Document's raw pixel data to an Avalonia WriteableBitmap.
+    /// Maps the Document's composite pixel buffer to an Avalonia WriteableBitmap
+    /// via a fast unsafe memory copy.
     /// </summary>
     public class Renderer
     {
-        // Corresponds to the API: Renderer.Render(Document doc, IRenderTarget target) [cite: 117]
-        /// <summary>
-        /// Renders the current composite (primary layer) to the target bitmap via fast memory copy.
-        /// </summary>
         public void Render(Document document, WriteableBitmap targetBitmap)
         {
-            uint[] sourcePixels = document.GetPixelsRaw(); 
-            
+            uint[] sourcePixels = document.GetPixelsRaw();
+
+            // T2 — Guard: bitmap and document must be the same size
+            int bitmapPixelCount = targetBitmap.PixelSize.Width * targetBitmap.PixelSize.Height;
+            int docPixelCount    = document.Width * document.Height;
+            if (bitmapPixelCount != docPixelCount)
+                throw new InvalidOperationException(
+                    $"Bitmap size ({bitmapPixelCount} px) does not match document ({docPixelCount} px). " +
+                    "Recreate the WriteableBitmap when the document is resized.");
+
             try
             {
-                // Lock the WriteableBitmap for direct memory access
-                using (var lock_ = targetBitmap.Lock())
+                using var lock_ = targetBitmap.Lock();
+                unsafe
                 {
-                    unsafe
+                    long byteCount = (long)docPixelCount * sizeof(uint);
+                    fixed (uint* sourcePtr = sourcePixels)
                     {
-                        // Use unsafe Buffer.MemoryCopy for fast mem copies [cite: 83]
-                        int pixelCount = document.Width * document.Height;
-                        long byteCount = (long)pixelCount * sizeof(uint);
-                        
-                        // We must 'fix' the managed array pointer for use in the unmanaged memory copy.
-                        fixed (uint* sourcePtr = sourcePixels)
-                        {
-                            Buffer.MemoryCopy(
-                                source: sourcePtr,
-                                destination: (void*)lock_.Address,
-                                destinationSizeInBytes: byteCount, 
-                                sourceBytesToCopy: byteCount
-                            );
-                        }
+                        Buffer.MemoryCopy(
+                            source: sourcePtr,
+                            destination: (void*)lock_.Address,
+                            destinationSizeInBytes: byteCount,
+                            sourceBytesToCopy: byteCount);
                     }
                 }
             }
             catch (Exception ex)
             {
-                // In a production app, logging would occur here.
                 System.Diagnostics.Debug.WriteLine($"Rendering error: {ex.Message}");
             }
         }

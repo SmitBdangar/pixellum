@@ -1,5 +1,5 @@
 using System;
-namespace Pixellum.Core.Core
+namespace Pixellum.Core
 {
     /// <summary>
     /// Interface for commands that can be executed, undone, and redone. [cite: 30]
