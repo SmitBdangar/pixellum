@@ -84,7 +84,7 @@
                     <MenuItem Header="Zoom _Out"   Click="OnZoomOutClicked"   InputGesture="Ctrl+OemMinus"/>
                     <MenuItem Header="_Reset Zoom" Click="OnZoomResetClicked" InputGesture="Ctrl+D0"/>
                     <Separator Background="#444"/>
-                    <MenuItem Header="Toggle _Grid"    Click="OnToggleGridClicked"    InputGesture="Ctrl+Quote"/>
+                    <MenuItem Header="Toggle _Grid"    Click="OnToggleGridClicked"    InputGesture="Ctrl+G"/>
                 </MenuItem>
 
             </Menu>

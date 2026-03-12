@@ -192,6 +192,34 @@
                                 </StackPanel>
                             </Button>
                         </Border>
+                        <!-- Text -->
+                        <Border Margin="3">
+                            <Button x:Name="TextToolButton"
+                                    Classes="tool-btn"
+                                    Height="58"
+                                    HorizontalAlignment="Stretch"
+                                    Click="OnTextToolClicked">
+                                <ToolTip.Tip>Text  [T]</ToolTip.Tip>
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="T" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Text" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                        <!-- Gradient -->
+                        <Border Margin="3">
+                            <Button x:Name="GradientToolButton"
+                                    Classes="tool-btn"
+                                    Height="58"
+                                    HorizontalAlignment="Stretch"
+                                    Click="OnGradientToolClicked">
+                                <ToolTip.Tip>Gradient  [G]</ToolTip.Tip>
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="🌫️" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Gradient" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
                     </UniformGrid>
                 </StackPanel>
 

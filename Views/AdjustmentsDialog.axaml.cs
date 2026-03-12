@@ -30,6 +30,11 @@ namespace Pixellum.Views
         private TextBlock? _v1, _v2, _v3, _v4, _v5, _v6;
         private CheckBox? _previewCheck;
 
+        public AdjustmentsDialog()
+        {
+            InitializeComponent();
+        }
+
         public AdjustmentsDialog(AdjustmentType type, CanvasView canvas)
         {
             _type   = type;

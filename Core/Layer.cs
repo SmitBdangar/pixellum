@@ -53,10 +53,27 @@ namespace Pixellum.Core
             if (width <= 0 || height <= 0)
                 throw new ArgumentException("Width and Height must be positive.");
 
-            Width = width;
-            Height = height;
-            Name = name;
+            Width   = width;
+            Height  = height;
+            Name    = name;
             _pixels = new uint[Width * Height];
+        }
+
+        public void TranslatePixels(int dx, int dy)
+        {
+            var copy = (uint[])_pixels.Clone();
+            Array.Clear(_pixels);
+            for (int y = 0; y < Height; y++)
+            {
+                int srcY = y - dy;
+                if (srcY < 0 || srcY >= Height) continue;
+                for (int x = 0; x < Width; x++)
+                {
+                    int srcX = x - dx;
+                    if (srcX >= 0 && srcX < Width)
+                        _pixels[y * Width + x] = copy[srcY * Width + srcX];
+                }
+            }
         }
 
         public uint[] GetPixels() => _pixels;

@@ -274,6 +274,18 @@ namespace Pixellum.Views
             UpdateToolButtons();
         }
 
+        private void OnTextToolClicked(object? sender, RoutedEventArgs e)
+        {
+            _activeTool = ToolType.Text;
+            UpdateToolButtons();
+        }
+
+        private void OnGradientToolClicked(object? sender, RoutedEventArgs e)
+        {
+            _activeTool = ToolType.Gradient;
+            UpdateToolButtons();
+        }
+
         private void UpdateToolButtons()
         {
             void SetActive(Button? btn, bool active)
@@ -290,6 +302,8 @@ namespace Pixellum.Views
             SetActive(this.FindControl<Button>("SelectToolButton"),  _activeTool == ToolType.Select);
             SetActive(this.FindControl<Button>("MoveToolButton"),    _activeTool == ToolType.Move);
             SetActive(this.FindControl<Button>("ShapeToolButton"),   _activeTool == ToolType.Shape);
+            SetActive(this.FindControl<Button>("TextToolButton"),    _activeTool == ToolType.Text);
+            SetActive(this.FindControl<Button>("GradientToolButton"),_activeTool == ToolType.Gradient);
 
             if (_canvas != null)
                 _canvas.ActiveTool = _activeTool;

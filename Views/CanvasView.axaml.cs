@@ -14,7 +14,7 @@ using Pixellum.Rendering;
 namespace Pixellum.Views
 {
     // Q3 / M3: Enum replaces fragile magic strings for tool switching
-    public enum ToolType { Brush, Eraser, Fill, Eyedropper, Select, Move, Shape }
+    public enum ToolType { Brush, Eraser, Fill, Eyedropper, Select, Move, Shape, Text, Gradient }
 
     public partial class CanvasView : UserControl
     {
@@ -34,6 +34,10 @@ namespace Pixellum.Views
         private readonly Renderer    _renderer    = new();
         private WriteableBitmap _canvasBitmap;
         private Image?          _canvasImage;
+        private Canvas?         _overlayCanvas;
+        private Avalonia.Controls.Shapes.Rectangle? _selectionMarquee;
+        private Avalonia.Controls.Shapes.Rectangle? _selectionMarqueeInner;
+        private TextBox?        _textOverlayBox;
 
         // ── Drawing state ────────────────────────────────────────────────────
         private Point? _lastPoint = null;
@@ -44,11 +48,17 @@ namespace Pixellum.Views
         private readonly Stack<uint[]> _redoStack = new();
         private const int MAX_HISTORY = 50;
 
-        // ── Selection ────────────────────────────────────────────────────
+        // ── Selection & Shapes ───────────────────────────────────────────
         private bool    _hasSelection   = false;
         private int     _selStartX, _selStartY;
         private int     _selEndX,   _selEndY;
         private bool    _selDragging    = false;
+        
+        private int     _shapeStartX, _shapeStartY;
+        private bool    _shapeDragging = false;
+        
+        private int     _gradStartX, _gradStartY;
+        private bool    _gradDragging = false;
 
         // ── Grid overlay ────────────────────────────────────────────────
         private bool _gridVisible   = false;
@@ -112,7 +122,13 @@ namespace Pixellum.Views
             if (_canvasImage != null)
                 _canvasImage.Source = _canvasBitmap;
 
-            if (_canvasImage?.RenderTransform is TransformGroup tg)
+            _overlayCanvas = this.FindControl<Canvas>("OverlayCanvas");
+            _selectionMarquee = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("SelectionMarquee");
+            _selectionMarqueeInner = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("SelectionMarqueeInner");
+            _textOverlayBox = this.FindControl<TextBox>("TextOverlayBox");
+
+            var container = this.FindControl<Grid>("TransformContainer");
+            if (container?.RenderTransform is TransformGroup tg)
             {
                 _scaleTransform     = tg.Children.OfType<ScaleTransform>().FirstOrDefault();
                 _translateTransform = tg.Children.OfType<TranslateTransform>().FirstOrDefault();
@@ -561,6 +577,70 @@ namespace Pixellum.Views
                 return;
             }
 
+            if (ActiveTool == ToolType.Select)
+            {
+                _selStartX = (int)coords.Value.X;
+                _selStartY = (int)coords.Value.Y;
+                _selEndX   = _selStartX;
+                _selEndY   = _selStartY;
+                _selDragging = true;
+                _hasSelection = true;
+                UpdateSelectionOverlay();
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Shape)
+            {
+                _shapeStartX = (int)coords.Value.X;
+                _shapeStartY = (int)coords.Value.Y;
+                _shapeDragging = true;
+                _lastPoint = coords.Value;
+                SaveStateForUndo();
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Gradient)
+            {
+                _gradStartX = (int)coords.Value.X;
+                _gradStartY = (int)coords.Value.Y;
+                _gradDragging = true;
+                _lastPoint = coords.Value;
+                SaveStateForUndo();
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Text)
+            {
+                if (_textOverlayBox != null && _textOverlayBox.IsVisible)
+                {
+                    CommitText(); // they clicked elsewhere, commit the previous text
+                }
+                
+                if (_textOverlayBox != null)
+                {
+                    SaveStateForUndo();
+                    Avalonia.Controls.Canvas.SetLeft(_textOverlayBox, coords.Value.X);
+                    Avalonia.Controls.Canvas.SetTop(_textOverlayBox, coords.Value.Y);
+                    _textOverlayBox.Text = "";
+                    _textOverlayBox.IsVisible = true;
+                    // Try to focus it so they can type immediately
+                    Dispatcher.UIThread.Post(() => _textOverlayBox.Focus(), DispatcherPriority.Input);
+                }
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Move)
+            {
+                _lastPoint = coords.Value;
+                SaveStateForUndo(); // dragging starts
+                e.Handled = true;
+                return;
+            }
+
             _isDrawing = true;
             _lastPoint = coords.Value;
             SaveStateForUndo();
@@ -596,6 +676,49 @@ namespace Pixellum.Views
             var coords = GetBitmapCoordinates(e);
             if (coords == null) return;
 
+            if (ActiveTool == ToolType.Select && _selDragging)
+            {
+                _selEndX = (int)coords.Value.X;
+                _selEndY = (int)coords.Value.Y;
+                UpdateSelectionOverlay();
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Shape && _shapeDragging)
+            {
+                // To do live preview of shape, we could erase and redraw, but for now we draw on release.
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Gradient && _gradDragging)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Text)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Move && _lastPoint.HasValue && ActiveLayer != null)
+            {
+                int dx = (int)(coords.Value.X - _lastPoint.Value.X);
+                int dy = (int)(coords.Value.Y - _lastPoint.Value.Y);
+
+                if (dx != 0 || dy != 0)
+                {
+                    ActiveLayer.TranslatePixels(dx, dy); // We will add this helper
+                    _lastPoint = coords.Value;
+                    RedrawCanvas();
+                }
+                e.Handled = true;
+                return;
+            }
+
             if (ActiveTool == ToolType.Brush || ActiveTool == ToolType.Eraser)
             {
                 if (_lastPoint.HasValue)
@@ -630,6 +753,55 @@ namespace Pixellum.Views
             {
                 _isPanning = false;
                 e.Handled  = true;
+                return;
+            }
+
+            if (_selDragging)
+            {
+                _selDragging = false;
+                EnsureValidSelectionBox();
+                e.Handled = true;
+                return;
+            }
+
+            if (_shapeDragging)
+            {
+                _shapeDragging = false;
+                var coords = GetBitmapCoordinates(e);
+                if (coords != null)
+                {
+                    int endX = (int)coords.Value.X;
+                    int endY = (int)coords.Value.Y;
+                    DrawShape(_shapeStartX, _shapeStartY, endX, endY);
+                }
+                e.Handled = true;
+                return;
+            }
+
+            if (_gradDragging)
+            {
+                _gradDragging = false;
+                var coords = GetBitmapCoordinates(e);
+                if (coords != null)
+                {
+                    int endX = (int)coords.Value.X;
+                    int endY = (int)coords.Value.Y;
+                    DrawGradient(_gradStartX, _gradStartY, endX, endY);
+                }
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Text)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (ActiveTool == ToolType.Move && _lastPoint.HasValue)
+            {
+                _lastPoint = null;
+                e.Handled = true;
                 return;
             }
 
@@ -707,6 +879,11 @@ namespace Pixellum.Views
 
         private void SetTool(ToolType tool)
         {
+            if (ActiveTool == ToolType.Text && tool != ToolType.Text)
+            {
+                CommitText();
+            }
+
             ActiveTool = tool;
             ToolChanged?.Invoke(this, tool);
         }
@@ -776,6 +953,260 @@ namespace Pixellum.Views
                     if (y < h - 1 && pixels[(y + 1) * w + i] == targetColor) q.Enqueue((i, y + 1));
                 }
             }
+        }
+
+        // ── Shape & Selection Helpers ────────────────────────────────────────
+
+        private void UpdateSelectionOverlay()
+        {
+            if (_selectionMarquee == null || _selectionMarqueeInner == null) return;
+            
+            if (!_hasSelection)
+            {
+                _selectionMarquee.IsVisible = false;
+                _selectionMarqueeInner.IsVisible = false;
+                return;
+            }
+
+            int minX = Math.Min(_selStartX, _selEndX);
+            int minY = Math.Min(_selStartY, _selEndY);
+            int maxX = Math.Max(_selStartX, _selEndX);
+            int maxY = Math.Max(_selStartY, _selEndY);
+
+            double width  = maxX - minX;
+            double height = maxY - minY;
+
+            if (width < 1 || height < 1)
+            {
+                _selectionMarquee.IsVisible = false;
+                _selectionMarqueeInner.IsVisible = false;
+                return;
+            }
+
+            // Since the RenderTransform is on TransformContainer, the Canvas is drawn
+            // in the same coordinate space as the image! (1 pixel = 1 unit)
+            // But we need to offset it by the padding if the image is centered.
+            // Wait, the Image and Canvas are siblings, both centered. 
+            // The Canvas will just overlay the grid. We should set Canvas sizing.
+            // Actually, setting Margin or Canvas.Left/Top works.
+            Avalonia.Controls.Canvas.SetLeft(_selectionMarquee, minX);
+            Avalonia.Controls.Canvas.SetTop(_selectionMarquee, minY);
+            _selectionMarquee.Width = width;
+            _selectionMarquee.Height = height;
+            _selectionMarquee.IsVisible = true;
+
+            Avalonia.Controls.Canvas.SetLeft(_selectionMarqueeInner, minX);
+            Avalonia.Controls.Canvas.SetTop(_selectionMarqueeInner, minY);
+            _selectionMarqueeInner.Width = width;
+            _selectionMarqueeInner.Height = height;
+            _selectionMarqueeInner.IsVisible = true;
+        }
+
+        private void EnsureValidSelectionBox()
+        {
+            int minX = Math.Min(_selStartX, _selEndX);
+            int minY = Math.Min(_selStartY, _selEndY);
+            int maxX = Math.Max(_selStartX, _selEndX);
+            int maxY = Math.Max(_selStartY, _selEndY);
+
+            _selStartX = minX;
+            _selStartY = minY;
+            _selEndX   = maxX;
+            _selEndY   = maxY;
+
+            if (maxX - minX < 1 || maxY - minY < 1)
+            {
+                _hasSelection = false;
+                UpdateSelectionOverlay();
+            }
+        }
+
+        private void DrawShape(int startX, int startY, int endX, int endY)
+        {
+            if (ActiveLayer == null) return;
+
+            int minX = Math.Max(0, Math.Min(startX, endX));
+            int minY = Math.Max(0, Math.Min(startY, endY));
+            int maxX = Math.Min(_document.Width - 1, Math.Max(startX, endX));
+            int maxY = Math.Min(_document.Height - 1, Math.Max(startY, endY));
+
+            if (maxX < minX || maxY < minY) return;
+
+            uint fillAlpha = (uint)(255 * _brushOpacity);
+            uint color = (fillAlpha << 24) | (_activeColor & 0x00FFFFFF);
+            uint[] pixels = ActiveLayer.GetPixels();
+
+            for (int y = minY; y <= maxY; y++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    pixels[y * _document.Width + x] = color; 
+                }
+            }
+
+            RedrawCanvas();
+        }
+
+        private void CommitText()
+        {
+            if (_textOverlayBox == null || !_textOverlayBox.IsVisible || ActiveLayer == null) return;
+            
+            string text = _textOverlayBox.Text ?? "";
+            _textOverlayBox.IsVisible = false;
+            if (string.IsNullOrWhiteSpace(text)) return;
+            
+            double x = Avalonia.Controls.Canvas.GetLeft(_textOverlayBox);
+            double y = Avalonia.Controls.Canvas.GetTop(_textOverlayBox);
+
+            uint fillAlpha = (uint)(255 * _brushOpacity);
+            var color = Avalonia.Media.Color.FromArgb((byte)fillAlpha, (byte)((_activeColor >> 16) & 0xFF), (byte)((_activeColor >> 8) & 0xFF), (byte)(_activeColor & 0xFF));
+            var brush = new SolidColorBrush(color);
+
+            var typeface = new Typeface(_textOverlayBox.FontFamily, _textOverlayBox.FontStyle, _textOverlayBox.FontWeight);
+            var formattedText = new FormattedText(
+                text,
+                System.Globalization.CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                typeface,
+                _textOverlayBox.FontSize,
+                brush);
+
+            int w = (int)Math.Ceiling(formattedText.Width) + 1;
+            int h = (int)Math.Ceiling(formattedText.Height) + 1;
+
+            if (w <= 1 || h <= 1) return;
+
+            var rtb = new RenderTargetBitmap(new PixelSize(w, h), new Vector(96, 96));
+            using (var ctx = rtb.CreateDrawingContext())
+            {
+                ctx.DrawText(formattedText, new Point(0, 0));
+            }
+
+            uint[] textPixels = new uint[w * h];
+            unsafe
+            {
+                fixed (uint* ptr = textPixels)
+                {
+                    rtb.CopyPixels(new PixelRect(0, 0, w, h), (IntPtr)ptr, w * h * 4, w * 4);
+                }
+            }
+
+            int startX = (int)x;
+            int startY = (int)y;
+            uint[] layerPixels = ActiveLayer.GetPixels();
+
+            for (int ty = 0; ty < h; ty++)
+            {
+                int ly = startY + ty;
+                if (ly < 0 || ly >= _document.Height) continue;
+
+                for (int tx = 0; tx < w; tx++)
+                {
+                    int lx = startX + tx;
+                    if (lx < 0 || lx >= _document.Width) continue;
+
+                    uint srcPx = textPixels[ty * w + tx];
+                    float srcA = ((srcPx >> 24) & 0xFF) / 255.0f;
+                    if (srcA > 0)
+                    {
+                        uint dstPx = layerPixels[ly * _document.Width + lx];
+                        float dstA = ((dstPx >> 24) & 0xFF) / 255.0f;
+                        float invA = 1.0f - srcA;
+                        float outA = srcA + dstA * invA;
+
+                        float sR = ((srcPx >> 16) & 0xFF) / 255.0f;
+                        float sG = ((srcPx >> 8) & 0xFF) / 255.0f;
+                        float sB = (srcPx & 0xFF) / 255.0f;
+
+                        float dR = ((dstPx >> 16) & 0xFF) / 255.0f;
+                        float dG = ((dstPx >> 8) & 0xFF) / 255.0f;
+                        float dB = (dstPx & 0xFF) / 255.0f;
+
+                        float oR = (sR * srcA + dR * dstA * invA) / outA;
+                        float oG = (sG * srcA + dG * dstA * invA) / outA;
+                        float oB = (sB * srcA + dB * dstA * invA) / outA;
+
+                        uint A = (uint)Math.Clamp(outA * 255f, 0, 255);
+                        uint R = (uint)Math.Clamp(oR * 255f, 0, 255);
+                        uint G = (uint)Math.Clamp(oG * 255f, 0, 255);
+                        uint B = (uint)Math.Clamp(oB * 255f, 0, 255);
+
+                        layerPixels[ly * _document.Width + lx] = (A << 24) | (R << 16) | (G << 8) | B;
+                    }
+                }
+            }
+
+            RedrawCanvas();
+        }
+
+        private void DrawGradient(int startX, int startY, int endX, int endY)
+        {
+            if (ActiveLayer == null) return;
+
+            uint[] pixels = ActiveLayer.GetPixels();
+            uint fillAlpha = (uint)(255 * _brushOpacity);
+            uint startColor = (fillAlpha << 24) | (_activeColor & 0x00FFFFFF);
+            uint endColor   = 0x00FFFFFF; // Transparent white
+
+            float sA = ((startColor >> 24) & 0xFF);
+            float sR = ((startColor >> 16) & 0xFF);
+            float sG = ((startColor >> 8) & 0xFF);
+            float sB = (startColor & 0xFF);
+
+            float eA = ((endColor >> 24) & 0xFF);
+            float eR = ((endColor >> 16) & 0xFF);
+            float eG = ((endColor >> 8) & 0xFF);
+            float eB = (endColor & 0xFF);
+
+            double dx = endX - startX;
+            double dy = endY - startY;
+            double lenSq = dx * dx + dy * dy;
+
+            for (int y = 0; y < _document.Height; y++)
+            {
+                for (int x = 0; x < _document.Width; x++)
+                {
+                    double t = 0;
+                    if (lenSq > 0)
+                    {
+                        t = ((x - startX) * dx + (y - startY) * dy) / lenSq;
+                        t = Math.Clamp(t, 0, 1);
+                    }
+
+                    uint A = (uint)Math.Clamp(sA + (eA - sA) * t, 0, 255);
+                    uint R = (uint)Math.Clamp(sR + (eR - sR) * t, 0, 255);
+                    uint G = (uint)Math.Clamp(sG + (eG - sG) * t, 0, 255);
+                    uint B = (uint)Math.Clamp(sB + (eB - sB) * t, 0, 255);
+
+                    uint gradPx = (A << 24) | (R << 16) | (G << 8) | B;
+                    
+                    // Alpha over active layer
+                    uint dstPx = pixels[y * _document.Width + x];
+                    float srcAlpha = A / 255.0f;
+                    float dstAlpha = ((dstPx >> 24) & 0xFF) / 255.0f;
+                    float invA = 1.0f - srcAlpha;
+                    float outA = srcAlpha + dstAlpha * invA;
+
+                    if (outA > 0)
+                    {
+                        float dR_ = ((dstPx >> 16) & 0xFF) / 255.0f;
+                        float dG_ = ((dstPx >> 8) & 0xFF) / 255.0f;
+                        float dB_ = (dstPx & 0xFF) / 255.0f;
+
+                        float oR = ((R / 255.0f) * srcAlpha + dR_ * dstAlpha * invA) / outA;
+                        float oG = ((G / 255.0f) * srcAlpha + dG_ * dstAlpha * invA) / outA;
+                        float oB = ((B / 255.0f) * srcAlpha + dB_ * dstAlpha * invA) / outA;
+
+                        uint fA = (uint)Math.Clamp(outA * 255f, 0, 255);
+                        uint fR = (uint)Math.Clamp(oR * 255f, 0, 255);
+                        uint fG = (uint)Math.Clamp(oG * 255f, 0, 255);
+                        uint fB = (uint)Math.Clamp(oB * 255f, 0, 255);
+
+                        pixels[y * _document.Width + x] = (fA << 24) | (fR << 16) | (fG << 8) | fB;
+                    }
+                }
+            }
+            RedrawCanvas();
         }
 
         // ── Rendering ────────────────────────────────────────────────────────

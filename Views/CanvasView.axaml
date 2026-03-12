@@ -8,18 +8,42 @@
           Name="CanvasGrid"
           ClipToBounds="True">
         
-        <Image Name="CanvasImage"
-               Stretch="None"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               RenderOptions.BitmapInterpolationMode="None">
-            <Image.RenderTransform>
+        <Grid Name="TransformContainer"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+            
+            <Grid.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform ScaleX="1" ScaleY="1" />
                     <TranslateTransform X="0" Y="0" />
                 </TransformGroup>
-            </Image.RenderTransform>
-        </Image>
+            </Grid.RenderTransform>
+
+            <Image Name="CanvasImage"
+                   Stretch="None"
+                   RenderOptions.BitmapInterpolationMode="None"/>
+            
+            <Canvas Name="OverlayCanvas" Background="Transparent" IsHitTestVisible="False">
+                <Rectangle Name="SelectionMarquee"
+                           Stroke="Black"
+                           StrokeThickness="1"
+                           StrokeDashArray="4,4"
+                           IsVisible="False" />
+                <Rectangle Name="SelectionMarqueeInner"
+                           Stroke="White"
+                           StrokeThickness="1"
+                           StrokeDashArray="4,4"
+                           StrokeDashOffset="4"
+                           IsVisible="False" />
+                <TextBox Name="TextOverlayBox"
+                         IsVisible="False"
+                         Background="Transparent"
+                         Foreground="White"
+                         BorderThickness="1"
+                         BorderBrush="#888"
+                         AcceptsReturn="True"
+                         FontSize="24"/>
+            </Canvas>
+        </Grid>
     </Grid>
-    
 </UserControl>
