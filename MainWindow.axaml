@@ -31,29 +31,66 @@
 
     <DockPanel>
 
+        <!-- ── Menu Bar ─────────────────────────────────────────────────────── -->
         <Border DockPanel.Dock="Top" Background="#252525" BorderBrush="#333" BorderThickness="0,0,0,1">
             <Menu Background="Transparent" Padding="4,0">
+
+                <!-- File -->
                 <MenuItem Header="_File">
-                    <MenuItem Header="_New Canvas"     Click="OnNewClicked"       InputGesture="Ctrl+N"/>
-                    <MenuItem Header="_Open…"           Click="OnOpenClicked"      InputGesture="Ctrl+O"/>
+                    <MenuItem Header="_New…"            Click="OnNewClicked"          InputGesture="Ctrl+N"/>
+                    <MenuItem Header="_Open Image…"     Click="OnOpenClicked"         InputGesture="Ctrl+O"/>
                     <Separator Background="#444"/>
-                    <MenuItem Header="_Save"            Click="OnSaveClicked"      InputGesture="Ctrl+S"/>
-                    <MenuItem Header="Export _PNG…"    Click="OnExportPngClicked" InputGesture="Ctrl+E"/>
+                    <MenuItem Header="_Save"            Click="OnSaveClicked"         InputGesture="Ctrl+S"/>
+                    <MenuItem Header="Save _As…"        Click="OnSaveAsClicked"       InputGesture="Ctrl+Shift+S"/>
+                    <Separator Background="#444"/>
+                    <MenuItem Header="Export _PNG…"     Click="OnExportPngClicked"    InputGesture="Ctrl+E"/>
+                    <Separator Background="#444"/>
+                    <MenuItem Header="_Close"           Click="OnCloseDocClicked"/>
                 </MenuItem>
 
+                <!-- Edit -->
                 <MenuItem Header="_Edit">
                     <MenuItem Header="_Undo"  Click="OnUndoClicked" InputGesture="Ctrl+Z"/>
                     <MenuItem Header="_Redo"  Click="OnRedoClicked" InputGesture="Ctrl+Y"/>
                 </MenuItem>
 
-                <MenuItem Header="_View">
-                    <MenuItem Header="Zoom In"    Click="OnZoomInClicked"    InputGesture="Ctrl+OemPlus"/>
-                    <MenuItem Header="Zoom Out"   Click="OnZoomOutClicked"   InputGesture="Ctrl+OemMinus"/>
-                    <MenuItem Header="Reset Zoom" Click="OnZoomResetClicked" InputGesture="Ctrl+D0"/>
+                <!-- Image -->
+                <MenuItem Header="_Image">
+                    <MenuItem Header="Canvas _Size…"       Click="OnCanvasSizeClicked"/>
+                    <MenuItem Header="_Image Size…"        Click="OnImageSizeClicked"/>
+                    <Separator Background="#444"/>
+                    <MenuItem Header="_Adjustments">
+                        <MenuItem Header="Brightness / _Contrast…"  Click="OnBrightnessContrastClicked"/>
+                        <MenuItem Header="_Hue / Saturation…"       Click="OnHueSaturationClicked"/>
+                        <MenuItem Header="_Levels…"                 Click="OnLevelsClicked"/>
+                        <MenuItem Header="C_urves…"                 Click="OnCurvesClicked"/>
+                        <MenuItem Header="Color _Balance…"          Click="OnColorBalanceClicked"/>
+                    </MenuItem>
+                    <Separator Background="#444"/>
+                    <MenuItem Header="Rotate Canvas">
+                        <MenuItem Header="90° Clockwise"       Click="OnRotate90CWClicked"/>
+                        <MenuItem Header="90° Counter-Clockwise" Click="OnRotate90CCWClicked"/>
+                        <MenuItem Header="180°"                Click="OnRotate180Clicked"/>
+                    </MenuItem>
+                    <MenuItem Header="Flip Canvas">
+                        <MenuItem Header="Flip _Horizontal"   Click="OnFlipHClicked"/>
+                        <MenuItem Header="Flip _Vertical"     Click="OnFlipVClicked"/>
+                    </MenuItem>
                 </MenuItem>
+
+                <!-- View -->
+                <MenuItem Header="_View">
+                    <MenuItem Header="Zoom _In"    Click="OnZoomInClicked"    InputGesture="Ctrl+OemPlus"/>
+                    <MenuItem Header="Zoom _Out"   Click="OnZoomOutClicked"   InputGesture="Ctrl+OemMinus"/>
+                    <MenuItem Header="_Reset Zoom" Click="OnZoomResetClicked" InputGesture="Ctrl+D0"/>
+                    <Separator Background="#444"/>
+                    <MenuItem Header="Toggle _Grid"    Click="OnToggleGridClicked"    InputGesture="Ctrl+Quote"/>
+                </MenuItem>
+
             </Menu>
         </Border>
 
+        <!-- ── Status Bar ───────────────────────────────────────────────────── -->
         <Border DockPanel.Dock="Bottom"
                 Background="#1e1e1e"
                 BorderBrush="#333"
@@ -96,6 +133,7 @@
             </Grid>
         </Border>
 
+        <!-- ── Main Panel ───────────────────────────────────────────────────── -->
         <Grid ColumnDefinitions="240,*,220">
 
             <views:ToolsPanel Grid.Column="0" x:Name="ToolsPanelControl"/>
@@ -108,6 +146,33 @@
                               Background="Transparent">
                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
                           Margin="30">
+                        <!-- Checkerboard background to indicate transparency -->
+                        <Border x:Name="CanvasCheckerBg"
+                                Background="Transparent">
+                            <Border.Background>
+                                <DrawingBrush TileMode="Tile"
+                                              SourceRect="0,0,16,16"
+                                              DestinationRect="0,0,16,16">
+                                    <DrawingBrush.Drawing>
+                                        <DrawingGroup>
+                                            <GeometryDrawing Brush="#404040">
+                                                <GeometryDrawing.Geometry>
+                                                    <RectangleGeometry Rect="0,0,16,16"/>
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing Brush="#4a4a4a">
+                                                <GeometryDrawing.Geometry>
+                                                    <GeometryGroup>
+                                                        <RectangleGeometry Rect="0,0,8,8"/>
+                                                        <RectangleGeometry Rect="8,8,8,8"/>
+                                                    </GeometryGroup>
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
+                                        </DrawingGroup>
+                                    </DrawingBrush.Drawing>
+                                </DrawingBrush>
+                            </Border.Background>
+                        </Border>
                         <Border BoxShadow="0 8 32 8 #AA000000"
                                 CornerRadius="2"
                                 Background="Transparent">

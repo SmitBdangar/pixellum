@@ -1,0 +1,134 @@
+<Window
+    x:Class="Pixellum.Views.NewDocumentDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="New Document"
+    Width="380" Height="320"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner"
+    Background="#1e1e1e"
+    FontFamily="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif"
+    SizeToContent="Height">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="Foreground" Value="#999"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="CaretBrush" Value="#4CAF50"/>
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#1e3a2a"/>
+            <Setter Property="Foreground" Value="#4CAF50"/>
+            <Setter Property="BorderBrush" Value="#4CAF50"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="20,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.primary:pointerover">
+            <Setter Property="Background" Value="#264a34"/>
+        </Style>
+        <Style Selector="Button.cancel">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Foreground" Value="#aaa"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="20,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.cancel:pointerover">
+            <Setter Property="Background" Value="#363636"/>
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="28,24" Spacing="18">
+
+        <!-- Header -->
+        <TextBlock Text="New Document"
+                   Foreground="#e0e0e0"
+                   FontSize="16"
+                   FontWeight="SemiBold"/>
+
+        <!-- Presets -->
+        <StackPanel Spacing="6">
+            <TextBlock Text="PRESET" Classes="label"
+                       FontSize="10" FontWeight="SemiBold" LetterSpacing="1.5"/>
+            <ComboBox x:Name="PresetComboBox"
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="OnPresetChanged">
+                <ComboBoxItem Content="Custom" IsSelected="True"/>
+                <ComboBoxItem Content="800 × 600  (Web)"/>
+                <ComboBoxItem Content="1280 × 720  (HD)"/>
+                <ComboBoxItem Content="1920 × 1080  (Full HD)"/>
+                <ComboBoxItem Content="3840 × 2160  (4K UHD)"/>
+                <ComboBoxItem Content="2480 × 3508  (A4 @ 300dpi)"/>
+                <ComboBoxItem Content="1080 × 1080  (Square)"/>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Width / Height -->
+        <Grid ColumnDefinitions="*,16,*">
+            <StackPanel Grid.Column="0" Spacing="6">
+                <TextBlock Text="WIDTH (px)" Classes="label"
+                           FontSize="10" FontWeight="SemiBold" LetterSpacing="1.5"/>
+                <TextBox x:Name="WidthBox" Text="800"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Spacing="6">
+                <TextBlock Text="HEIGHT (px)" Classes="label"
+                           FontSize="10" FontWeight="SemiBold" LetterSpacing="1.5"/>
+                <TextBox x:Name="HeightBox" Text="600"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- DPI -->
+        <StackPanel Spacing="6">
+            <TextBlock Text="RESOLUTION (DPI)" Classes="label"
+                       FontSize="10" FontWeight="SemiBold" LetterSpacing="1.5"/>
+            <ComboBox x:Name="DpiComboBox" HorizontalAlignment="Stretch">
+                <ComboBoxItem Content="72 dpi  (Screen)"/>
+                <ComboBoxItem Content="96 dpi  (Screen)"/>
+                <ComboBoxItem Content="150 dpi  (Medium)"/>
+                <ComboBoxItem Content="300 dpi  (Print)" IsSelected="True"/>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Background -->
+        <StackPanel Spacing="6">
+            <TextBlock Text="BACKGROUND" Classes="label"
+                       FontSize="10" FontWeight="SemiBold" LetterSpacing="1.5"/>
+            <ComboBox x:Name="BgComboBox" HorizontalAlignment="Stretch">
+                <ComboBoxItem Content="Transparent" IsSelected="True"/>
+                <ComboBoxItem Content="White"/>
+                <ComboBoxItem Content="Black"/>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <Grid ColumnDefinitions="*,8,*" Margin="0,6,0,0">
+            <Button Grid.Column="0" Classes="cancel" Content="Cancel"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Click="OnCancelClicked"/>
+            <Button Grid.Column="2" Classes="primary" Content="Create"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Click="OnCreateClicked"/>
+        </Grid>
+
+    </StackPanel>
+</Window>

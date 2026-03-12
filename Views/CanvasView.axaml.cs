@@ -14,7 +14,7 @@ using Pixellum.Rendering;
 namespace Pixellum.Views
 {
     // Q3 / M3: Enum replaces fragile magic strings for tool switching
-    public enum ToolType { Brush, Eraser, Fill, Eyedropper }
+    public enum ToolType { Brush, Eraser, Fill, Eyedropper, Select, Move, Shape }
 
     public partial class CanvasView : UserControl
     {
@@ -39,10 +39,21 @@ namespace Pixellum.Views
         private Point? _lastPoint = null;
         private bool   _isDrawing = false;
 
-        // ── Undo / redo (raw snapshot stacks — Phase 2 will wire HistoryManager) ─
+        // ── Undo / redo ─────────────────────────────────────────────────
         private readonly Stack<uint[]> _undoStack = new();
         private readonly Stack<uint[]> _redoStack = new();
-        private const int MAX_HISTORY = 30;
+        private const int MAX_HISTORY = 50;
+
+        // ── Selection ────────────────────────────────────────────────────
+        private bool    _hasSelection   = false;
+        private int     _selStartX, _selStartY;
+        private int     _selEndX,   _selEndY;
+        private bool    _selDragging    = false;
+
+        // ── Grid overlay ────────────────────────────────────────────────
+        private bool _gridVisible   = false;
+        private int  _gridCellSize  = 32;  // pixels
+        public  void SetGridVisible(bool v) { _gridVisible = v; InvalidateVisual(); }
 
         // ── Tool / brush state ──────────────────────────────────────────────
         // Q3 / M3: Strongly-typed tool; no more magic strings
@@ -57,8 +68,16 @@ namespace Pixellum.Views
         public uint  ActiveColor  { get => _activeColor;  set => _activeColor  = value; }
         public float BrushRadius  { get => _brushRadius;  set => _brushRadius  = value; }
         public float BrushOpacity { get => _brushOpacity; set => _brushOpacity = value; }
+
+        public void SetBrushEngineParams(float hardness, float flow)
+        {
+            _brushEngine.Hardness = hardness;
+            _brushEngine.Flow     = flow;
+        }
         public WriteableBitmap CanvasBitmap => _canvasBitmap;
         public double Zoom => _zoom;
+        public int CanvasWidth  => _document.Width;
+        public int CanvasHeight => _document.Height;
 
         // Events for status bar updates
         public event EventHandler<double>?  ZoomChanged;
@@ -111,6 +130,100 @@ namespace Pixellum.Views
             RedrawCanvas();
         }
 
+        // ── New document / Load image ────────────────────────────────────────
+
+        /// <summary>
+        /// Reinitializes the canvas with a fresh document of the given size.
+        /// bgChoice: 0=transparent, 1=white, 2=black
+        /// </summary>
+        public void NewDocument(int width, int height, int bgChoice)
+        {
+            _layers.Clear();
+            _undoStack.Clear();
+            _redoStack.Clear();
+
+            _document = new Document(width, height);
+            var bg = new Layer(width, height, "Background");
+
+            if (bgChoice == 1)  // White
+            {
+                var px = bg.GetPixels();
+                for (int i = 0; i < px.Length; i++) px[i] = 0xFFFFFFFF;
+            }
+            else if (bgChoice == 2)  // Black
+            {
+                var px = bg.GetPixels();
+                for (int i = 0; i < px.Length; i++) px[i] = 0xFF000000;
+            }
+
+            _layers.Add(bg);
+            _activeLayerIndex = 0;
+
+            _canvasBitmap = new WriteableBitmap(
+                new PixelSize(width, height),
+                new Vector(96, 96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Unpremul);
+
+            if (_canvasImage != null)
+                _canvasImage.Source = _canvasBitmap;
+
+            // Reset zoom/pan
+            _zoom = 1.0;
+            if (_scaleTransform != null)
+                _scaleTransform.ScaleX = _scaleTransform.ScaleY = 1.0;
+            if (_translateTransform != null)
+                _translateTransform.X = _translateTransform.Y = 0;
+            _panTranslation = new Point(0, 0);
+
+            ZoomChanged?.Invoke(this, _zoom);
+            RedrawCanvas();
+        }
+
+        /// <summary>
+        /// Pastes decoded image pixels onto a new layer (or replaces the canvas if resizeCanvas is true).
+        /// </summary>
+        public void LoadImageOntoLayer(uint[] pixels, int imgWidth, int imgHeight, bool resizeCanvas)
+        {
+            if (resizeCanvas)
+            {
+                _layers.Clear();
+                _undoStack.Clear();
+                _redoStack.Clear();
+
+                _document = new Document(imgWidth, imgHeight);
+
+                _canvasBitmap = new WriteableBitmap(
+                    new PixelSize(imgWidth, imgHeight),
+                    new Vector(96, 96),
+                    PixelFormat.Bgra8888,
+                    AlphaFormat.Unpremul);
+
+                if (_canvasImage != null)
+                    _canvasImage.Source = _canvasBitmap;
+
+                _zoom = 1.0;
+                if (_scaleTransform != null)
+                    _scaleTransform.ScaleX = _scaleTransform.ScaleY = 1.0;
+                if (_translateTransform != null)
+                    _translateTransform.X = _translateTransform.Y = 0;
+                _panTranslation = new Point(0, 0);
+                ZoomChanged?.Invoke(this, _zoom);
+            }
+
+            var newLayer = new Layer(_document.Width, _document.Height, "Imported Image");
+            var dst = newLayer.GetPixels();
+            int copyW = Math.Min(imgWidth, _document.Width);
+            int copyH = Math.Min(imgHeight, _document.Height);
+            for (int y = 0; y < copyH; y++)
+                for (int x = 0; x < copyW; x++)
+                    dst[y * _document.Width + x] = pixels[y * imgWidth + x];
+
+            _layers.Add(newLayer);
+            _activeLayerIndex = _layers.Count - 1;
+            RedrawCanvas();
+        }
+
         // ── Layer management ─────────────────────────────────────────────────
 
         public void AddLayer(string name)
@@ -160,7 +273,204 @@ namespace Pixellum.Views
         /// <summary>Public entry point for LayersPanel (opacity/blend mode changes).</summary>
         public void TriggerRedraw() => RedrawCanvas();
 
-        // ── Zoom control (called from MainWindow View menu) ─────────────────
+        /// <summary>Exposes undo snapshot to external callers (e.g. Adjustments dialog).</summary>
+        public void SaveUndoState() => SaveStateForUndo();
+
+        // ── Canvas operations ─────────────────────────────────────────────────
+
+        /// <summary>Resize the canvas (extend or clip); anchor is offset from top-left.</summary>
+        public void ResizeCanvas(int newW, int newH, int anchorX = 0, int anchorY = 0)
+        {
+            SaveStateForUndo();
+            foreach (var layer in _layers)
+            {
+                var src = layer.GetPixels();
+                var dst = new uint[newW * newH];
+                int copyW = Math.Min(layer.Width, newW);
+                int copyH = Math.Min(layer.Height, newH);
+                for (int y = 0; y < copyH; y++)
+                    for (int x = 0; x < copyW; x++)
+                        dst[(y + anchorY) * newW + (x + anchorX)]
+                            = src[y * layer.Width + x];
+                Array.Copy(dst, src.Length == dst.Length ? src : (layer.GetPixels()), Math.Min(src.Length, dst.Length));
+            }
+
+            // Rebuild layers with new size
+            var newLayers = new Layer[_layers.Count];
+            for (int i = 0; i < _layers.Count; i++)
+            {
+                var oldLayer = _layers[i];
+                var newLayer = new Layer(newW, newH, oldLayer.Name)
+                {
+                    Visible = oldLayer.Visible,
+                    Opacity = oldLayer.Opacity,
+                    Mode    = oldLayer.Mode
+                };
+                var src2 = oldLayer.GetPixels();
+                var dst2 = newLayer.GetPixels();
+                int copyW = Math.Min(oldLayer.Width,  newW);
+                int copyH = Math.Min(oldLayer.Height, newH);
+                for (int y = 0; y < copyH; y++)
+                    for (int x = 0; x < copyW; x++)
+                        dst2[(y + anchorY) * newW + (x + anchorX)] = src2[y * oldLayer.Width + x];
+                newLayers[i] = newLayer;
+            }
+
+            _layers.Clear();
+            foreach (var l in newLayers) _layers.Add(l);
+            _document = new Document(newW, newH);
+
+            _canvasBitmap = new WriteableBitmap(
+                new PixelSize(newW, newH),
+                new Vector(96, 96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Unpremul);
+            if (_canvasImage != null) _canvasImage.Source = _canvasBitmap;
+
+            RedrawCanvas();
+        }
+
+        /// <summary>Bilinear resample all layers to a new size.</summary>
+        public void ResampleImage(int newW, int newH)
+        {
+            SaveStateForUndo();
+
+            var newLayers = new Layer[_layers.Count];
+            for (int li = 0; li < _layers.Count; li++)
+            {
+                var oldLayer = _layers[li];
+                var newLayer = new Layer(newW, newH, oldLayer.Name)
+                {
+                    Visible = oldLayer.Visible,
+                    Opacity = oldLayer.Opacity,
+                    Mode    = oldLayer.Mode
+                };
+                var src = oldLayer.GetPixels();
+                var dst = newLayer.GetPixels();
+                float sx = (float)oldLayer.Width  / newW;
+                float sy = (float)oldLayer.Height / newH;
+
+                for (int y = 0; y < newH; y++)
+                {
+                    for (int x = 0; x < newW; x++)
+                    {
+                        float fx = x * sx;
+                        float fy = y * sy;
+                        int   x0 = (int)fx, y0 = (int)fy;
+                        int   x1 = Math.Min(x0 + 1, oldLayer.Width  - 1);
+                        int   y1 = Math.Min(y0 + 1, oldLayer.Height - 1);
+                        float dx = fx - x0, dy = fy - y0;
+
+                        uint c00 = src[y0 * oldLayer.Width + x0];
+                        uint c10 = src[y0 * oldLayer.Width + x1];
+                        uint c01 = src[y1 * oldLayer.Width + x0];
+                        uint c11 = src[y1 * oldLayer.Width + x1];
+
+                        dst[y * newW + x] = BilinearBlend(c00, c10, c01, c11, dx, dy);
+                    }
+                }
+                newLayers[li] = newLayer;
+            }
+
+            _layers.Clear();
+            foreach (var l in newLayers) _layers.Add(l);
+            _document = new Document(newW, newH);
+
+            _canvasBitmap = new WriteableBitmap(
+                new PixelSize(newW, newH),
+                new Vector(96, 96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Unpremul);
+            if (_canvasImage != null) _canvasImage.Source = _canvasBitmap;
+
+            RedrawCanvas();
+        }
+
+        private static uint BilinearBlend(uint c00, uint c10, uint c01, uint c11, float dx, float dy)
+        {
+            uint A = BlendChannel((c00>>24)&0xFF,(c10>>24)&0xFF,(c01>>24)&0xFF,(c11>>24)&0xFF,dx,dy);
+            uint R = BlendChannel((c00>>16)&0xFF,(c10>>16)&0xFF,(c01>>16)&0xFF,(c11>>16)&0xFF,dx,dy);
+            uint G = BlendChannel((c00>> 8)&0xFF,(c10>> 8)&0xFF,(c01>> 8)&0xFF,(c11>> 8)&0xFF,dx,dy);
+            uint B = BlendChannel( c00     &0xFF, c10     &0xFF, c01     &0xFF, c11     &0xFF,dx,dy);
+            return (A<<24)|(R<<16)|(G<<8)|B;
+        }
+
+        private static uint BlendChannel(uint v00, uint v10, uint v01, uint v11, float dx, float dy)
+        {
+            float top    = v00 + (v10 - v00) * dx;
+            float bottom = v01 + (v11 - v01) * dx;
+            return (uint)Math.Clamp(top + (bottom - top) * dy + 0.5f, 0, 255);
+        }
+
+        /// <summary>Rotate all layers: degrees = 90, -90, or 180.</summary>
+        public void RotateCanvas(int degrees)
+        {
+            SaveStateForUndo();
+            int srcW = _document.Width, srcH = _document.Height;
+            int newW, newH;
+
+            if (degrees == 90 || degrees == -90)
+                (newW, newH) = (srcH, srcW);
+            else
+                (newW, newH) = (srcW, srcH);
+
+            var newLayers = new Layer[_layers.Count];
+            for (int li = 0; li < _layers.Count; li++)
+            {
+                var old = _layers[li];
+                var nw  = new Layer(newW, newH, old.Name)
+                    { Visible = old.Visible, Opacity = old.Opacity, Mode = old.Mode };
+                var src = old.GetPixels();
+                var dst = nw.GetPixels();
+
+                for (int y = 0; y < srcH; y++)
+                for (int x = 0; x < srcW; x++)
+                {
+                    uint pixel = src[y * srcW + x];
+                    int nx, ny;
+                    if (degrees == 90)       { nx = srcH - 1 - y; ny = x; }
+                    else if (degrees == -90) { nx = y;             ny = srcW - 1 - x; }
+                    else                     { nx = srcW - 1 - x;  ny = srcH - 1 - y; }
+                    dst[ny * newW + nx] = pixel;
+                }
+                newLayers[li] = nw;
+            }
+
+            _layers.Clear();
+            foreach (var l in newLayers) _layers.Add(l);
+            _document = new Document(newW, newH);
+
+            _canvasBitmap = new WriteableBitmap(
+                new PixelSize(newW, newH),
+                new Vector(96, 96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Unpremul);
+            if (_canvasImage != null) _canvasImage.Source = _canvasBitmap;
+            RedrawCanvas();
+        }
+
+        /// <summary>Flip all layers horizontally or vertically.</summary>
+        public void FlipCanvas(bool horizontal)
+        {
+            SaveStateForUndo();
+            int w = _document.Width, h = _document.Height;
+
+            foreach (var layer in _layers)
+            {
+                var px   = layer.GetPixels();
+                var copy = (uint[])px.Clone();
+                for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    int sx = horizontal ? w - 1 - x : x;
+                    int sy = horizontal ? y         : h - 1 - y;
+                    px[y * w + x] = copy[sy * w + sx];
+                }
+            }
+            RedrawCanvas();
+        }
+
+
         public void ZoomIn()    => ApplyZoomDelta(1.25, new Point(Bounds.Width / 2, Bounds.Height / 2));
         public void ZoomOut()   => ApplyZoomDelta(0.8,  new Point(Bounds.Width / 2, Bounds.Height / 2));
         public void ZoomReset()

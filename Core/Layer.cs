@@ -4,10 +4,28 @@ namespace Pixellum.Core
 {
     public enum BlendMode
     {
+        // Basic
         Normal,
+        // Darken group
+        Darken,
         Multiply,
+        ColorBurn,
+        // Lighten group
+        Lighten,
         Screen,
-        Overlay
+        ColorDodge,
+        // Contrast group
+        Overlay,
+        SoftLight,
+        HardLight,
+        // Inversion group
+        Difference,
+        Exclusion,
+        // Component group
+        Hue,
+        Saturation,
+        Color,
+        Luminosity,
     }
 
     public class Layer

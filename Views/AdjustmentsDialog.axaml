@@ -1,0 +1,94 @@
+<Window
+    x:Class="Pixellum.Views.AdjustmentsDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Adjustments"
+    Width="420"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner"
+    Background="#1e1e1e"
+    FontFamily="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif"
+    SizeToContent="Height">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="Foreground" Value="#999"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="MinWidth" Value="100"/>
+        </Style>
+        <Style Selector="TextBlock.value">
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="MinWidth" Value="44"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+        </Style>
+        <Style Selector="Slider">
+            <Setter Property="Foreground" Value="#4CAF50"/>
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#1e3a2a"/>
+            <Setter Property="Foreground" Value="#4CAF50"/>
+            <Setter Property="BorderBrush" Value="#4CAF50"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="18,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.cancel">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Foreground" Value="#aaa"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="18,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.reset">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="24,20" Spacing="16">
+
+        <!-- Title -->
+        <TextBlock x:Name="TitleLabel"
+                   Text="Brightness / Contrast"
+                   Foreground="#e0e0e0"
+                   FontSize="15"
+                   FontWeight="SemiBold"/>
+
+        <!-- Sliders area — content set from code-behind -->
+        <StackPanel x:Name="SlidersPanel" Spacing="12"/>
+
+        <!-- Preview toggle -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <CheckBox x:Name="PreviewCheck"
+                      IsChecked="True"
+                      Foreground="#aaa"
+                      FontSize="12"
+                      Content="Live Preview"
+                      Checked="OnPreviewToggled"
+                      Unchecked="OnPreviewToggled"/>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <Grid ColumnDefinitions="Auto,*,Auto,8,Auto" Margin="0,4,0,0">
+            <Button Grid.Column="0" Classes="reset" Content="Reset"
+                    Click="OnResetClicked"/>
+            <Button Grid.Column="2" Classes="cancel" Content="Cancel"
+                    Click="OnCancelClicked"/>
+            <Button Grid.Column="4" Classes="primary" Content="OK"
+                    Click="OnOkClicked"/>
+        </Grid>
+
+    </StackPanel>
+</Window>

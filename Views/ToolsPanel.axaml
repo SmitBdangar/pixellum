@@ -93,7 +93,7 @@
                 <StackPanel Spacing="10" Margin="12,14,12,0">
                     <TextBlock Text="TOOLS" Classes="section-header"/>
 
-                    <UniformGrid Columns="2" Rows="2" HorizontalAlignment="Stretch">
+                    <UniformGrid Columns="2" HorizontalAlignment="Stretch">
                         <!-- Brush -->
                         <Border Margin="3">
                             <Button x:Name="BrushToolButton"
@@ -147,6 +147,48 @@
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
                                     <TextBlock Text="🪣" FontSize="22" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Fill" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                        <!-- Select -->
+                        <Border Margin="3">
+                            <Button x:Name="SelectToolButton"
+                                    Classes="tool-btn"
+                                    Height="58"
+                                    HorizontalAlignment="Stretch"
+                                    Click="OnSelectToolClicked">
+                                <ToolTip.Tip>Selection  [M]</ToolTip.Tip>
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="⬚" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Select" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                        <!-- Move -->
+                        <Border Margin="3">
+                            <Button x:Name="MoveToolButton"
+                                    Classes="tool-btn"
+                                    Height="58"
+                                    HorizontalAlignment="Stretch"
+                                    Click="OnMoveToolClicked">
+                                <ToolTip.Tip>Move  [V]</ToolTip.Tip>
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="✥" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Move" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                        <!-- Shape -->
+                        <Border Margin="3">
+                            <Button x:Name="ShapeToolButton"
+                                    Classes="tool-btn"
+                                    Height="58"
+                                    HorizontalAlignment="Stretch"
+                                    Click="OnShapeToolClicked">
+                                <ToolTip.Tip>Shape  [U]</ToolTip.Tip>
+                                <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="■" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Shape" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
                         </Border>

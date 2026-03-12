@@ -145,10 +145,28 @@
                         <ComboBox Grid.Column="1"
                                   x:Name="BlendModeComboBox"
                                   SelectionChanged="OnBlendModeChanged">
-                            <ComboBoxItem Content="Normal"   IsSelected="True"/>
+                            <!-- Basic -->
+                            <ComboBoxItem Content="Normal"    IsSelected="True"/>
+                            <!-- Darken group -->
+                            <ComboBoxItem Content="Darken"/>
                             <ComboBoxItem Content="Multiply"/>
+                            <ComboBoxItem Content="ColorBurn"/>
+                            <!-- Lighten group -->
+                            <ComboBoxItem Content="Lighten"/>
                             <ComboBoxItem Content="Screen"/>
+                            <ComboBoxItem Content="ColorDodge"/>
+                            <!-- Contrast group -->
                             <ComboBoxItem Content="Overlay"/>
+                            <ComboBoxItem Content="SoftLight"/>
+                            <ComboBoxItem Content="HardLight"/>
+                            <!-- Inversion group -->
+                            <ComboBoxItem Content="Difference"/>
+                            <ComboBoxItem Content="Exclusion"/>
+                            <!-- Component group -->
+                            <ComboBoxItem Content="Hue"/>
+                            <ComboBoxItem Content="Saturation"/>
+                            <ComboBoxItem Content="Color"/>
+                            <ComboBoxItem Content="Luminosity"/>
                         </ComboBox>
                     </Grid>
                 </StackPanel>

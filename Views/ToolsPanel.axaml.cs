@@ -79,11 +79,13 @@ namespace Pixellum.Views
             HardnessSlider.ValueChanged += (_, e) =>
             {
                 HardnessValue.Text = $"{(int)(e.NewValue * 100)}%";
+                UpdateBrushSettings();
             };
 
             FlowSlider.ValueChanged += (_, e) =>
             {
                 FlowValue.Text = $"{(int)(e.NewValue * 100)}%";
+                UpdateBrushSettings();
             };
 
             // Color wheel event
@@ -218,8 +220,13 @@ namespace Pixellum.Views
         {
             if (_canvas == null) return;
 
-            _canvas.BrushRadius = (float)BrushSizeSlider.Value;
+            _canvas.BrushRadius  = (float)BrushSizeSlider.Value;
             _canvas.BrushOpacity = (float)OpacitySlider.Value;
+
+            // Wire hardness/flow/spacing to BrushEngine
+            _canvas.SetBrushEngineParams(
+                (float)HardnessSlider.Value,
+                (float)FlowSlider.Value);
         }
 
         // Tool Selection Handlers
@@ -241,19 +248,34 @@ namespace Pixellum.Views
         {
             _activeTool = ToolType.Eyedropper;
             UpdateToolButtons();
-            System.Diagnostics.Debug.WriteLine("💧 Eyedropper tool selected");
         }
 
         private void OnFillToolClicked(object? sender, RoutedEventArgs e)
         {
             _activeTool = ToolType.Fill;
             UpdateToolButtons();
-            System.Diagnostics.Debug.WriteLine("🪣 Fill tool selected");
+        }
+
+        private void OnSelectToolClicked(object? sender, RoutedEventArgs e)
+        {
+            _activeTool = ToolType.Select;
+            UpdateToolButtons();
+        }
+
+        private void OnMoveToolClicked(object? sender, RoutedEventArgs e)
+        {
+            _activeTool = ToolType.Move;
+            UpdateToolButtons();
+        }
+
+        private void OnShapeToolClicked(object? sender, RoutedEventArgs e)
+        {
+            _activeTool = ToolType.Shape;
+            UpdateToolButtons();
         }
 
         private void UpdateToolButtons()
         {
-            // Toggle CSS 'active' class — AXAML styles control appearance
             void SetActive(Button? btn, bool active)
             {
                 if (btn == null) return;
@@ -265,6 +287,9 @@ namespace Pixellum.Views
             SetActive(EraserToolButton,     _activeTool == ToolType.Eraser);
             SetActive(EyedropperToolButton, _activeTool == ToolType.Eyedropper);
             SetActive(FillToolButton,       _activeTool == ToolType.Fill);
+            SetActive(this.FindControl<Button>("SelectToolButton"),  _activeTool == ToolType.Select);
+            SetActive(this.FindControl<Button>("MoveToolButton"),    _activeTool == ToolType.Move);
+            SetActive(this.FindControl<Button>("ShapeToolButton"),   _activeTool == ToolType.Shape);
 
             if (_canvas != null)
                 _canvas.ActiveTool = _activeTool;
@@ -273,37 +298,29 @@ namespace Pixellum.Views
         private void OnClearCanvasClicked(object? sender, RoutedEventArgs e)
         {
             if (_canvas == null) return;
-
             var layers = _canvas.GetLayers();
             int activeIndex = _canvas.GetActiveLayerIndex();
-
             if (activeIndex >= 0 && activeIndex < layers.Count)
             {
+                _canvas.SaveUndoState();
                 layers[activeIndex].Clear();
-                // Trigger redraw by calling a method on canvas
-                System.Diagnostics.Debug.WriteLine("🗑️ Canvas cleared");
+                _canvas.TriggerRedraw();
             }
         }
 
         private void OnFillCanvasClicked(object? sender, RoutedEventArgs e)
         {
             if (_canvas == null) return;
-
             var layers = _canvas.GetLayers();
             int activeIndex = _canvas.GetActiveLayerIndex();
-
             if (activeIndex >= 0 && activeIndex < layers.Count)
             {
-                var layer = layers[activeIndex];
+                _canvas.SaveUndoState();
+                var layer  = layers[activeIndex];
                 var pixels = layer.GetPixels();
-                
-                // Fill entire layer with primary color
                 for (int i = 0; i < pixels.Length; i++)
-                {
                     pixels[i] = _primaryColor;
-                }
-
-                System.Diagnostics.Debug.WriteLine("🎨 Canvas filled with color");
+                _canvas.TriggerRedraw();
             }
         }
 
