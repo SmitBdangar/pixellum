@@ -20,7 +20,6 @@ namespace Pixellum.Core
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Export failed: {ex.Message}");
-                // TODO: Show error dialog to user
             }
         }
     }

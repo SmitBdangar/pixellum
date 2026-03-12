@@ -1,15 +1,8 @@
-# ============================================================
-#  Pixellum — .gitignore
-#  C# / .NET 9 / Avalonia UI
-# ============================================================
-
-# ---------- Build output ----------
 bin/
 obj/
 out/
 publish/
 
-# ---------- .NET ----------
 *.user
 *.suo
 *.userosscache
@@ -19,7 +12,6 @@ publish/
 .vscode/
 *.DotSettings.user
 
-# ---------- NuGet ----------
 *.nupkg
 *.snupkg
 packages/
@@ -27,7 +19,6 @@ packages/
 *.nuget.props
 *.nuget.targets
 
-# ---------- Logs & temp files ----------
 log.txt
 *.log
 *.tmp
@@ -36,16 +27,12 @@ Thumbs.db
 .DS_Store
 Desktop.ini
 
-# ---------- Avalonia ----------
-# Generated resource files
 **/*.axaml.g.cs
 **/*.axaml.g.i.cs
 
-# ---------- Rider / JetBrains ----------
 .idea/
 *.sln.iml
 
-# ---------- Visual Studio ----------
 .vs/
 *.rsuser
 *.VC.db
@@ -54,7 +41,6 @@ Desktop.ini
 *.svclog
 *.scc
 
-# ---------- OS files ----------
 .DS_Store
 .DS_Store?
 ._*
@@ -63,6 +49,5 @@ Desktop.ini
 ehthumbs.db
 Thumbs.db
 
-# ---------- Release zips ----------
 *.zip
 *.tar.gz

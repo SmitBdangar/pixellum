@@ -16,13 +16,11 @@ namespace Pixellum
         {
             InitializeComponent();
 
-            // Wire canvas events once the visual tree is ready
             this.Loaded += (_, _) =>
             {
                 _canvasView = FindCanvasView();
                 if (_canvasView == null) return;
 
-                // Status bar — zoom updates
                 _canvasView.ZoomChanged += (_, zoom) =>
                 {
                     var zoomText = this.FindControl<TextBlock>("ZoomText");
@@ -30,7 +28,6 @@ namespace Pixellum
                         zoomText.Text = $"{(int)(zoom * 100)}%";
                 };
 
-                // Status bar — tool name updates
                 _canvasView.ToolChanged += (_, tool) =>
                 {
                     var toolText = this.FindControl<TextBlock>("ActiveToolText");
@@ -38,7 +35,6 @@ namespace Pixellum
                         toolText.Text = $"Tool: {tool}";
                 };
 
-                // Status bar — cursor position
                 _canvasView.PointerMoved += (_, e) =>
                 {
                     var pos      = e.GetPosition(_canvasView);
@@ -58,10 +54,8 @@ namespace Pixellum
             if (statusText != null) statusText.Text = message;
         }
 
-        // ── File ─────────────────────────────────────────────────────────
         public void OnNewClicked(object? sender, RoutedEventArgs e)
         {
-            // TODO: new document dialog
             UpdateStatus("New document… (not yet implemented)");
         }
 
@@ -93,11 +87,10 @@ namespace Pixellum
             if (file != null)
             {
                 await FileHandler.ExportPng(canvas.CanvasBitmap, file);
-                UpdateStatus($"✅ Exported: {file.Name}");
+                UpdateStatus($"Exported: {file.Name}");
             }
         }
 
-        // ── Edit ─────────────────────────────────────────────────────────
         public void OnUndoClicked(object? sender, RoutedEventArgs e)
         {
             FindCanvasView()?.Undo();
@@ -110,7 +103,6 @@ namespace Pixellum
             UpdateStatus("Redo");
         }
 
-        // ── View ─────────────────────────────────────────────────────────
         public void OnZoomInClicked(object? sender, RoutedEventArgs e)
         {
             FindCanvasView()?.ZoomIn();

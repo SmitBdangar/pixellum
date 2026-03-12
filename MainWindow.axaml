@@ -10,7 +10,6 @@
         FontFamily="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif">
 
     <Window.Styles>
-        <!-- Global dark theme overrides -->
         <Style Selector="Menu">
             <Setter Property="Background" Value="#252525"/>
             <Setter Property="Foreground" Value="#e0e0e0"/>
@@ -32,7 +31,6 @@
 
     <DockPanel>
 
-        <!-- ── Menu Bar ─────────────────────────────────────────────────── -->
         <Border DockPanel.Dock="Top" Background="#252525" BorderBrush="#333" BorderThickness="0,0,0,1">
             <Menu Background="Transparent" Padding="4,0">
                 <MenuItem Header="_File">
@@ -56,7 +54,6 @@
             </Menu>
         </Border>
 
-        <!-- ── Status Bar ───────────────────────────────────────────────── -->
         <Border DockPanel.Dock="Bottom"
                 Background="#1e1e1e"
                 BorderBrush="#333"
@@ -99,23 +96,18 @@
             </Grid>
         </Border>
 
-        <!-- ── Main layout ──────────────────────────────────────────────── -->
         <Grid ColumnDefinitions="240,*,220">
 
-            <!-- Tools Panel (Left) -->
             <views:ToolsPanel Grid.Column="0" x:Name="ToolsPanelControl"/>
 
-            <!-- Canvas Area (Centre) -->
             <Border Grid.Column="1"
                     Background="#2b2b2b"
                     ClipToBounds="True">
-                <!-- Checkerboard drawn in code-behind via Canvas background brush -->
                 <ScrollViewer HorizontalScrollBarVisibility="Auto"
                               VerticalScrollBarVisibility="Auto"
                               Background="Transparent">
                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
                           Margin="30">
-                        <!-- Canvas drop shadow -->
                         <Border BoxShadow="0 8 32 8 #AA000000"
                                 CornerRadius="2"
                                 Background="Transparent">
@@ -125,7 +117,6 @@
                 </ScrollViewer>
             </Border>
 
-            <!-- Layers Panel (Right) -->
             <views:LayersPanel Grid.Column="2" x:Name="LayersPanelControl"/>
 
         </Grid>

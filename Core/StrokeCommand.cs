@@ -3,11 +3,6 @@ using Pixellum.Core;
 
 namespace Pixellum.Core
 {
-    /// <summary>
-    /// Represents a single painting stroke that can be undone and redone
-    /// using delta regions (dirty rectangle + pixel delta buffers).
-    /// This minimizes memory usage compared to full layer snapshots.
-    /// </summary>
     public class StrokeCommand : ICommand
     {
         private readonly Layer _targetLayer;
@@ -23,7 +18,6 @@ namespace Pixellum.Core
             _undoPixels = beforePixels ?? throw new ArgumentNullException(nameof(beforePixels));
             _redoPixels = afterPixels ?? throw new ArgumentNullException(nameof(afterPixels));
 
-            // ✅ Validate pixel buffer sizes
             int expectedSize = dirtyRect.Width * dirtyRect.Height;
             if (_undoPixels.Length != expectedSize || _redoPixels.Length != expectedSize)
             {
@@ -31,7 +25,6 @@ namespace Pixellum.Core
             }
         }
 
-        // ICommand Implementation
         public void Execute() => Redo();
 
         public void Undo()
@@ -53,11 +46,6 @@ namespace Pixellum.Core
                 _targetLayer.MarkDirty(_dirtyRect);
             }
         }
-
-        /// <summary>
-        /// Copies the delta-region pixels into the layer buffer.
-        /// Only affects the dirty rectangle.
-        /// </summary>
         private void ApplyPixels(uint[] source)
         {
             if (_dirtyRect.IsEmpty)
@@ -69,12 +57,11 @@ namespace Pixellum.Core
             uint[] target = _targetLayer.GetPixels();
             int sourceIndex = 0;
 
-            // ✅ Validate bounds before applying
             if (_dirtyRect.X < 0 || _dirtyRect.Y < 0 ||
                 _dirtyRect.X + _dirtyRect.Width > _targetLayer.Width ||
                 _dirtyRect.Y + _dirtyRect.Height > _targetLayer.Height)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Invalid dirty rect bounds: {_dirtyRect}");
+                System.Diagnostics.Debug.WriteLine($"Invalid dirty rect bounds: {_dirtyRect}");
                 return;
             }
 
@@ -84,16 +71,15 @@ namespace Pixellum.Core
                 {
                     int targetStart = y * _targetLayer.Width + _dirtyRect.X;
                     
-                    // ✅ Additional safety check
                     if (targetStart + _dirtyRect.Width > target.Length)
                     {
-                        System.Diagnostics.Debug.WriteLine($"❌ Target index out of bounds at y={y}");
+                        System.Diagnostics.Debug.WriteLine($"Target index out of bounds at y={y}");
                         break;
                     }
 
                     if (sourceIndex + _dirtyRect.Width > source.Length)
                     {
-                        System.Diagnostics.Debug.WriteLine($"❌ Source index out of bounds at y={y}");
+                        System.Diagnostics.Debug.WriteLine($"Source index out of bounds at y={y}");
                         break;
                     }
 
@@ -103,7 +89,7 @@ namespace Pixellum.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ ApplyPixels error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ApplyPixels error: {ex.Message}");
                 throw;
             }
         }

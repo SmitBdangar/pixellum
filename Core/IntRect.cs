@@ -1,8 +1,5 @@
 namespace Pixellum.Core
 {
-    /// <summary>
-    /// Represents an integer-based rectangular region (used for dirty tracking).
-    /// </summary>
     public readonly struct IntRect
     {
         public int X { get; }
@@ -17,7 +14,6 @@ namespace Pixellum.Core
 
         public IntRect(int x, int y, int width, int height)
         {
-            // Enforce non-negative dimensions
             if (width < 0) { x += width; width = -width; }
             if (height < 0) { y += height; height = -height; }
 
@@ -27,9 +23,6 @@ namespace Pixellum.Core
             Height = height;
         }
 
-        /// <summary>
-        /// Returns a rectangle that encloses both input rectangles.
-        /// </summary>
         public static IntRect Union(IntRect a, IntRect b)
         {
             if (a.IsEmpty) return b;
@@ -43,10 +36,6 @@ namespace Pixellum.Core
             return new IntRect(x1, y1, x2 - x1, y2 - y1);
         }
 
-        /// <summary>
-        /// Returns the overlapping region of two rectangles.
-        /// If none overlap, returns an empty rect.
-        /// </summary>
         public static IntRect Intersect(IntRect a, IntRect b)
         {
             int x1 = System.Math.Max(a.X, b.X);

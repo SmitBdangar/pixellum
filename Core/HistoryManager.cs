@@ -3,17 +3,12 @@ using System.Collections.Generic;
 
 namespace Pixellum.Core
 {
-    /// <summary>
-    /// Manages the command stack for undo/redo functionality using commands/mementos.
-    /// </summary>
     public class HistoryManager
     {
         private readonly Stack<ICommand> _undoStack = new Stack<ICommand>();
         private readonly Stack<ICommand> _redoStack = new Stack<ICommand>();
-        private const int MAX_HISTORY = 50; // ✅ Prevent memory leaks
-
+        private const int MAX_HISTORY = 50;
         /// <summary>
-        /// Executes a command and adds it to the undo stack.
         /// </summary>
         public void Do(ICommand command)
         {
@@ -26,7 +21,6 @@ namespace Pixellum.Core
                 _undoStack.Push(command);
                 _redoStack.Clear();
 
-                // ✅ Limit history size to prevent memory issues
                 if (_undoStack.Count > MAX_HISTORY)
                 {
                     var items = _undoStack.ToArray();
@@ -37,18 +31,15 @@ namespace Pixellum.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Command execution failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Command execution failed: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Undoes the last executed command.
-        /// </summary>
         public void Undo()
         {
             if (_undoStack.Count == 0)
             {
-                System.Diagnostics.Debug.WriteLine("⚠️ Nothing to undo");
+                System.Diagnostics.Debug.WriteLine("Nothing to undo");
                 return;
             }
 
@@ -60,14 +51,11 @@ namespace Pixellum.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Undo failed: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"   Stack trace: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"Undo failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
 
-        /// <summary>
-        /// Re-executes the last undone command.
-        /// </summary>
         public void Redo()
         {
             if (_redoStack.Count == 0)
@@ -75,7 +63,6 @@ namespace Pixellum.Core
                 System.Diagnostics.Debug.WriteLine("⚠️ Nothing to redo");
                 return;
             }
-
             try
             {
                 var command = _redoStack.Pop();
@@ -84,24 +71,16 @@ namespace Pixellum.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Redo failed: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"   Stack trace: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"Redo failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
 
-        /// <summary>
-        /// ✅ Check if undo is available
-        /// </summary>
+  
         public bool CanUndo => _undoStack.Count > 0;
 
-        /// <summary>
-        /// ✅ Check if redo is available
-        /// </summary>
         public bool CanRedo => _redoStack.Count > 0;
 
-        /// <summary>
-        /// ✅ Clear all history
-        /// </summary>
         public void Clear()
         {
             _undoStack.Clear();

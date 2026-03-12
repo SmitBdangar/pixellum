@@ -7,17 +7,12 @@ using System.Runtime.CompilerServices;
 
 namespace Pixellum.Rendering
 {
-    /// <summary>
-    /// Maps the Document's composite pixel buffer to an Avalonia WriteableBitmap
-    /// via a fast unsafe memory copy.
-    /// </summary>
     public class Renderer
     {
         public void Render(Document document, WriteableBitmap targetBitmap)
         {
             uint[] sourcePixels = document.GetPixelsRaw();
 
-            // T2 — Guard: bitmap and document must be the same size
             int bitmapPixelCount = targetBitmap.PixelSize.Width * targetBitmap.PixelSize.Height;
             int docPixelCount    = document.Width * document.Height;
             if (bitmapPixelCount != docPixelCount)

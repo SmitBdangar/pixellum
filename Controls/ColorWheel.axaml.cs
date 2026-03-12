@@ -50,7 +50,6 @@ namespace Pixellum.Controls
             double radius = Math.Min(Bounds.Width, Bounds.Height) / 2;
             var center = new Point(Bounds.Width / 2, Bounds.Height / 2);
 
-            // Draw wheel segments
             for (int angle = 0; angle < 360; angle++)
             {
                 var color = HsvToColor(angle, 1, 1);
@@ -66,7 +65,7 @@ namespace Pixellum.Controls
                 context.DrawLine(new Pen(brush, 10), p1, p2);
             }
 
-            // Draw current preview circle
+
             if (ShowBrushPreview)
             {
                 var previewBrush = new SolidColorBrush(ActiveColor);
