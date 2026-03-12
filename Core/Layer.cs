@@ -42,6 +42,12 @@ namespace Pixellum.Core
 
         public BlendMode Mode { get; set; } = BlendMode.Normal;
 
+        public bool LockTransparency { get; set; } = false;
+        public bool LockPixels { get; set; } = false;
+        public bool LockPosition { get; set; } = false;
+        
+        public bool IsClippingMask { get; set; } = false;
+
         public int Width { get; }
         public int Height { get; }
         private readonly uint[] _pixels;

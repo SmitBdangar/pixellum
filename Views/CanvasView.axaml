@@ -43,6 +43,9 @@
                          BorderBrush="#888"
                          AcceptsReturn="True"
                          FontSize="24"/>
+                <Rectangle Name="GridOverlayRect"
+                           IsVisible="False"
+                           IsHitTestVisible="False" />
             </Canvas>
         </Grid>
     </Grid>

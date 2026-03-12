@@ -46,6 +46,15 @@ namespace Pixellum.Views
             RefreshLayersList();
         }
 
+        private void OnAddFillLayerClicked(object? sender, RoutedEventArgs e)
+        {
+            if (_canvas == null) return;
+            // Use the currently selected foreground color from the brush/tools
+            uint color = _canvas.ActiveColor | 0xFF000000; // Force opaque fill
+            _canvas.AddSolidColorLayer($"Color Fill {_layerCounter++}", color);
+            RefreshLayersList();
+        }
+
         private void OnDuplicateLayerClicked(object? sender, RoutedEventArgs e)
         {
             if (_canvas == null) return;
@@ -149,6 +158,31 @@ namespace Pixellum.Views
             _canvas.TriggerRedraw();
         }
 
+        private void OnLockToggled(object? sender, RoutedEventArgs e)
+        {
+            if (_canvas == null) return;
+            var layers = _canvas.GetLayers();
+            int activeIndex = _canvas.GetActiveLayerIndex();
+            if (activeIndex < 0 || activeIndex >= layers.Count) return;
+
+            var activeLayer = layers[activeIndex];
+
+            var toggle = sender as ToggleButton;
+            if (toggle == null) return;
+
+            if (toggle.Name == "LockTransToggle")
+                activeLayer.LockTransparency = toggle.IsChecked ?? false;
+            else if (toggle.Name == "LockPixToggle")
+                activeLayer.LockPixels = toggle.IsChecked ?? false;
+            else if (toggle.Name == "LockPosToggle")
+                activeLayer.LockPosition = toggle.IsChecked ?? false;
+            else if (toggle.Name == "ClipMaskToggle")
+                activeLayer.IsClippingMask = toggle.IsChecked ?? false;
+
+            _canvas.TriggerRedraw();
+            RefreshLayersList(); // Refresh list to show clipping mask visual indicator
+        }
+
         // ── Layer reorder ─────────────────────────────────────────────────
 
         private void MoveLayerUp(int index)
@@ -220,6 +254,22 @@ namespace Pixellum.Views
                 }
             }
 
+            if (activeIndex >= 0 && activeIndex < layers.Count)
+            {
+                var layer = layers[activeIndex];
+                var lockTrans = this.FindControl<ToggleButton>("LockTransToggle");
+                if (lockTrans != null) lockTrans.IsChecked = layer.LockTransparency;
+
+                var lockPix = this.FindControl<ToggleButton>("LockPixToggle");
+                if (lockPix != null) lockPix.IsChecked = layer.LockPixels;
+
+                var lockPos = this.FindControl<ToggleButton>("LockPosToggle");
+                if (lockPos != null) lockPos.IsChecked = layer.LockPosition;
+
+                var clipMask = this.FindControl<ToggleButton>("ClipMaskToggle");
+                if (clipMask != null) clipMask.IsChecked = layer.IsClippingMask;
+            }
+
             // Build layer rows (top to bottom = highest index first)
             for (int i = layers.Count - 1; i >= 0; i--)
             {
@@ -286,6 +336,20 @@ namespace Pixellum.Views
                 Foreground = new SolidColorBrush(Color.Parse("#666")),
                 FontSize   = 10
             });
+
+            if (layer.IsClippingMask)
+            {
+                center.Children.Add(new TextBlock
+                {
+                    Text = "↳ Masked",
+                    Foreground = new SolidColorBrush(Color.Parse("#B0BEC5")),
+                    FontSize = 10,
+                    FontWeight = FontWeight.SemiBold
+                });
+                
+                // Indent the thumbnail slightly to show hierarchy
+                thumb.Margin = new Thickness(12, 0, 0, 0);
+            }
 
             border.PointerPressed += (_, _) =>
             {

@@ -25,6 +25,14 @@ namespace Pixellum
                 _canvasView = FindCanvasView();
                 if (_canvasView == null) return;
 
+                var topOptions = this.FindControl<TopOptionsBar>("TopOptionsBarControl");
+                if (topOptions != null)
+                    topOptions.SetCanvas(_canvasView);
+
+                var historyPanel = this.FindControl<HistoryPanel>("HistoryPanelControl");
+                if (historyPanel != null)
+                    historyPanel.SetCanvas(_canvasView);
+
                 _canvasView.ZoomChanged += (_, zoom) =>
                 {
                     var zoomText = this.FindControl<TextBlock>("ZoomText");

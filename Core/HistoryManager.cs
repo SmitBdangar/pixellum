@@ -1,90 +1,134 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Pixellum.Core
 {
+    public class LayerSnapshot
+    {
+        public string Name { get; set; } = "";
+        public uint[] Pixels { get; set; } = Array.Empty<uint>();
+        public float Opacity { get; set; }
+        public BlendMode BlendMode { get; set; }
+        public bool IsVisible { get; set; }
+        public bool LockTransparency { get; set; }
+        public bool LockPixels { get; set; }
+        public bool IsClippingMask { get; set; }
+    }
+
+    public class HistoryStep
+    {
+        public string ActionName { get; set; } = "";
+        public List<LayerSnapshot> Layers { get; set; } = new();
+        public int ActiveLayerIndex { get; set; }
+    }
+
     public class HistoryManager
     {
-        private readonly Stack<ICommand> _undoStack = new Stack<ICommand>();
-        private readonly Stack<ICommand> _redoStack = new Stack<ICommand>();
-        private const int MAX_HISTORY = 50;
-        /// <summary>
-        /// </summary>
-        public void Do(ICommand command)
-        {
-            if (command == null)
-                return;
-
-            try
+        private readonly int _maxHistory;
+        
+        public ObservableCollection<HistoryStep> Steps { get; } = new();
+        
+        private int _currentIndex = -1;
+        public int CurrentIndex 
+        { 
+            get => _currentIndex; 
+            private set
             {
-                command.Execute();
-                _undoStack.Push(command);
-                _redoStack.Clear();
-
-                if (_undoStack.Count > MAX_HISTORY)
+                if (_currentIndex != value)
                 {
-                    var items = _undoStack.ToArray();
-                    _undoStack.Clear();
-                    for (int i = 0; i < MAX_HISTORY; i++)
-                        _undoStack.Push(items[i]);
+                    _currentIndex = value;
+                    HistoryChanged?.Invoke(this, EventArgs.Empty);
+                }
+            } 
+        }
+
+        public event EventHandler? HistoryChanged;
+
+        public HistoryManager(int maxHistory = 50)
+        {
+            _maxHistory = maxHistory;
+        }
+
+        public void AddStep(string actionName, List<Layer> currentLayers, int activeLayerIndex)
+        {
+            // Truncate future steps if we are adding a new action after undoing
+            if (CurrentIndex < Steps.Count - 1 && CurrentIndex >= 0)
+            {
+                while (Steps.Count > CurrentIndex + 1)
+                {
+                    Steps.RemoveAt(Steps.Count - 1);
                 }
             }
-            catch (Exception ex)
+
+            var step = new HistoryStep
             {
-                System.Diagnostics.Debug.WriteLine($"Command execution failed: {ex.Message}");
+                ActionName = actionName,
+                ActiveLayerIndex = activeLayerIndex
+            };
+
+            foreach (var layer in currentLayers)
+            {
+                var pixels = layer.GetPixels();
+                var snapshot = new uint[pixels.Length];
+                Array.Copy(pixels, snapshot, snapshot.Length);
+
+                step.Layers.Add(new LayerSnapshot
+                {
+                    Name = layer.Name,
+                    Pixels = snapshot,
+                    Opacity = layer.Opacity,
+                    BlendMode = layer.Mode,
+                    IsVisible = layer.Visible,
+                    LockTransparency = layer.LockTransparency,
+                    LockPixels = layer.LockPixels,
+                    IsClippingMask = layer.IsClippingMask
+                });
+            }
+
+            Steps.Add(step);
+
+            if (Steps.Count > _maxHistory)
+            {
+                Steps.RemoveAt(0);
+            }
+            else
+            {
+                CurrentIndex = Steps.Count - 1;
             }
         }
 
-        public void Undo()
+        public bool CanUndo => CurrentIndex > 0;
+        public bool CanRedo => CurrentIndex < Steps.Count - 1;
+
+        public HistoryStep? Undo()
         {
-            if (_undoStack.Count == 0)
-            {
-                System.Diagnostics.Debug.WriteLine("Nothing to undo");
-                return;
-            }
-
-            try
-            {
-                var command = _undoStack.Pop();
-                command.Undo();
-                _redoStack.Push(command);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Undo failed: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-            }
+            if (!CanUndo) return null;
+            CurrentIndex--;
+            return Steps[CurrentIndex];
         }
 
-        public void Redo()
+        public HistoryStep? Redo()
         {
-            if (_redoStack.Count == 0)
-            {
-                System.Diagnostics.Debug.WriteLine("⚠️ Nothing to redo");
-                return;
-            }
-            try
-            {
-                var command = _redoStack.Pop();
-                command.Redo();
-                _undoStack.Push(command);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Redo failed: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-            }
+            if (!CanRedo) return null;
+            CurrentIndex++;
+            return Steps[CurrentIndex];
         }
 
-  
-        public bool CanUndo => _undoStack.Count > 0;
-
-        public bool CanRedo => _redoStack.Count > 0;
+        public HistoryStep? JumpTo(int index)
+        {
+            if (index >= 0 && index < Steps.Count)
+            {
+                CurrentIndex = index;
+                return Steps[CurrentIndex];
+            }
+            return null;
+        }
 
         public void Clear()
         {
-            _undoStack.Clear();
-            _redoStack.Clear();
+            Steps.Clear();
+            CurrentIndex = -1;
         }
     }
 }

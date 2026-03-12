@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Pixellum.Views.TopOptionsBar"
+             Height="42"
+             Background="#2d2d2d"
+             BorderBrush="#333"
+             BorderThickness="0,0,0,1">
+
+    <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" Margin="12,0">
+        
+        <!-- Active Tool Name -->
+        <Border Background="#3a3a3a" CornerRadius="4" Padding="8,4">
+            <TextBlock x:Name="ActiveToolName" 
+                       Text="Brush" 
+                       FontWeight="SemiBold" 
+                       Foreground="#e0e0e0" 
+                       VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Brush Options Container (Visible only for Brush/Eraser etc) -->
+        <StackPanel x:Name="BrushOptionsContainer" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+            
+            <!-- Preset picker -->
+            <ComboBox x:Name="BrushPresetsComboBox"
+                      Width="130"
+                      SelectionChanged="OnBrushPresetChanged">
+                <ComboBoxItem Content="Standard Brush" IsSelected="True"/>
+                <ComboBoxItem Content="Soft Airbrush"/>
+                <ComboBoxItem Content="Inking Pen"/>
+            </ComboBox>
+
+            <!-- Size -->
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="Size" Foreground="#888" VerticalAlignment="Center"/>
+                <Slider x:Name="BrushSizeSlider" Minimum="1" Maximum="150" Value="15" Width="100" VerticalAlignment="Center"/>
+                <TextBlock x:Name="BrushSizeValue" Text="15px" Foreground="#e0e0e0" Width="40" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Opacity -->
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="Opac" Foreground="#888" VerticalAlignment="Center"/>
+                <Slider x:Name="OpacitySlider" Minimum="0" Maximum="1" Value="1" Width="80" VerticalAlignment="Center"/>
+                <TextBlock x:Name="OpacityValue" Text="100%" Foreground="#e0e0e0" Width="40" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Hardness -->
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="Hard" Foreground="#888" VerticalAlignment="Center"/>
+                <Slider x:Name="HardnessSlider" Minimum="0" Maximum="1" Value="1" Width="80" VerticalAlignment="Center"/>
+                <TextBlock x:Name="HardnessValue" Text="100%" Foreground="#e0e0e0" Width="40" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Flow -->
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="Flow" Foreground="#888" VerticalAlignment="Center"/>
+                <Slider x:Name="FlowSlider" Minimum="0" Maximum="1" Value="1" Width="80" VerticalAlignment="Center"/>
+                <TextBlock x:Name="FlowValue" Text="100%" Foreground="#e0e0e0" Width="40" VerticalAlignment="Center"/>
+            </StackPanel>
+
+        </StackPanel>
+    </StackPanel>
+</UserControl>

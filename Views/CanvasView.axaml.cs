@@ -38,15 +38,14 @@ namespace Pixellum.Views
         private Avalonia.Controls.Shapes.Rectangle? _selectionMarquee;
         private Avalonia.Controls.Shapes.Rectangle? _selectionMarqueeInner;
         private TextBox?        _textOverlayBox;
+        private Avalonia.Controls.Shapes.Rectangle? _gridOverlayRect;
 
         // ── Drawing state ────────────────────────────────────────────────────
         private Point? _lastPoint = null;
         private bool   _isDrawing = false;
 
         // ── Undo / redo ─────────────────────────────────────────────────
-        private readonly Stack<uint[]> _undoStack = new();
-        private readonly Stack<uint[]> _redoStack = new();
-        private const int MAX_HISTORY = 50;
+        public HistoryManager History { get; } = new HistoryManager(50);
 
         // ── Selection & Shapes ───────────────────────────────────────────
         private bool    _hasSelection   = false;
@@ -63,11 +62,57 @@ namespace Pixellum.Views
         // ── Grid overlay ────────────────────────────────────────────────
         private bool _gridVisible   = false;
         private int  _gridCellSize  = 32;  // pixels
-        public  void SetGridVisible(bool v) { _gridVisible = v; InvalidateVisual(); }
+        public void SetGridVisible(bool visible)
+        {
+            _gridVisible = visible;
+            UpdateGridOverlay();
+        }
+
+        private void UpdateGridOverlay()
+        {
+            if (_gridOverlayRect != null && _canvasBitmap != null)
+            {
+                _gridOverlayRect.Width     = _canvasBitmap.PixelSize.Width;
+                _gridOverlayRect.Height    = _canvasBitmap.PixelSize.Height;
+                _gridOverlayRect.IsVisible = _gridVisible;
+
+                if (_gridVisible && _gridOverlayRect.Fill == null)
+                    _gridOverlayRect.Fill = CreateGridBrush(_gridCellSize);
+            }
+        }
+
+        private static DrawingBrush CreateGridBrush(int size)
+        {
+            var lineGeometry = new GeometryGroup();
+            lineGeometry.Children.Add(new LineGeometry(new Point(0, 0), new Point(size, 0)));
+            lineGeometry.Children.Add(new LineGeometry(new Point(0, 0), new Point(0, size)));
+
+            var pen = new Pen(new SolidColorBrush(Color.Parse("#44ffffff")), 1);
+
+            return new DrawingBrush
+            {
+                Drawing         = new GeometryDrawing { Pen = pen, Geometry = lineGeometry },
+                TileMode        = TileMode.Tile,
+                SourceRect      = new RelativeRect(0, 0, size, size, RelativeUnit.Absolute),
+                DestinationRect = new RelativeRect(0, 0, size, size, RelativeUnit.Absolute)
+            };
+        }
 
         // ── Tool / brush state ──────────────────────────────────────────────
         // Q3 / M3: Strongly-typed tool; no more magic strings
-        public ToolType ActiveTool { get; set; } = ToolType.Brush;
+        private ToolType _activeTool = ToolType.Brush;
+        public ToolType ActiveTool
+        {
+            get => _activeTool;
+            set
+            {
+                if (_activeTool != value)
+                {
+                    _activeTool = value;
+                    ToolChanged?.Invoke(this, _activeTool);
+                }
+            }
+        }
 
         public event EventHandler<uint>? ColorPicked;
 
@@ -126,6 +171,7 @@ namespace Pixellum.Views
             _selectionMarquee = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("SelectionMarquee");
             _selectionMarqueeInner = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("SelectionMarqueeInner");
             _textOverlayBox = this.FindControl<TextBox>("TextOverlayBox");
+            _gridOverlayRect = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("GridOverlayRect");
 
             var container = this.FindControl<Grid>("TransformContainer");
             if (container?.RenderTransform is TransformGroup tg)
@@ -155,8 +201,7 @@ namespace Pixellum.Views
         public void NewDocument(int width, int height, int bgChoice)
         {
             _layers.Clear();
-            _undoStack.Clear();
-            _redoStack.Clear();
+            History.Clear();
 
             _document = new Document(width, height);
             var bg = new Layer(width, height, "Background");
@@ -204,8 +249,7 @@ namespace Pixellum.Views
             if (resizeCanvas)
             {
                 _layers.Clear();
-                _undoStack.Clear();
-                _redoStack.Clear();
+                History.Clear();
 
                 _document = new Document(imgWidth, imgHeight);
 
@@ -249,6 +293,21 @@ namespace Pixellum.Views
             _activeLayerIndex = _layers.Count - 1;
             RedrawCanvas();
             System.Diagnostics.Debug.WriteLine($"✅ Added new layer: {name}");
+        }
+
+        public void AddSolidColorLayer(string name, uint color)
+        {
+            var newLayer = new Layer(_document.Width, _document.Height, name);
+            var px = newLayer.GetPixels();
+            for (int i = 0; i < px.Length; i++)
+            {
+                px[i] = color;
+            }
+            newLayer.LockPixels = true; // Lock pixels for solid color fills by default
+            _layers.Add(newLayer);
+            _activeLayerIndex = _layers.Count - 1;
+            RedrawCanvas();
+            System.Diagnostics.Debug.WriteLine($"✅ Added solid color layer: {name}");
         }
 
         public void DeleteLayer(int index)
@@ -614,6 +673,8 @@ namespace Pixellum.Views
 
             if (ActiveTool == ToolType.Text)
             {
+                if (ActiveLayer == null || ActiveLayer.LockPixels) return; // Block text entry on locked layer
+
                 if (_textOverlayBox != null && _textOverlayBox.IsVisible)
                 {
                     CommitText(); // they clicked elsewhere, commit the previous text
@@ -706,6 +767,8 @@ namespace Pixellum.Views
 
             if (ActiveTool == ToolType.Move && _lastPoint.HasValue && ActiveLayer != null)
             {
+                if (ActiveLayer.LockPosition) return;
+
                 int dx = (int)(coords.Value.X - _lastPoint.Value.X);
                 int dy = (int)(coords.Value.Y - _lastPoint.Value.Y);
 
@@ -914,7 +977,7 @@ namespace Pixellum.Views
         // B3: FloodFill uses value-tuple queue — no heavyweight Avalonia.Point allocations
         private void FloodFill(int startX, int startY)
         {
-            if (ActiveLayer == null) return;   // B1 guard
+            if (ActiveLayer == null || ActiveLayer.LockPixels) return;
 
             int    w       = ActiveLayer.Width;
             int    h       = ActiveLayer.Height;
@@ -1023,7 +1086,7 @@ namespace Pixellum.Views
 
         private void DrawShape(int startX, int startY, int endX, int endY)
         {
-            if (ActiveLayer == null) return;
+            if (ActiveLayer == null || ActiveLayer.LockPixels) return;
 
             int minX = Math.Max(0, Math.Min(startX, endX));
             int minY = Math.Max(0, Math.Min(startY, endY));
@@ -1141,7 +1204,7 @@ namespace Pixellum.Views
 
         private void DrawGradient(int startX, int startY, int endX, int endY)
         {
-            if (ActiveLayer == null) return;
+            if (ActiveLayer == null || ActiveLayer.LockPixels) return;
 
             uint[] pixels = ActiveLayer.GetPixels();
             uint fillAlpha = (uint)(255 * _brushOpacity);
@@ -1218,92 +1281,79 @@ namespace Pixellum.Views
             _renderer.Render(_document, _canvasBitmap);
 
             // T1: InvalidateVisual MUST run on the UI thread
-            Dispatcher.UIThread.Post(() => _canvasImage?.InvalidateVisual(),
-                DispatcherPriority.Render);
+            Dispatcher.UIThread.Post(() => 
+            {
+                UpdateGridOverlay();
+                _canvasImage?.InvalidateVisual();
+            }, DispatcherPriority.Render);
         }
 
         // ── Undo / Redo ──────────────────────────────────────────────────────
 
-        private void SaveStateForUndo()
+        public void SaveStateForUndo(string actionName = "Action")
         {
-            if (ActiveLayer == null) return;   // B1 guard
-            try
-            {
-                uint[] snapshot = new uint[ActiveLayer.Width * ActiveLayer.Height];
-                Array.Copy(ActiveLayer.GetPixels(), snapshot, snapshot.Length);
-                _undoStack.Push(snapshot);
-                _redoStack.Clear();
-
-                // B2: Trim oldest entries — preserve correct LIFO order
-                if (_undoStack.Count > MAX_HISTORY)
-                {
-                    var items = _undoStack.ToArray(); // index 0 = most-recent (top of stack)
-                    _undoStack.Clear();
-                    // Re-push from oldest (end) to newest (start) so newest is on top
-                    for (int i = MAX_HISTORY - 1; i >= 0; i--)
-                        _undoStack.Push(items[i]);
-                }
-
-                System.Diagnostics.Debug.WriteLine($"✅ Saved undo state. Stack: {_undoStack.Count}");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ Failed to save undo state: {ex.Message}");
-            }
+            History.AddStep(actionName, _layers, _activeLayerIndex);
+            System.Diagnostics.Debug.WriteLine($"✅ Saved undo state: {actionName}. Steps: {History.Steps.Count}");
         }
 
         public void Undo()
         {
-            if (_undoStack.Count == 0 || ActiveLayer == null)
+            var step = History.Undo();
+            if (step != null)
+            {
+                RestoreHistoryStep(step);
+                System.Diagnostics.Debug.WriteLine($"✅ Undid to: {step.ActionName}");
+            }
+            else
             {
                 System.Diagnostics.Debug.WriteLine("⚠️ Nothing to undo");
-                return;
-            }
-
-            try
-            {
-                uint[] currentState = new uint[ActiveLayer.Width * ActiveLayer.Height];
-                Array.Copy(ActiveLayer.GetPixels(), currentState, currentState.Length);
-                _redoStack.Push(currentState);
-
-                uint[] previousState = _undoStack.Pop();
-                Array.Copy(previousState, ActiveLayer.GetPixels(), previousState.Length);
-
-                RedrawCanvas();
-                System.Diagnostics.Debug.WriteLine(
-                    $"✅ Undo. Undo:{_undoStack.Count} Redo:{_redoStack.Count}");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ Undo failed: {ex.Message}");
             }
         }
 
         public void Redo()
         {
-            if (_redoStack.Count == 0 || ActiveLayer == null)
+            var step = History.Redo();
+            if (step != null)
+            {
+                RestoreHistoryStep(step);
+                System.Diagnostics.Debug.WriteLine($"✅ Redid to: {step.ActionName}");
+            }
+            else
             {
                 System.Diagnostics.Debug.WriteLine("⚠️ Nothing to redo");
-                return;
             }
+        }
 
-            try
+        public void JumpToHistoryState(int index)
+        {
+            var step = History.JumpTo(index);
+            if (step != null)
             {
-                uint[] currentState = new uint[ActiveLayer.Width * ActiveLayer.Height];
-                Array.Copy(ActiveLayer.GetPixels(), currentState, currentState.Length);
-                _undoStack.Push(currentState);
-
-                uint[] redoState = _redoStack.Pop();
-                Array.Copy(redoState, ActiveLayer.GetPixels(), redoState.Length);
-
-                RedrawCanvas();
-                System.Diagnostics.Debug.WriteLine(
-                    $"✅ Redo. Undo:{_undoStack.Count} Redo:{_redoStack.Count}");
+                RestoreHistoryStep(step);
+                System.Diagnostics.Debug.WriteLine($"✅ Jumped to history step: {step.ActionName}");
             }
-            catch (Exception ex)
+        }
+
+        private void RestoreHistoryStep(HistoryStep step)
+        {
+            _layers.Clear();
+            foreach (var s in step.Layers)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Redo failed: {ex.Message}");
+                var layer = new Layer(_document.Width, _document.Height, s.Name)
+                {
+                    Opacity = s.Opacity,
+                    Mode = s.BlendMode,
+                    Visible = s.IsVisible,
+                    LockTransparency = s.LockTransparency,
+                    LockPixels = s.LockPixels,
+                    IsClippingMask = s.IsClippingMask
+                };
+                var ptr = layer.GetPixels();
+                Array.Copy(s.Pixels, ptr, ptr.Length);
+                _layers.Add(layer);
             }
+            _activeLayerIndex = step.ActiveLayerIndex;
+            RedrawCanvas();
         }
     }
 }

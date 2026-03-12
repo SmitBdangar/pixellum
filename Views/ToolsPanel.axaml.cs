@@ -63,31 +63,6 @@ namespace Pixellum.Views
                 UpdateSecondaryColorPreview();
             };
 
-            // Wire up slider events
-            BrushSizeSlider.ValueChanged += (_, e) =>
-            {
-                BrushSizeValue.Text = $"{(int)e.NewValue}px";
-                UpdateBrushSettings();
-            };
-
-            OpacitySlider.ValueChanged += (_, e) =>
-            {
-                OpacityValue.Text = $"{(int)(e.NewValue * 100)}%";
-                UpdateBrushSettings();
-            };
-
-            HardnessSlider.ValueChanged += (_, e) =>
-            {
-                HardnessValue.Text = $"{(int)(e.NewValue * 100)}%";
-                UpdateBrushSettings();
-            };
-
-            FlowSlider.ValueChanged += (_, e) =>
-            {
-                FlowValue.Text = $"{(int)(e.NewValue * 100)}%";
-                UpdateBrushSettings();
-            };
-
             // Color wheel event
             ColorPicker.ActiveColorChanged += (_, color) =>
             {
@@ -216,19 +191,6 @@ namespace Pixellum.Views
             }
         }
 
-        private void UpdateBrushSettings()
-        {
-            if (_canvas == null) return;
-
-            _canvas.BrushRadius  = (float)BrushSizeSlider.Value;
-            _canvas.BrushOpacity = (float)OpacitySlider.Value;
-
-            // Wire hardness/flow/spacing to BrushEngine
-            _canvas.SetBrushEngineParams(
-                (float)HardnessSlider.Value,
-                (float)FlowSlider.Value);
-        }
-
         // Tool Selection Handlers
         private void OnBrushToolClicked(object? sender, RoutedEventArgs e)
         {
@@ -335,35 +297,6 @@ namespace Pixellum.Views
                 for (int i = 0; i < pixels.Length; i++)
                     pixels[i] = _primaryColor;
                 _canvas.TriggerRedraw();
-            }
-        }
-
-        private void OnBrushPresetChanged(object? sender, SelectionChangedEventArgs e)
-        {
-            if (BrushPresetsComboBox != null && BrushPresetsComboBox.SelectedItem is ComboBoxItem item && _activeTool == ToolType.Brush)
-            {
-                string preset = item.Content?.ToString() ?? "";
-                switch (preset)
-                {
-                    case "Standard Brush":
-                        BrushSizeSlider.Value = 15;
-                        OpacitySlider.Value = 1.0;
-                        HardnessSlider.Value = 1.0;
-                        FlowSlider.Value = 1.0;
-                        break;
-                    case "Soft Airbrush":
-                        BrushSizeSlider.Value = 40;
-                        OpacitySlider.Value = 0.3;
-                        HardnessSlider.Value = 0.0;
-                        FlowSlider.Value = 0.2;
-                        break;
-                    case "Inking Pen":
-                        BrushSizeSlider.Value = 5;
-                        OpacitySlider.Value = 1.0;
-                        HardnessSlider.Value = 1.0;
-                        FlowSlider.Value = 1.0;
-                        break;
-                }
             }
         }
     }

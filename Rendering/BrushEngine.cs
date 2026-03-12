@@ -20,6 +20,8 @@ namespace Pixellum.Rendering
 
         public void ApplyBrush(Layer layer, int centerX, int centerY, uint brushColor, float radius)
         {
+            if (layer.LockPixels) return;
+
             float srcA = ((brushColor >> 24) & 0xFF) / 255.0f * Flow;
             float srcR = ((brushColor >> 16) & 0xFF) / 255.0f;
             float srcG = ((brushColor >>  8) & 0xFF) / 255.0f;
@@ -27,18 +29,22 @@ namespace Pixellum.Rendering
 
             uint[] pixels = layer.GetPixels();
 
+            bool lockTrans = layer.LockTransparency;
+
             IterateCircle(layer, centerX, centerY, radius, (index, dist) =>
             {
                 float t       = dist / radius;
                 float falloff = ComputeFalloff(t, Hardness);
                 float stampA  = srcA * falloff;
 
-                pixels[index] = AlphaBlend(srcR, srcG, srcB, stampA, pixels[index]);
+                pixels[index] = AlphaBlend(srcR, srcG, srcB, stampA, pixels[index], lockTrans);
             });
         }
 
         public void ApplyEraser(Layer layer, int centerX, int centerY, float radius)
         {
+            if (layer.LockPixels || layer.LockTransparency) return;
+
             uint[] pixels = layer.GetPixels();
 
             IterateCircle(layer, centerX, centerY, radius, (index, dist) =>
@@ -105,26 +111,43 @@ namespace Pixellum.Rendering
 
         // ── Alpha compositing ─────────────────────────────────────────────────
 
-        private static uint AlphaBlend(float srcR, float srcG, float srcB, float srcA, uint dst)
+        // ── Alpha compositing ─────────────────────────────────────────────────
+
+        private static uint AlphaBlend(float srcR, float srcG, float srcB, float srcA, uint dst, bool lockTrans = false)
         {
             float dstA = ((dst >> 24) & 0xFF) / 255.0f;
+            
+            if (lockTrans && dstA == 0f) return dst; // Protect fully transparent pixels
+
             float dstR = ((dst >> 16) & 0xFF) / 255.0f;
             float dstG = ((dst >>  8) & 0xFF) / 255.0f;
             float dstB = ( dst        & 0xFF) / 255.0f;
 
-            float invSrcA = 1.0f - srcA;
+            float outA, outR, outG, outB;
 
-            float outA = srcA + dstA * invSrcA;
-            float outR, outG, outB;
-            if (outA < 1e-6f)
+            if (lockTrans)
             {
-                outR = outG = outB = 0f;
+                outA = dstA;
+                float blendRatio = srcA; 
+                float invBlend = 1.0f - blendRatio;
+                outR = srcR * blendRatio + dstR * invBlend;
+                outG = srcG * blendRatio + dstG * invBlend;
+                outB = srcB * blendRatio + dstB * invBlend;
             }
             else
             {
-                outR = (srcR * srcA + dstR * dstA * invSrcA) / outA;
-                outG = (srcG * srcA + dstG * dstA * invSrcA) / outA;
-                outB = (srcB * srcA + dstB * dstA * invSrcA) / outA;
+                float invSrcA = 1.0f - srcA;
+                outA = srcA + dstA * invSrcA;
+                if (outA < 1e-6f)
+                {
+                    outR = outG = outB = 0f;
+                }
+                else
+                {
+                    outR = (srcR * srcA + dstR * dstA * invSrcA) / outA;
+                    outG = (srcG * srcA + dstG * dstA * invSrcA) / outA;
+                    outB = (srcB * srcA + dstB * dstA * invSrcA) / outA;
+                }
             }
 
             uint A = (uint)Math.Clamp(outA * 255f, 0, 255);

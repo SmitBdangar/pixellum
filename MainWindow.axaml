@@ -133,6 +133,9 @@
             </Grid>
         </Border>
 
+        <!-- ── Top Options Bar ──────────────────────────────────────────────── -->
+        <views:TopOptionsBar DockPanel.Dock="Top" x:Name="TopOptionsBarControl" />
+
         <!-- ── Main Panel ───────────────────────────────────────────────────── -->
         <Grid ColumnDefinitions="240,*,220">
 
@@ -182,7 +185,10 @@
                 </ScrollViewer>
             </Border>
 
-            <views:LayersPanel Grid.Column="2" x:Name="LayersPanelControl"/>
+            <Grid Grid.Column="2" RowDefinitions="3*,2*">
+                <views:LayersPanel Grid.Row="0" x:Name="LayersPanelControl"/>
+                <views:HistoryPanel Grid.Row="1" x:Name="HistoryPanelControl"/>
+            </Grid>
 
         </Grid>
 

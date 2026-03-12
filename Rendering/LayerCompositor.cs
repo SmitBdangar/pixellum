@@ -6,10 +6,17 @@ namespace Pixellum.Rendering
 {
     public static class LayerCompositor
     {
+        private static float[] _baseAlphaBuffer = Array.Empty<float>();
+
         public static void Composite(Document document, IReadOnlyList<Layer> layers)
         {
             uint[] documentPixels = document.GetPixelsRaw();
             Array.Clear(documentPixels, 0, documentPixels.Length);
+
+            if (_baseAlphaBuffer.Length < documentPixels.Length)
+            {
+                _baseAlphaBuffer = new float[documentPixels.Length];
+            }
 
             for (int li = 0; li < layers.Count; li++)
             {
@@ -20,11 +27,25 @@ namespace Pixellum.Rendering
                 uint[] layerPixels = layer.GetPixels();
                 float  layerOpacity = layer.Opacity;
 
+                if (!layer.IsClippingMask)
+                {
+                    for (int i = 0; i < documentPixels.Length; i++)
+                    {
+                        _baseAlphaBuffer[i] = ((layerPixels[i] >> 24) & 0xFF) / 255.0f * layerOpacity;
+                    }
+                }
+
                 for (int i = 0; i < documentPixels.Length; i++)
                 {
                     uint src = layerPixels[i];
 
                     float srcA = ((src >> 24) & 0xFF) / 255.0f * layerOpacity;
+                    
+                    if (layer.IsClippingMask)
+                    {
+                        srcA *= _baseAlphaBuffer[i];
+                    }
+
                     if (srcA <= 0.001f) continue;
 
                     uint  dst    = documentPixels[i];
