@@ -8,14 +8,14 @@ A lightweight, cross-platform digital painting application built with Avalonia U
 ## Features
 
 - **Robust Toolset** - Brush, Eraser, Eyedropper, Fill Bucket, Marquee Selection, Move, Shape, Text, and Gradient tools.
-- **Advanced Brush Engine** - Support for Brush Size, Opacity, Hardness (crisp vs soft edges), and Flow limiters.
-- **Layer Management** - Unlimited layers with visibility, opacity, and 16 Photoshop-standard Blend Modes (e.g. Multiply, Overlay, Color Dodge, Soft Light, Difference, Luminosity).
+- **Advanced Brush Engine** - Support for Brush Size, Opacity, Hardness (crisp vs soft edges), and Flow limiters via a context-sensitive **Top Options Bar**.
+- **Layer Management** - Unlimited layers with visibility, opacity, locking (transparency/pixels/position), clipping masks, and 16 Photoshop-standard Blend Modes. Includes support for pure Solid Color (Fill) Layers.
 - **Image Adjustments** - Live-preview destructive pixel filters: Brightness/Contrast, Hue/Saturation/Lightness, Levels (with Gamma), Curves, and multi-tone Color Balance.
-- **Canvas Operations** - Easily Resize Canvas (with clipping/expanding), Resample Image sizes (bilinear scaling), Flip (Horizontal/Vertical), and Rotate (90°, 180°). 
+- **Canvas Operations** - Easily Resize Canvas (with clipping/expanding), Resample Image sizes (bilinear scaling), Flip (Horizontal/Vertical), Rotate (90°, 180°), and display a toggleable **Grid Overlay**.
 - **File I/O** - Native document creation Dialog, opening standard images (PNG/JPEG/BMP) directly to layers, and saving/exporting directly to PNG.
 - **Color System** - Interactive color wheel, quick swatch palette, and hex input. Swap primary/secondary colors with keyboard shortcuts.
 - **Infinite Zoom & Pan** - Interactive View manipulation using Mouse Wheel and Spacebar-Drag.
-- **Non-Destructive Workflows** - Full Undo/Redo tracking up to 50 historical steps for every action.
+- **Non-Destructive Workflows** - Full, robust global history state tracking (up to 50 steps) complete with a visible **History Panel** for instant visual jump-undo operations across all tool and layer actions.
 - **Cross-Platform** - Runs natively on Windows, macOS, and Linux.
 
 ## Quick Start
@@ -81,10 +81,10 @@ dotnet run --project Pixellum.csproj
 
 ### Upcoming Features
 - [ ] Layer Groups (Folders)
-- [ ] Clipping Masks and alpha locks
+- [x] Clipping Masks and layer locks
 - [ ] Layer Effects (Drop shadow, glow, stroke)
 - [ ] Brush scattered jitter engine & custom alpha tips
-- [ ] History visual panel
+- [x] History visual panel & Top options bar
 - [ ] Floating dockable interface panels
 
 ## License

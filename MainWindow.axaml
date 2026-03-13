@@ -177,7 +177,7 @@
                             </Border.Background>
                         </Border>
                         <Border BoxShadow="0 8 32 8 #AA000000"
-                                CornerRadius="2"
+                                CornerRadius="4"
                                 Background="Transparent">
                             <views:CanvasView x:Name="MainCanvasView"/>
                         </Border>

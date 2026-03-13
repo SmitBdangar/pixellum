@@ -5,6 +5,20 @@
              Background="#2d2d2d"
              BorderBrush="#333"
              BorderThickness="0,0,0,1">
+    <UserControl.Styles>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
+        <Style Selector="Slider">
+            <Setter Property="Foreground" Value="#4CAF50"/>
+        </Style>
+    </UserControl.Styles>
 
     <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" Margin="12,0">
         
