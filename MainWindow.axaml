@@ -3,78 +3,147 @@
         xmlns:views="clr-namespace:Pixellum.Views"
         x:Class="Pixellum.MainWindow"
         Title="Pixellum"
-        Width="1400" Height="900"
+        Width="1440" Height="920"
         MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         Background="#1a1a1a"
         FontFamily="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif">
 
     <Window.Styles>
+
+        <!-- ── Menu ──────────────────────────────────────────────────────────── -->
         <Style Selector="Menu">
-            <Setter Property="Background" Value="#252525"/>
-            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="Background" Value="#242424"/>
+            <Setter Property="Foreground" Value="#cccccc"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
         <Style Selector="MenuItem">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#e0e0e0"/>
-            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Foreground" Value="#cccccc"/>
+            <Setter Property="Padding" Value="12,5"/>
         </Style>
         <Style Selector="MenuItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
-            <Setter Property="Background" Value="#3a3a3a"/>
-            <Setter Property="TextElement.Foreground" Value="White"/>
+            <Setter Property="Background" Value="#383838"/>
+            <Setter Property="TextElement.Foreground" Value="#ffffff"/>
         </Style>
         <Style Selector="MenuItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
-            <Setter Property="Background" Value="#4a4a4a"/>
+            <Setter Property="Background" Value="#35506e"/>
+            <Setter Property="TextElement.Foreground" Value="#ffffff"/>
         </Style>
+
+        <!-- ── Toolbar buttons ───────────────────────────────────────────────── -->
+        <Style Selector="Button.tb">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#b8b8b8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="MinWidth" Value="28"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.tb:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#353535"/>
+            <Setter Property="TextElement.Foreground" Value="#ffffff"/>
+        </Style>
+        <Style Selector="Button.tb:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#3a4e6a"/>
+        </Style>
+
+        <!-- ── Zoom display pill ─────────────────────────────────────────────── -->
+        <Style Selector="Border.zoom-pill">
+            <Setter Property="Background" Value="#2c2c2c"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="10,3"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ── Status bar text ───────────────────────────────────────────────── -->
+        <Style Selector="TextBlock.status">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#666666"/>
+        </Style>
+        <Style Selector="TextBlock.status-label">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#444444"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="LetterSpacing" Value="0.5"/>
+        </Style>
+        <Style Selector="Rectangle.status-divider">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Fill" Value="#333333"/>
+            <Setter Property="Margin" Value="10,5"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+
+        <!-- ── ScrollBar theming ─────────────────────────────────────────────── -->
+        <Style Selector="ScrollBar">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ScrollBar /template/ Border#PART_Track">
+            <Setter Property="Background" Value="#252525"/>
+        </Style>
+        <Style Selector="ScrollBar /template/ Thumb">
+            <Setter Property="Background" Value="#3a3a3a"/>
+            <Setter Property="CornerRadius" Value="2"/>
+        </Style>
+
     </Window.Styles>
 
     <DockPanel>
 
-        <!-- ── Menu Bar ─────────────────────────────────────────────────────── -->
-        <Border DockPanel.Dock="Top" Background="#252525" BorderBrush="#333" BorderThickness="0,0,0,1">
-            <Menu Background="Transparent" Padding="4,0">
+        <!-- ════════════════════════════════════════════════════════════════════
+             MENU BAR
+             ════════════════════════════════════════════════════════════════════ -->
+        <Border DockPanel.Dock="Top"
+                Background="#242424"
+                BorderBrush="#2a2a2a"
+                BorderThickness="0,0,0,1">
+            <Menu Background="Transparent" Padding="6,0">
 
                 <!-- File -->
                 <MenuItem Header="_File">
-                    <MenuItem Header="_New…"            Click="OnNewClicked"          InputGesture="Ctrl+N"/>
-                    <MenuItem Header="_Open Image…"     Click="OnOpenClicked"         InputGesture="Ctrl+O"/>
-                    <Separator Background="#444"/>
-                    <MenuItem Header="_Save"            Click="OnSaveClicked"         InputGesture="Ctrl+S"/>
-                    <MenuItem Header="Save _As…"        Click="OnSaveAsClicked"       InputGesture="Ctrl+Shift+S"/>
-                    <Separator Background="#444"/>
-                    <MenuItem Header="Export _PNG…"     Click="OnExportPngClicked"    InputGesture="Ctrl+E"/>
-                    <Separator Background="#444"/>
-                    <MenuItem Header="_Close"           Click="OnCloseDocClicked"/>
+                    <MenuItem Header="_New…"          Click="OnNewClicked"       InputGesture="Ctrl+N"/>
+                    <MenuItem Header="_Open Image…"   Click="OnOpenClicked"      InputGesture="Ctrl+O"/>
+                    <Separator Background="#353535"/>
+                    <MenuItem Header="_Save"          Click="OnSaveClicked"      InputGesture="Ctrl+S"/>
+                    <MenuItem Header="Save _As…"      Click="OnSaveAsClicked"    InputGesture="Ctrl+Shift+S"/>
+                    <Separator Background="#353535"/>
+                    <MenuItem Header="Export _PNG…"   Click="OnExportPngClicked" InputGesture="Ctrl+E"/>
+                    <Separator Background="#353535"/>
+                    <MenuItem Header="_Close"         Click="OnCloseDocClicked"/>
                 </MenuItem>
 
                 <!-- Edit -->
                 <MenuItem Header="_Edit">
-                    <MenuItem Header="_Undo"  Click="OnUndoClicked" InputGesture="Ctrl+Z"/>
-                    <MenuItem Header="_Redo"  Click="OnRedoClicked" InputGesture="Ctrl+Y"/>
+                    <MenuItem Header="_Undo" Click="OnUndoClicked" InputGesture="Ctrl+Z"/>
+                    <MenuItem Header="_Redo" Click="OnRedoClicked" InputGesture="Ctrl+Y"/>
                 </MenuItem>
 
                 <!-- Image -->
                 <MenuItem Header="_Image">
-                    <MenuItem Header="Canvas _Size…"       Click="OnCanvasSizeClicked"/>
-                    <MenuItem Header="_Image Size…"        Click="OnImageSizeClicked"/>
-                    <Separator Background="#444"/>
+                    <MenuItem Header="Canvas _Size…"  Click="OnCanvasSizeClicked"/>
+                    <MenuItem Header="_Image Size…"   Click="OnImageSizeClicked"/>
+                    <Separator Background="#353535"/>
                     <MenuItem Header="_Adjustments">
-                        <MenuItem Header="Brightness / _Contrast…"  Click="OnBrightnessContrastClicked"/>
-                        <MenuItem Header="_Hue / Saturation…"       Click="OnHueSaturationClicked"/>
-                        <MenuItem Header="_Levels…"                 Click="OnLevelsClicked"/>
-                        <MenuItem Header="C_urves…"                 Click="OnCurvesClicked"/>
-                        <MenuItem Header="Color _Balance…"          Click="OnColorBalanceClicked"/>
+                        <MenuItem Header="Brightness / _Contrast…" Click="OnBrightnessContrastClicked"/>
+                        <MenuItem Header="_Hue / Saturation…"      Click="OnHueSaturationClicked"/>
+                        <MenuItem Header="_Levels…"                Click="OnLevelsClicked"/>
+                        <MenuItem Header="C_urves…"                Click="OnCurvesClicked"/>
+                        <MenuItem Header="Color _Balance…"         Click="OnColorBalanceClicked"/>
                     </MenuItem>
-                    <Separator Background="#444"/>
+                    <Separator Background="#353535"/>
                     <MenuItem Header="Rotate Canvas">
-                        <MenuItem Header="90° Clockwise"       Click="OnRotate90CWClicked"/>
-                        <MenuItem Header="90° Counter-Clockwise" Click="OnRotate90CCWClicked"/>
-                        <MenuItem Header="180°"                Click="OnRotate180Clicked"/>
+                        <MenuItem Header="90° Clockwise"          Click="OnRotate90CWClicked"/>
+                        <MenuItem Header="90° Counter-Clockwise"  Click="OnRotate90CCWClicked"/>
+                        <MenuItem Header="180°"                   Click="OnRotate180Clicked"/>
                     </MenuItem>
                     <MenuItem Header="Flip Canvas">
-                        <MenuItem Header="Flip _Horizontal"   Click="OnFlipHClicked"/>
-                        <MenuItem Header="Flip _Vertical"     Click="OnFlipVClicked"/>
+                        <MenuItem Header="Flip _Horizontal" Click="OnFlipHClicked"/>
+                        <MenuItem Header="Flip _Vertical"   Click="OnFlipVClicked"/>
                     </MenuItem>
                 </MenuItem>
 
@@ -83,87 +152,204 @@
                     <MenuItem Header="Zoom _In"    Click="OnZoomInClicked"    InputGesture="Ctrl+OemPlus"/>
                     <MenuItem Header="Zoom _Out"   Click="OnZoomOutClicked"   InputGesture="Ctrl+OemMinus"/>
                     <MenuItem Header="_Reset Zoom" Click="OnZoomResetClicked" InputGesture="Ctrl+D0"/>
-                    <Separator Background="#444"/>
-                    <MenuItem Header="Toggle _Grid"    Click="OnToggleGridClicked"    InputGesture="Ctrl+G"/>
+                    <Separator Background="#353535"/>
+                    <MenuItem Header="Toggle _Grid" Click="OnToggleGridClicked" InputGesture="Ctrl+G"/>
                 </MenuItem>
 
             </Menu>
         </Border>
 
-        <!-- ── Status Bar ───────────────────────────────────────────────────── -->
+        <!-- ════════════════════════════════════════════════════════════════════
+             ICON TOOLBAR
+             ════════════════════════════════════════════════════════════════════ -->
+        <Border DockPanel.Dock="Top"
+                Background="#202020"
+                BorderBrush="#2a2a2a"
+                BorderThickness="0,0,0,1"
+                Padding="8,4">
+            <StackPanel Orientation="Horizontal" Spacing="1" VerticalAlignment="Center">
+
+                <!-- ── File group ── -->
+                <Button Classes="tb" Click="OnNewClicked" ToolTip.Tip="New  Ctrl+N">
+                    <Panel Width="14" Height="14">
+                        <Path Fill="#aaaaaa" Stretch="Uniform"
+                              Data="M1,0 L9,0 L13,4 L13,14 L1,14 Z"/>
+                        <Path Fill="#202020" Stretch="None"
+                              Data="M9,0 L9,4 L13,4"/>
+                        <Path Stroke="#aaaaaa" StrokeThickness="1" Stretch="None"
+                              Data="M9,0 L13,4 L9,4 Z"/>
+                    </Panel>
+                </Button>
+
+                <Button Classes="tb" Click="OnOpenClicked" ToolTip.Tip="Open  Ctrl+O">
+                    <Path Fill="#aaaaaa" Stretch="Uniform" Width="16" Height="13"
+                          Data="M0,4 L0,13 L16,13 L16,6 L13,4 L8,4 L6,2 L2,2 L0,4 Z"/>
+                </Button>
+
+                <Button Classes="tb" Click="OnSaveClicked" ToolTip.Tip="Save  Ctrl+S">
+                    <Panel Width="14" Height="14">
+                        <Path Fill="#aaaaaa" Stretch="Uniform"
+                              Data="M0,0 L11,0 L14,3 L14,14 L0,14 Z"/>
+                        <Path Fill="#202020" Stretch="None"
+                              Data="M3,0 L3,5 L11,5 L11,0"/>
+                        <Rectangle Fill="#202020" Width="6" Height="5"
+                                   HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                   Margin="0,0,0,0"/>
+                    </Panel>
+                </Button>
+
+                <!-- ── Divider ── -->
+                <Rectangle Width="1" Fill="#333333" Margin="5,4" VerticalAlignment="Stretch"/>
+
+                <!-- ── Edit group ── -->
+                <Button Classes="tb" Click="OnUndoClicked" ToolTip.Tip="Undo  Ctrl+Z" Padding="7,4">
+                    <TextBlock Text="↩" FontSize="14" VerticalAlignment="Center"/>
+                </Button>
+                <Button Classes="tb" Click="OnRedoClicked" ToolTip.Tip="Redo  Ctrl+Y" Padding="7,4">
+                    <TextBlock Text="↪" FontSize="14" VerticalAlignment="Center"/>
+                </Button>
+
+                <!-- ── Divider ── -->
+                <Rectangle Width="1" Fill="#333333" Margin="5,4" VerticalAlignment="Stretch"/>
+
+                <!-- ── Zoom group ── -->
+                <Button Classes="tb" Click="OnZoomOutClicked" ToolTip.Tip="Zoom Out  Ctrl+−">
+                    <Path Fill="#aaaaaa" Stretch="Uniform" Width="14" Height="14"
+                          Data="M5.5,0 A5.5,5.5,0,1,0,5.5,11 A5.5,5.5,0,1,0,5.5,0 Z
+                                M9,14 L11.5,11.8
+                                M2.5,5.5 L8.5,5.5"/>
+                </Button>
+
+                <Border Classes="zoom-pill">
+                    <TextBlock x:Name="ZoomText"
+                               Text="100%"
+                               Foreground="#999999"
+                               FontSize="12"
+                               VerticalAlignment="Center"/>
+                </Border>
+
+                <Button Classes="tb" Click="OnZoomInClicked" ToolTip.Tip="Zoom In  Ctrl++">
+                    <Path Fill="#aaaaaa" Stretch="Uniform" Width="14" Height="14"
+                          Data="M5.5,0 A5.5,5.5,0,1,0,5.5,11 A5.5,5.5,0,1,0,5.5,0 Z
+                                M9,14 L11.5,11.8
+                                M5.5,2.5 L5.5,8.5 M2.5,5.5 L8.5,5.5"/>
+                </Button>
+
+                <Button Classes="tb" Click="OnZoomResetClicked" ToolTip.Tip="Reset Zoom  Ctrl+0"
+                        Padding="8,4">
+                    <TextBlock Text="1:1" FontSize="11" Foreground="#888888" VerticalAlignment="Center"/>
+                </Button>
+
+                <!-- ── Divider ── -->
+                <Rectangle Width="1" Fill="#333333" Margin="5,4" VerticalAlignment="Stretch"/>
+
+                <!-- ── View group ── -->
+                <Button Classes="tb" Click="OnToggleGridClicked" ToolTip.Tip="Toggle Grid  Ctrl+G">
+                    <Path Stroke="#aaaaaa" StrokeThickness="1.2" Fill="Transparent"
+                          Stretch="Uniform" Width="14" Height="14"
+                          Data="M0,0 H14 V14 H0 Z  M0,4.7 H14  M0,9.3 H14  M4.7,0 V14  M9.3,0 V14"/>
+                </Button>
+
+            </StackPanel>
+        </Border>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             TOP OPTIONS BAR  (tool-specific options from custom view)
+             ════════════════════════════════════════════════════════════════════ -->
+        <views:TopOptionsBar DockPanel.Dock="Top" x:Name="TopOptionsBarControl"/>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             STATUS BAR
+             ════════════════════════════════════════════════════════════════════ -->
         <Border DockPanel.Dock="Bottom"
-                Background="#1e1e1e"
-                BorderBrush="#333"
+                Background="#1c1c1c"
+                BorderBrush="#282828"
                 BorderThickness="0,1,0,0"
-                Padding="14,5">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                Height="24"
+                Padding="12,0">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+
+                <!-- Status message -->
                 <TextBlock x:Name="StatusText"
                            Grid.Column="0"
-                           Text="Ready"
-                           Foreground="#aaa"
-                           FontSize="12"
-                           VerticalAlignment="Center"/>
-                <TextBlock x:Name="CursorPosText"
-                           Grid.Column="1"
-                           Text="—"
-                           Foreground="#666"
-                           FontSize="12"
-                           VerticalAlignment="Center"
-                           Margin="0,0,20,0"/>
-                <TextBlock x:Name="CanvasSizeText"
-                           Grid.Column="2"
-                           Text="800 × 600"
-                           Foreground="#666"
-                           FontSize="12"
-                           VerticalAlignment="Center"
-                           Margin="0,0,20,0"/>
-                <TextBlock x:Name="ActiveToolText"
-                           Grid.Column="3"
-                           Text="Tool: Brush"
-                           Foreground="#888"
-                           FontSize="12"
-                           VerticalAlignment="Center"
-                           Margin="0,0,20,0"/>
-                <TextBlock x:Name="ZoomText"
-                           Grid.Column="4"
-                           Text="100%"
-                           Foreground="#888"
-                           FontSize="12"
-                           VerticalAlignment="Center"/>
+                           Classes="status"
+                           Text="Ready"/>
+
+                <!-- │ -->
+                <Rectangle Grid.Column="1" Classes="status-divider"/>
+
+                <!-- Cursor position -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Classes="status-label" Text="XY"/>
+                    <TextBlock x:Name="CursorPosText" Classes="status" Text="—"/>
+                </StackPanel>
+
+                <!-- │ -->
+                <Rectangle Grid.Column="3" Classes="status-divider"/>
+
+                <!-- Canvas size -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Classes="status-label" Text="SIZE"/>
+                    <TextBlock x:Name="CanvasSizeText" Classes="status" Text="800 × 600"/>
+                </StackPanel>
+
+                <!-- │ -->
+                <Rectangle Grid.Column="5" Classes="status-divider"/>
+
+                <!-- Active tool -->
+                <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Classes="status-label" Text="TOOL"/>
+                    <TextBlock x:Name="ActiveToolText" Classes="status" Text="Brush"/>
+                </StackPanel>
+
             </Grid>
         </Border>
 
-        <!-- ── Top Options Bar ──────────────────────────────────────────────── -->
-        <views:TopOptionsBar DockPanel.Dock="Top" x:Name="TopOptionsBarControl" />
+        <!-- ════════════════════════════════════════════════════════════════════
+             MAIN WORK AREA  — Tools | Canvas | Layers + History
+             ════════════════════════════════════════════════════════════════════ -->
+        <Grid ColumnDefinitions="210,4,*,4,268">
 
-        <!-- ── Main Panel ───────────────────────────────────────────────────── -->
-        <Grid ColumnDefinitions="240,*,220">
+            <!-- ── Tools panel ── -->
+            <Border Grid.Column="0"
+                    Background="#1f1f1f"
+                    BorderBrush="#2a2a2a"
+                    BorderThickness="0,0,1,0">
+                <views:ToolsPanel x:Name="ToolsPanelControl"/>
+            </Border>
 
-            <views:ToolsPanel Grid.Column="0" x:Name="ToolsPanelControl"/>
+            <!-- ── Column splitter (left) ── -->
+            <GridSplitter Grid.Column="1"
+                          Background="#2a2a2a"
+                          ResizeBehavior="PreviousAndNext"
+                          ResizeDirection="Columns"
+                          HorizontalAlignment="Stretch"/>
 
-            <Border Grid.Column="1"
-                    Background="#2b2b2b"
+            <!-- ── Canvas viewport ── -->
+            <Border Grid.Column="2"
+                    Background="#252525"
                     ClipToBounds="True">
                 <ScrollViewer HorizontalScrollBarVisibility="Auto"
                               VerticalScrollBarVisibility="Auto"
                               Background="Transparent">
-                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
-                          Margin="30">
-                        <!-- Checkerboard background to indicate transparency -->
-                        <Border x:Name="CanvasCheckerBg"
-                                Background="Transparent">
+                    <Grid HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Margin="48">
+
+                        <!-- Checkerboard transparency pattern -->
+                        <Border x:Name="CanvasCheckerBg">
                             <Border.Background>
                                 <DrawingBrush TileMode="Tile"
                                               SourceRect="0,0,16,16"
                                               DestinationRect="0,0,16,16">
                                     <DrawingBrush.Drawing>
                                         <DrawingGroup>
-                                            <GeometryDrawing Brush="#404040">
+                                            <GeometryDrawing Brush="#383838">
                                                 <GeometryDrawing.Geometry>
                                                     <RectangleGeometry Rect="0,0,16,16"/>
                                                 </GeometryDrawing.Geometry>
                                             </GeometryDrawing>
-                                            <GeometryDrawing Brush="#4a4a4a">
+                                            <GeometryDrawing Brush="#424242">
                                                 <GeometryDrawing.Geometry>
                                                     <GeometryGroup>
                                                         <RectangleGeometry Rect="0,0,8,8"/>
@@ -176,19 +362,52 @@
                                 </DrawingBrush>
                             </Border.Background>
                         </Border>
-                        <Border BoxShadow="0 8 32 8 #AA000000"
-                                CornerRadius="4"
+
+                        <!-- Canvas with layered shadow -->
+                        <Border BoxShadow="0 2 8 0 #99000000, 0 8 32 8 #CC000000"
+                                CornerRadius="2"
                                 Background="Transparent">
                             <views:CanvasView x:Name="MainCanvasView"/>
                         </Border>
+
                     </Grid>
                 </ScrollViewer>
             </Border>
 
-            <Grid Grid.Column="2" RowDefinitions="3*,2*">
-                <views:LayersPanel Grid.Row="0" x:Name="LayersPanelControl"/>
-                <views:HistoryPanel Grid.Row="1" x:Name="HistoryPanelControl"/>
-            </Grid>
+            <!-- ── Column splitter (right) ── -->
+            <GridSplitter Grid.Column="3"
+                          Background="#2a2a2a"
+                          ResizeBehavior="PreviousAndNext"
+                          ResizeDirection="Columns"
+                          HorizontalAlignment="Stretch"/>
+
+            <!-- ── Right side: Layers + History ── -->
+            <Border Grid.Column="4"
+                    Background="#1f1f1f"
+                    BorderBrush="#2a2a2a"
+                    BorderThickness="1,0,0,0">
+                <Grid RowDefinitions="3*,4,2*">
+
+                    <!-- Layers panel -->
+                    <Border Grid.Row="0"
+                            BorderBrush="#2a2a2a"
+                            BorderThickness="0,0,0,1">
+                        <views:LayersPanel x:Name="LayersPanelControl"/>
+                    </Border>
+
+                    <!-- Row splitter -->
+                    <GridSplitter Grid.Row="1"
+                                  Background="#2a2a2a"
+                                  ResizeBehavior="PreviousAndNext"
+                                  ResizeDirection="Rows"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch"/>
+
+                    <!-- History panel -->
+                    <views:HistoryPanel Grid.Row="2" x:Name="HistoryPanelControl"/>
+
+                </Grid>
+            </Border>
 
         </Grid>
 
