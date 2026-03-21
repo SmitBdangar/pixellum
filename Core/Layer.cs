@@ -63,6 +63,7 @@ namespace Pixellum.Core
             Height  = height;
             Name    = name;
             _pixels = new uint[Width * Height];
+            DirtyRegion = new IntRect(0, 0, width, height); // Initial full dirty
         }
 
         public void TranslatePixels(int dx, int dy)
@@ -91,6 +92,13 @@ namespace Pixellum.Core
             DirtyRegion = IntRect.Union(DirtyRegion, rect);
         }
 
+        public void MarkDirty(int x, int y, int w, int h)
+        {
+            MarkDirty(new IntRect(x, y, w, h));
+        }
+
         public void ClearDirty() => DirtyRegion = default;
+
+        public IntRect[] GetDirtyRects() => DirtyRegion.IsEmpty ? Array.Empty<IntRect>() : new[] { DirtyRegion };
     }
 }

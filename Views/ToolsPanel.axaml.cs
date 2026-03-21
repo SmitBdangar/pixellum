@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Pixellum.Controls;
+using Pixellum.Core;
 
 namespace Pixellum.Views
 {

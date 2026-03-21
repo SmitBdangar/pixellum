@@ -2,22 +2,55 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:core="clr-namespace:Pixellum.Core"
              x:Class="Pixellum.Views.HistoryPanel"
-             Background="#252525"
-             BorderBrush="#333"
+             Background="#1a1a1a"
+             BorderBrush="#2a2a2a"
              BorderThickness="0,1,0,0">
+
+    <UserControl.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#252525"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1e3d27"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected TextBlock">
+            <Setter Property="Foreground" Value="#80e080"/>
+        </Style>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*">
         <!-- Header -->
         <Border Grid.Row="0"
-                Background="#2a2a2a"
-                BorderBrush="#333"
+                Background="#202020"
+                BorderBrush="#2a2a2a"
                 BorderThickness="0,0,0,1"
-                Padding="12,10">
-            <TextBlock Text="HISTORY"
-                       Foreground="#e0e0e0"
-                       FontWeight="SemiBold"
-                       FontSize="13"
-                       LetterSpacing="1"/>
+                Padding="14,10">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="HISTORY"
+                           Foreground="#888"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           LetterSpacing="1.5"
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1"
+                           x:Name="StepCountText"
+                           Text=""
+                           Foreground="#444"
+                           FontSize="10"
+                           FontFamily="Consolas, monospace"
+                           VerticalAlignment="Center"/>
+            </Grid>
         </Border>
 
         <!-- History List -->
@@ -28,9 +61,19 @@
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="core:HistoryStep">
-                    <Grid ColumnDefinitions="Auto,*" Margin="4,2">
-                        <TextBlock Grid.Column="0" Text="• " Foreground="#555" Margin="0,0,6,0"/>
-                        <TextBlock Grid.Column="1" Text="{Binding ActionName}" Foreground="#ccc"/>
+                    <Grid ColumnDefinitions="24,*" Margin="0,1">
+                        <TextBlock Grid.Column="0"
+                                   Text="•"
+                                   Foreground="#3a6a4a"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding ActionName}"
+                                   Foreground="#ccc"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

@@ -9,7 +9,14 @@ namespace Pixellum.Rendering
 {
     public class Renderer
     {
+        /// <summary>Full canvas render.</summary>
         public void Render(Document document, WriteableBitmap targetBitmap)
+        {
+            Render(document, targetBitmap, new IntRect(0, 0, document.Width, document.Height));
+        }
+
+        /// <summary>Dirty rect render (memcpy clipped).</summary>
+        public void Render(Document document, WriteableBitmap targetBitmap, IntRect dirtyRect)
         {
             uint[] sourcePixels = document.GetPixelsRaw();
 
@@ -17,22 +24,31 @@ namespace Pixellum.Rendering
             int docPixelCount    = document.Width * document.Height;
             if (bitmapPixelCount != docPixelCount)
                 throw new InvalidOperationException(
-                    $"Bitmap size ({bitmapPixelCount} px) does not match document ({docPixelCount} px). " +
-                    "Recreate the WriteableBitmap when the document is resized.");
+                    $"Bitmap size ({bitmapPixelCount} px) does not match document ({docPixelCount} px).");
+
+            dirtyRect = IntRect.Intersect(dirtyRect, new IntRect(0, 0, document.Width, document.Height));
+            if (dirtyRect.IsEmpty) return;
 
             try
             {
                 using var lock_ = targetBitmap.Lock();
                 unsafe
                 {
-                    long byteCount = (long)docPixelCount * sizeof(uint);
+                    int stride = document.Width * sizeof(uint);
                     fixed (uint* sourcePtr = sourcePixels)
                     {
-                        Buffer.MemoryCopy(
-                            source: sourcePtr,
-                            destination: (void*)lock_.Address,
-                            destinationSizeInBytes: byteCount,
-                            sourceBytesToCopy: byteCount);
+                        byte* src = (byte*)sourcePtr;
+                        byte* dst = (byte*)lock_.Address.ToPointer();
+                        int dstStride = lock_.RowBytes;
+
+                        for (int y = dirtyRect.Y; y < dirtyRect.Bottom; y++)
+                        {
+                            Buffer.MemoryCopy(
+                                src + (nint)(y * stride + dirtyRect.X * sizeof(uint)),
+                                dst + (nint)(y * dstStride + dirtyRect.X * sizeof(uint)),
+                                dirtyRect.Width * sizeof(uint),
+                                dirtyRect.Width * sizeof(uint));
+                        }
                     }
                 }
             }

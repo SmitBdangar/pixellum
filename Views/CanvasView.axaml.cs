@@ -13,8 +13,6 @@ using Pixellum.Rendering;
 
 namespace Pixellum.Views
 {
-    // Q3 / M3: Enum replaces fragile magic strings for tool switching
-    public enum ToolType { Brush, Eraser, Fill, Eyedropper, Select, Move, Shape, Text, Gradient }
 
     public partial class CanvasView : UserControl
     {

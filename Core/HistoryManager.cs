@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Pixellum.Core
 {
@@ -91,6 +92,8 @@ namespace Pixellum.Core
             if (Steps.Count > _maxHistory)
             {
                 Steps.RemoveAt(0);
+                if (CurrentIndex >= Steps.Count)
+                    CurrentIndex = Steps.Count - 1;
             }
             else
             {
@@ -132,3 +135,4 @@ namespace Pixellum.Core
         }
     }
 }
+

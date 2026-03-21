@@ -14,25 +14,35 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="LetterSpacing" Value="1.5"/>
         </Style>
+        <Style Selector="TextBlock.prop-label">
+            <Setter Property="Foreground" Value="#666"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
         <Style Selector="Button.icon-btn">
-            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Background" Value="#252525"/>
             <Setter Property="Foreground" Value="#aaa"/>
-            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="BorderBrush" Value="#333"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Button.icon-btn:pointerover">
-            <Setter Property="Background" Value="#3a3a3a"/>
+            <Setter Property="Background" Value="#363636"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="ToggleButton.icon-btn">
-            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Background" Value="#252525"/>
             <Setter Property="Foreground" Value="#aaa"/>
-            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="BorderBrush" Value="#333"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="0"/>
@@ -41,7 +51,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <Style Selector="ToggleButton.icon-btn:pointerover">
-            <Setter Property="Background" Value="#3a3a3a"/>
+            <Setter Property="Background" Value="#363636"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="ToggleButton.icon-btn:checked">
@@ -56,14 +66,19 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Button.add-btn:pointerover">
             <Setter Property="Background" Value="#264a34"/>
         </Style>
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="Background" Value="#1e1e1e"/>
             <Setter Property="Foreground" Value="#e0e0e0"/>
-            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="BorderBrush" Value="#333"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="5"/>
             <Setter Property="Padding" Value="6,4"/>
@@ -71,15 +86,15 @@
         </Style>
     </UserControl.Styles>
 
-    <Border Background="#1e1e1e"
-            BorderBrush="#2e2e2e"
+    <Border Background="#1a1a1a"
+            BorderBrush="#2a2a2a"
             BorderThickness="1,0,0,0">
         <DockPanel>
 
             <!-- ── Header ─────────────────────────────────────────────── -->
             <Border DockPanel.Dock="Top"
-                    Padding="14,12"
-                    BorderBrush="#2e2e2e"
+                    Padding="12,10"
+                    BorderBrush="#2a2a2a"
                     BorderThickness="0,0,0,1">
                 <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
                     <TextBlock Grid.Column="0"
@@ -92,8 +107,8 @@
                             x:Name="MergeDownButton"
                             Classes="icon-btn"
                             Content="⬇"
-                            FontSize="14"
-                            Width="28" Height="28"
+                            FontSize="13"
+                            Width="26" Height="26"
                             Margin="0,0,4,0"
                             Click="OnMergeDownClicked"
                             ToolTip.Tip="Merge with layer below"/>
@@ -103,8 +118,8 @@
                             x:Name="DuplicateLayerButton"
                             Classes="icon-btn"
                             Content="⎘"
-                            FontSize="14"
-                            Width="28" Height="28"
+                            FontSize="13"
+                            Width="26" Height="26"
                             Margin="0,0,4,0"
                             Click="OnDuplicateLayerClicked"
                             ToolTip.Tip="Duplicate active layer"/>
@@ -114,9 +129,9 @@
                             x:Name="AddLayerButton"
                             Classes="add-btn"
                             Content="+"
-                            FontSize="18"
+                            FontSize="17"
                             FontWeight="Bold"
-                            Width="28" Height="28"
+                            Width="26" Height="26"
                             Click="OnAddLayerClicked"
                             ToolTip.Tip="Add new layer  [+]"/>
 
@@ -125,8 +140,8 @@
                             x:Name="AddFillLayerButton"
                             Classes="icon-btn"
                             Content="⬛"
-                            FontSize="14"
-                            Width="28" Height="28"
+                            FontSize="13"
+                            Width="26" Height="26"
                             Margin="4,0,0,0"
                             Click="OnAddFillLayerClicked"
                             ToolTip.Tip="Add Solid Color Fill Layer"/>
@@ -137,7 +152,7 @@
             <Border DockPanel.Dock="Top"
                     Background="#181818"
                     Padding="12,10"
-                    BorderBrush="#2e2e2e"
+                    BorderBrush="#2a2a2a"
                     BorderThickness="0,0,0,1">
                 <StackPanel Spacing="8">
                     <TextBlock x:Name="ActiveLayerName"
@@ -147,12 +162,10 @@
                                FontWeight="SemiBold"/>
 
                     <!-- Opacity row -->
-                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                    <Grid ColumnDefinitions="52,*,Auto" VerticalAlignment="Center">
                         <TextBlock Grid.Column="0"
                                    Text="Opacity"
-                                   Foreground="#888"
-                                   FontSize="11"
-                                   VerticalAlignment="Center"
+                                   Classes="prop-label"
                                    Margin="0,0,8,0"/>
                         <Slider Grid.Column="1"
                                 x:Name="LayerOpacitySlider"
@@ -164,40 +177,33 @@
                                    Text="100%"
                                    Foreground="#888"
                                    FontSize="11"
+                                   FontFamily="Consolas, monospace"
                                    VerticalAlignment="Center"
                                    Margin="8,0,0,0"
                                    MinWidth="36"/>
                     </Grid>
 
                     <!-- Blend mode row -->
-                    <Grid ColumnDefinitions="Auto,*">
+                    <Grid ColumnDefinitions="52,*">
                         <TextBlock Grid.Column="0"
-                                   Text="Blend"
-                                   Foreground="#888"
-                                   FontSize="11"
-                                   VerticalAlignment="Center"
+                                   Text="Mode"
+                                   Classes="prop-label"
                                    Margin="0,0,8,0"/>
                         <ComboBox Grid.Column="1"
                                   x:Name="BlendModeComboBox"
                                   SelectionChanged="OnBlendModeChanged">
-                            <!-- Basic -->
-                            <ComboBoxItem Content="Normal"    IsSelected="True"/>
-                            <!-- Darken group -->
+                            <ComboBoxItem Content="Normal"      IsSelected="True"/>
                             <ComboBoxItem Content="Darken"/>
                             <ComboBoxItem Content="Multiply"/>
                             <ComboBoxItem Content="ColorBurn"/>
-                            <!-- Lighten group -->
                             <ComboBoxItem Content="Lighten"/>
                             <ComboBoxItem Content="Screen"/>
                             <ComboBoxItem Content="ColorDodge"/>
-                            <!-- Contrast group -->
                             <ComboBoxItem Content="Overlay"/>
                             <ComboBoxItem Content="SoftLight"/>
                             <ComboBoxItem Content="HardLight"/>
-                            <!-- Inversion group -->
                             <ComboBoxItem Content="Difference"/>
                             <ComboBoxItem Content="Exclusion"/>
-                            <!-- Component group -->
                             <ComboBoxItem Content="Hue"/>
                             <ComboBoxItem Content="Saturation"/>
                             <ComboBoxItem Content="Color"/>
@@ -206,17 +212,15 @@
                     </Grid>
 
                     <!-- Locks and Clipping Mask -->
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" Margin="0,4,0,0">
+                    <Grid ColumnDefinitions="52,*,Auto,Auto,Auto,Auto" Margin="0,2,0,0">
                         <TextBlock Grid.Column="0"
-                                   Text="Lock / Mask"
-                                   Foreground="#888"
-                                   FontSize="11"
-                                   VerticalAlignment="Center"
+                                   Text="Locks"
+                                   Classes="prop-label"
                                    Margin="0,0,8,0"/>
                         <ToggleButton Grid.Column="2" x:Name="LockTransToggle" Content="▤" Classes="icon-btn" Width="24" Height="24" Margin="2,0" ToolTip.Tip="Lock Transparency" Click="OnLockToggled"/>
-                        <ToggleButton Grid.Column="3" x:Name="LockPixToggle" Content="🖌" Classes="icon-btn" Width="24" Height="24" Margin="2,0" ToolTip.Tip="Lock Image Pixels" Click="OnLockToggled"/>
-                        <ToggleButton Grid.Column="4" x:Name="LockPosToggle" Content="✥" Classes="icon-btn" Width="24" Height="24" Margin="2,0" ToolTip.Tip="Lock Position" Click="OnLockToggled"/>
-                        <ToggleButton Grid.Column="5" x:Name="ClipMaskToggle" Content="◧" Classes="icon-btn" Width="24" Height="24" Margin="12,0,0,0" ToolTip.Tip="Clipping Mask" Click="OnLockToggled"/>
+                        <ToggleButton Grid.Column="3" x:Name="LockPixToggle"   Content="🖌" Classes="icon-btn" Width="24" Height="24" Margin="2,0" ToolTip.Tip="Lock Image Pixels" Click="OnLockToggled"/>
+                        <ToggleButton Grid.Column="4" x:Name="LockPosToggle"   Content="✥" Classes="icon-btn" Width="24" Height="24" Margin="2,0" ToolTip.Tip="Lock Position"     Click="OnLockToggled"/>
+                        <ToggleButton Grid.Column="5" x:Name="ClipMaskToggle"  Content="◧" Classes="icon-btn" Width="24" Height="24" Margin="10,0,0,0" ToolTip.Tip="Clipping Mask" Click="OnLockToggled"/>
                     </Grid>
                 </StackPanel>
             </Border>

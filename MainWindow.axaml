@@ -68,7 +68,7 @@
         <Style Selector="TextBlock.status-label">
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="#444444"/>
+            <Setter Property="Foreground" Value="#888"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="LetterSpacing" Value="0.5"/>
         </Style>
@@ -262,10 +262,10 @@
              STATUS BAR
              ════════════════════════════════════════════════════════════════════ -->
         <Border DockPanel.Dock="Bottom"
-                Background="#1c1c1c"
-                BorderBrush="#282828"
+                Background="#1a1a1a"
+                BorderBrush="#2a2a2a"
                 BorderThickness="0,1,0,0"
-                Height="24"
+                Height="26"
                 Padding="12,0">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
 
@@ -308,7 +308,7 @@
         <!-- ════════════════════════════════════════════════════════════════════
              MAIN WORK AREA  — Tools | Canvas | Layers + History
              ════════════════════════════════════════════════════════════════════ -->
-        <Grid ColumnDefinitions="210,4,*,4,268">
+        <Grid ColumnDefinitions="210,4,*,4,280">
 
             <!-- ── Tools panel ── -->
             <Border Grid.Column="0"
@@ -340,20 +340,20 @@
                         <Border x:Name="CanvasCheckerBg">
                             <Border.Background>
                                 <DrawingBrush TileMode="Tile"
-                                              SourceRect="0,0,16,16"
-                                              DestinationRect="0,0,16,16">
+                                              SourceRect="0,0,8,8"
+                                              DestinationRect="0,0,8,8">
                                     <DrawingBrush.Drawing>
                                         <DrawingGroup>
-                                            <GeometryDrawing Brush="#383838">
+                                            <GeometryDrawing Brush="#303030">
                                                 <GeometryDrawing.Geometry>
-                                                    <RectangleGeometry Rect="0,0,16,16"/>
+                                                    <RectangleGeometry Rect="0,0,8,8"/>
                                                 </GeometryDrawing.Geometry>
                                             </GeometryDrawing>
-                                            <GeometryDrawing Brush="#424242">
+                                            <GeometryDrawing Brush="#3a3a3a">
                                                 <GeometryDrawing.Geometry>
                                                     <GeometryGroup>
-                                                        <RectangleGeometry Rect="0,0,8,8"/>
-                                                        <RectangleGeometry Rect="8,8,8,8"/>
+                                                        <RectangleGeometry Rect="0,0,4,4"/>
+                                                        <RectangleGeometry Rect="4,4,4,4"/>
                                                     </GeometryGroup>
                                                 </GeometryDrawing.Geometry>
                                             </GeometryDrawing>

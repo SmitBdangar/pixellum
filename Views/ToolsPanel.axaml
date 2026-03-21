@@ -8,9 +8,9 @@
     <UserControl.Styles>
         <!-- Tool button base style -->
         <Style Selector="Button.tool-btn">
-            <Setter Property="Background" Value="#2e2e2e"/>
-            <Setter Property="Foreground" Value="#aaa"/>
-            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="Background" Value="#252525"/>
+            <Setter Property="Foreground" Value="#999"/>
+            <Setter Property="BorderBrush" Value="#333"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="0"/>
@@ -24,15 +24,31 @@
                 </Transitions>
             </Setter>
         </Style>
+        <Style Selector="Button.tool-btn /template/ ContentPresenter">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.tool-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="RenderTransform" Value="scale(1.06)"/>
+        </Style>
         <Style Selector="Button.tool-btn:pointerover">
-            <Setter Property="Background" Value="#3a3a3a"/>
+            <Setter Property="Background" Value="#333"/>
             <Setter Property="BorderBrush" Value="#555"/>
             <Setter Property="Foreground" Value="#fff"/>
         </Style>
+        <Style Selector="Button.tool-btn:pressed">
+            <Setter Property="Background" Value="#1a1a1a"/>
+        </Style>
         <Style Selector="Button.tool-btn.active">
-            <Setter Property="Background" Value="#1e3a2a"/>
+            <Setter Property="Background" Value="#162e1e"/>
             <Setter Property="BorderBrush" Value="#4CAF50"/>
             <Setter Property="Foreground" Value="#4CAF50"/>
+        </Style>
+        <Style Selector="Button.tool-btn.active:pointerover">
+            <Setter Property="Background" Value="#1e3d27"/>
         </Style>
 
         <!-- Panel section header -->
@@ -50,7 +66,7 @@
 
         <!-- TextBox style -->
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#222"/>
+            <Setter Property="Background" Value="#1e1e1e"/>
             <Setter Property="Foreground" Value="#e0e0e0"/>
             <Setter Property="BorderBrush" Value="#3a3a3a"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -59,35 +75,76 @@
             <Setter Property="SelectionBrush" Value="#2a4a2a"/>
             <Setter Property="FontFamily" Value="Consolas, monospace"/>
         </Style>
+        <Style Selector="TextBox:focus">
+            <Setter Property="BorderBrush" Value="#4CAF50"/>
+        </Style>
 
         <!-- ComboBox style -->
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#222"/>
+            <Setter Property="Background" Value="#1e1e1e"/>
             <Setter Property="Foreground" Value="#e0e0e0"/>
             <Setter Property="BorderBrush" Value="#3a3a3a"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="5"/>
-            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Padding" Value="8,5"/>
+        </Style>
+
+        <!-- Action button base -->
+        <Style Selector="Button.action-btn">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.action-clear">
+            <Setter Property="Background" Value="#3a1a1a"/>
+            <Setter Property="Foreground" Value="#f44336"/>
+            <Setter Property="BorderBrush" Value="#5a2020"/>
+        </Style>
+        <Style Selector="Button.action-clear:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#4a2020"/>
+        </Style>
+        <Style Selector="Button.action-fill">
+            <Setter Property="Background" Value="#252525"/>
+            <Setter Property="Foreground" Value="#aaa"/>
+            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+        </Style>
+        <Style Selector="Button.action-fill:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#333"/>
         </Style>
     </UserControl.Styles>
 
-    <Border Background="#1e1e1e"
-            BorderBrush="#2e2e2e"
+    <Border Background="#1a1a1a"
+            BorderBrush="#2a2a2a"
             BorderThickness="0,0,1,0">
         <ScrollViewer VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="0">
 
                 <!-- ── App Name / Logo ───────────────────────────────────── -->
-                <Border Padding="16,14,16,12"
-                        BorderBrush="#2e2e2e"
+                <Border Padding="14,13,14,11"
+                        BorderBrush="#2a2a2a"
                         BorderThickness="0,0,0,1">
-                    <TextBlock Text="PIXELLUM"
-                               Foreground="#4CAF50"
-                               FontSize="15"
-                               FontWeight="Bold"
-                               LetterSpacing="3"
-                               HorizontalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+                        <TextBlock Text="■"
+                                   Foreground="#4CAF50"
+                                   FontSize="10"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="PIXELLUM"
+                                   Foreground="#4CAF50"
+                                   FontSize="14"
+                                   FontWeight="Bold"
+                                   LetterSpacing="4"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Border>
 
                 <!-- ── Tools ─────────────────────────────────────────────── -->
@@ -99,12 +156,12 @@
                         <Border Margin="3">
                             <Button x:Name="BrushToolButton"
                                     Classes="tool-btn active"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnBrushToolClicked">
                                 <ToolTip.Tip>Brush  [B]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="🖌️" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="🖌️" FontSize="20" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Brush" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -113,12 +170,12 @@
                         <Border Margin="3">
                             <Button x:Name="EraserToolButton"
                                     Classes="tool-btn"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnEraserToolClicked">
                                 <ToolTip.Tip>Eraser  [E]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="🧹" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="🧹" FontSize="20" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Eraser" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -127,12 +184,12 @@
                         <Border Margin="3">
                             <Button x:Name="EyedropperToolButton"
                                     Classes="tool-btn"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnEyedropperToolClicked">
                                 <ToolTip.Tip>Eyedropper  [I]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="💧" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="💧" FontSize="20" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Pick" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -141,12 +198,12 @@
                         <Border Margin="3">
                             <Button x:Name="FillToolButton"
                                     Classes="tool-btn"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnFillToolClicked">
-                                <ToolTip.Tip>Fill Bucket  [G]</ToolTip.Tip>
+                                <ToolTip.Tip>Fill Bucket  [F]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="🪣" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="🪣" FontSize="20" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Fill" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -155,12 +212,12 @@
                         <Border Margin="3">
                             <Button x:Name="SelectToolButton"
                                     Classes="tool-btn"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnSelectToolClicked">
                                 <ToolTip.Tip>Selection  [M]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="⬚" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="⬚" FontSize="20" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Select" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -169,12 +226,12 @@
                         <Border Margin="3">
                             <Button x:Name="MoveToolButton"
                                     Classes="tool-btn"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnMoveToolClicked">
                                 <ToolTip.Tip>Move  [V]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="✥" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="✥" FontSize="20" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Move" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -183,12 +240,12 @@
                         <Border Margin="3">
                             <Button x:Name="ShapeToolButton"
                                     Classes="tool-btn"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnShapeToolClicked">
                                 <ToolTip.Tip>Shape  [U]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="■" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="■" FontSize="20" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Shape" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -197,12 +254,12 @@
                         <Border Margin="3">
                             <Button x:Name="TextToolButton"
                                     Classes="tool-btn"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnTextToolClicked">
                                 <ToolTip.Tip>Text  [T]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="T" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="T" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Text" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -211,12 +268,12 @@
                         <Border Margin="3">
                             <Button x:Name="GradientToolButton"
                                     Classes="tool-btn"
-                                    Height="58"
+                                    Height="52"
                                     HorizontalAlignment="Stretch"
                                     Click="OnGradientToolClicked">
-                                <ToolTip.Tip>Gradient  [G]</ToolTip.Tip>
+                                <ToolTip.Tip>Gradient  [Shift+G]</ToolTip.Tip>
                                 <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                    <TextBlock Text="🌫️" FontSize="22" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="🌫️" FontSize="20" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Gradient" FontSize="10" HorizontalAlignment="Center" Foreground="#aaa"/>
                                 </StackPanel>
                             </Button>
@@ -225,7 +282,7 @@
                 </StackPanel>
 
                 <!-- ── Divider ───────────────────────────────────────────── -->
-                <Border Margin="12,14,12,0" Height="1" Background="#2e2e2e"/>
+                <Border Margin="12,14,12,0" Height="1" Background="#2a2a2a"/>
 
                 <!-- ── Color ─────────────────────────────────────────────── -->
                 <StackPanel Spacing="10" Margin="12,14,12,0">
@@ -248,7 +305,7 @@
                         <Border Grid.Column="1"
                                 x:Name="SecondaryColorPreview"
                                 Width="36" Height="36"
-                                CornerRadius="6"
+                                CornerRadius="7"
                                 Background="White"
                                 BorderBrush="#3a3a3a"
                                 BorderThickness="2"
@@ -262,8 +319,8 @@
                         <!-- Primary (on top, slightly larger) -->
                         <Border Grid.Column="0"
                                 x:Name="PrimaryColorPreview"
-                                Width="50" Height="50"
-                                CornerRadius="8"
+                                Width="52" Height="52"
+                                CornerRadius="10"
                                 Background="Black"
                                 BorderBrush="#4CAF50"
                                 BorderThickness="2"
@@ -275,28 +332,33 @@
                     </Grid>
 
                     <!-- Hex input -->
-                    <Grid ColumnDefinitions="Auto,*" Margin="0,6,0,0">
-                        <Border Grid.Column="0"
-                                Width="28" Height="28"
-                                CornerRadius="4"
-                                Background="#333"
-                                VerticalAlignment="Center"
-                                Margin="0,0,6,0">
-                            <TextBlock Text="#"
-                                       Foreground="#888"
+                    <Border Background="#232323"
+                            CornerRadius="6"
+                            BorderBrush="#333"
+                            BorderThickness="1"
+                            Padding="6,5"
+                            Margin="0,6,0,0">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Grid.Column="0"
+                                       Text="#"
+                                       Foreground="#666"
                                        FontFamily="Consolas, monospace"
                                        FontSize="13"
                                        HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBox Grid.Column="1"
-                                 x:Name="HexColorInput"
-                                 Text="000000"
-                                 Watermark="RRGGBB"
-                                 MaxLength="6"
-                                 FontSize="13"
-                                 TextChanged="OnHexColorChanged"/>
-                    </Grid>
+                                       VerticalAlignment="Center"
+                                       Margin="2,0,6,0"/>
+                            <TextBox Grid.Column="1"
+                                     x:Name="HexColorInput"
+                                     Text="000000"
+                                     Watermark="RRGGBB"
+                                     MaxLength="6"
+                                     FontSize="13"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     Padding="0"
+                                     TextChanged="OnHexColorChanged"/>
+                        </Grid>
+                    </Border>
 
                     <!-- Quick Color Palette -->
                     <StackPanel Spacing="5" Margin="0,8,0,0">
@@ -309,59 +371,41 @@
                 </StackPanel>
 
                 <!-- ── Divider ───────────────────────────────────────────── -->
-                <Border Margin="12,14,12,0" Height="1" Background="#2e2e2e"/>
+                <Border Margin="12,14,12,0" Height="1" Background="#2a2a2a"/>
 
                 <!-- ── Canvas Actions ─────────────────────────────────────── -->
                 <StackPanel Spacing="8" Margin="12,14,12,16">
                     <TextBlock Text="CANVAS" Classes="section-header"/>
 
-                    <Button Content="🗑  Clear Layer"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="34"
-                            Padding="10,0"
-                            Background="#3a1a1a"
-                            Foreground="#f44336"
-                            BorderBrush="#5a2020"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Cursor="Hand"
+                    <Button Classes="action-btn action-clear"
+                            Content="🗑  Clear Layer"
                             Click="OnClearCanvasClicked"/>
 
-                    <Button Content="🎨  Fill Layer"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Height="34"
-                            Padding="10,0"
-                            Background="#2e2e2e"
-                            Foreground="#aaa"
-                            BorderBrush="#3a3a3a"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Cursor="Hand"
+                    <Button Classes="action-btn action-fill"
+                            Content="🎨  Fill Layer"
                             Click="OnFillCanvasClicked"/>
                 </StackPanel>
 
                 <!-- ── Keyboard shortcut hint ─────────────────────────────── -->
                 <Border Margin="12,0,12,16"
-                        Padding="10,8"
-                        Background="#181818"
+                        Padding="10,10"
+                        Background="#161616"
                         CornerRadius="8"
-                        BorderBrush="#2a2a2a"
+                        BorderBrush="#272727"
                         BorderThickness="1">
                     <StackPanel Spacing="3">
-                        <TextBlock Text="SHORTCUTS" Classes="section-header" Margin="0,0,0,4"/>
+                        <TextBlock Text="SHORTCUTS" Classes="section-header" Margin="0,0,0,6"/>
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="B / E / I / G" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,2"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Tools" Foreground="#666" FontSize="11" Margin="0,0,0,2"/>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="[ / ]" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,2"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Brush size" Foreground="#666" FontSize="11" Margin="0,0,0,2"/>
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="X" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,2"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Swap colors" Foreground="#666" FontSize="11" Margin="0,0,0,2"/>
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Ctrl+Z / Y" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,2"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Undo / Redo" Foreground="#666" FontSize="11" Margin="0,0,0,2"/>
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Space+drag" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,2"/>
-                            <TextBlock Grid.Row="4" Grid.Column="1" Text="Pan canvas" Foreground="#666" FontSize="11" Margin="0,0,0,2"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="B / E / I / F" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,3"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Tools" Foreground="#666" FontSize="11" Margin="0,0,0,3"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="[ / ]" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,3"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Brush size" Foreground="#666" FontSize="11" Margin="0,0,0,3"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="X" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,3"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Swap colors" Foreground="#666" FontSize="11" Margin="0,0,0,3"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Ctrl+Z / Y" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,3"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Undo / Redo" Foreground="#666" FontSize="11" Margin="0,0,0,3"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Space+drag" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,3"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="Pan canvas" Foreground="#666" FontSize="11" Margin="0,0,0,3"/>
                             <TextBlock Grid.Row="5" Grid.Column="0" Text="Scroll wheel" Foreground="#4CAF50" FontSize="11" FontFamily="Consolas, monospace" Margin="0,0,8,0"/>
                             <TextBlock Grid.Row="5" Grid.Column="1" Text="Zoom" Foreground="#666" FontSize="11"/>
                         </Grid>

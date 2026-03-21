@@ -25,7 +25,7 @@
             
             <Canvas Name="OverlayCanvas" Background="Transparent" IsHitTestVisible="False">
                 <Rectangle Name="SelectionMarquee"
-                           Stroke="Black"
+                           Stroke="#90ffffff"
                            StrokeThickness="1"
                            StrokeDashArray="4,4"
                            IsVisible="False" />
@@ -37,10 +37,12 @@
                            IsVisible="False" />
                 <TextBox Name="TextOverlayBox"
                          IsVisible="False"
-                         Background="Transparent"
+                         Background="#44000000"
                          Foreground="White"
                          BorderThickness="1"
-                         BorderBrush="#888"
+                         BorderBrush="#4CAF50"
+                         CornerRadius="2"
+                         Padding="4,3"
                          AcceptsReturn="True"
                          FontSize="24"/>
                 <Rectangle Name="GridOverlayRect"

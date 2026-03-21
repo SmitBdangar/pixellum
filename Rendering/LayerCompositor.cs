@@ -8,36 +8,62 @@ namespace Pixellum.Rendering
     {
         private static float[] _baseAlphaBuffer = Array.Empty<float>();
 
-        public static void Composite(Document document, IReadOnlyList<Layer> layers)
+    /// <summary>Full canvas composite.</summary>
+    public static void Composite(Document document, IReadOnlyList<Layer> layers)
+    {
+        Composite(document, layers, new IntRect(0, 0, document.Width, document.Height));
+    }
+
+    /// <summary>Dirty rect composite for perf.</summary>
+    public static void Composite(Document document, IReadOnlyList<Layer> layers, IntRect dirtyRect)
+    {
+        uint[] documentPixels = document.GetPixelsRaw();
+        int w = document.Width;
+        int h = document.Height;
+        dirtyRect = IntRect.Intersect(dirtyRect, new IntRect(0, 0, w, h));
+
+        if (dirtyRect.IsEmpty) return;
+
+        Array.Clear(documentPixels, dirtyRect.Y * w + dirtyRect.X, dirtyRect.Width * dirtyRect.Height);
+
+        int start = dirtyRect.Y * w + dirtyRect.X;
+        int count = dirtyRect.Width * dirtyRect.Height;
+        if (_baseAlphaBuffer.Length < count)
         {
-            uint[] documentPixels = document.GetPixelsRaw();
-            Array.Clear(documentPixels, 0, documentPixels.Length);
+            _baseAlphaBuffer = new float[count];
+        }
 
-            if (_baseAlphaBuffer.Length < documentPixels.Length)
+        for (int li = 0; li < layers.Count; li++)
+        {
+            var layer = layers[li];
+            if (!layer.Visible || layer.Opacity <= 0.001f) continue;
+
+            uint[] layerPixels = layer.GetPixels();
+            float layerOpacity = layer.Opacity;
+
+            IntRect layerDirty = IntRect.Intersect(layer.DirtyRegion, dirtyRect);
+            if (layerDirty.IsEmpty) continue;
+            layer.ClearDirty();
+
+            // Clip to dirty rect for this layer
+            if (!layer.IsClippingMask)
             {
-                _baseAlphaBuffer = new float[documentPixels.Length];
-            }
-
-            for (int li = 0; li < layers.Count; li++)
-            {
-                var layer = layers[li];
-                if (!layer.Visible || layer.Opacity <= 0.001f)
-                    continue;
-
-                uint[] layerPixels = layer.GetPixels();
-                float  layerOpacity = layer.Opacity;
-
-                if (!layer.IsClippingMask)
+                for (int yi = layerDirty.Y; yi < layerDirty.Bottom; yi++)
                 {
-                    for (int i = 0; i < documentPixels.Length; i++)
+                    for (int xi = layerDirty.X; xi < layerDirty.Right; xi++)
                     {
-                        _baseAlphaBuffer[i] = ((layerPixels[i] >> 24) & 0xFF) / 255.0f * layerOpacity;
+                        int i = yi * w + xi - start;
+                        _baseAlphaBuffer[i] = ((layerPixels[yi * layer.Width + xi] >> 24) & 0xFF) / 255.0f * layerOpacity;
                     }
                 }
+            }
 
-                for (int i = 0; i < documentPixels.Length; i++)
+            for (int yi = layerDirty.Y; yi < layerDirty.Bottom; yi++)
+            {
+                for (int xi = layerDirty.X; xi < layerDirty.Right; xi++)
                 {
-                    uint src = layerPixels[i];
+                    int i = yi * w + xi - start;
+                    uint src = layerPixels[yi * layer.Width + xi];
 
                     float srcA = ((src >> 24) & 0xFF) / 255.0f * layerOpacity;
                     
@@ -48,26 +74,21 @@ namespace Pixellum.Rendering
 
                     if (srcA <= 0.001f) continue;
 
-                    uint  dst    = documentPixels[i];
-                    float dstA   = ((dst >> 24) & 0xFF) / 255.0f;
+                    uint dst = documentPixels[yi * w + xi];
+                    float dstA = ((dst >> 24) & 0xFF) / 255.0f;
                     float invSrcA = 1.0f - srcA;
 
                     float srcR = ((src >> 16) & 0xFF) / 255.0f;
                     float srcG = ((src >>  8) & 0xFF) / 255.0f;
-                    float srcB = ( src        & 0xFF) / 255.0f;
+                    float srcB = ( src & 0xFF) / 255.0f;
 
                     float dstR = ((dst >> 16) & 0xFF) / 255.0f;
                     float dstG = ((dst >>  8) & 0xFF) / 255.0f;
-                    float dstB = ( dst        & 0xFF) / 255.0f;
+                    float dstB = ( dst & 0xFF) / 255.0f;
 
-                    // Apply blend mode to RGB channels
                     float blendR, blendG, blendB;
-                    ApplyBlendMode(layer.Mode,
-                        srcR, srcG, srcB,
-                        dstR, dstG, dstB,
-                        out blendR, out blendG, out blendB);
+                    ApplyBlendMode(layer.Mode, srcR, srcG, srcB, dstR, dstG, dstB, out blendR, out blendG, out blendB);
 
-                    // Porter-Duff src-over compositing with blended color
                     float outA = srcA + dstA * invSrcA;
                     float outR, outG, outB;
                     if (outA < 1e-6f)
@@ -86,10 +107,13 @@ namespace Pixellum.Rendering
                     uint g = (uint)Math.Clamp(outG * 255f, 0, 255);
                     uint b = (uint)Math.Clamp(outB * 255f, 0, 255);
 
-                    documentPixels[i] = (a << 24) | (r << 16) | (g << 8) | b;
+                    documentPixels[yi * w + xi] = (a << 24) | (r << 16) | (g << 8) | b;
                 }
             }
         }
+
+        document.MarkDirty(dirtyRect);
+    }
 
         // ─── Blend mode dispatch ─────────────────────────────────────────────
 
