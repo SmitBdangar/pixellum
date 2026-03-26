@@ -81,6 +81,9 @@ namespace Pixellum.Core
                         _pixels[y * Width + x] = copy[srcY * Width + srcX];
                 }
             }
+
+            // Pixel translation affects the whole layer.
+            DirtyRegion = new IntRect(0, 0, Width, Height);
         }
 
         public uint[] GetPixels() => _pixels;
@@ -89,7 +92,9 @@ namespace Pixellum.Core
 
         public void MarkDirty(IntRect rect)
         {
-            DirtyRegion = IntRect.Union(DirtyRegion, rect);
+            var clipped = IntRect.Intersect(rect, new IntRect(0, 0, Width, Height));
+            if (clipped.IsEmpty) return;
+            DirtyRegion = DirtyRegion.IsEmpty ? clipped : IntRect.Union(DirtyRegion, clipped);
         }
 
         public void MarkDirty(int x, int y, int w, int h)

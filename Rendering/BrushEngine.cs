@@ -31,6 +31,10 @@ namespace Pixellum.Rendering
 
             bool lockTrans = layer.LockTransparency;
 
+            // Mark a conservative dirty rect for this stamp (used for dirty-rect compositing/render).
+            int r = (int)MathF.Ceiling(radius) + 1;
+            layer.MarkDirty(centerX - r, centerY - r, r * 2 + 1, r * 2 + 1);
+
             IterateCircle(layer, centerX, centerY, radius, (index, dist) =>
             {
                 float t       = dist / radius;
@@ -46,6 +50,9 @@ namespace Pixellum.Rendering
             if (layer.LockPixels || layer.LockTransparency) return;
 
             uint[] pixels = layer.GetPixels();
+
+            int r = (int)MathF.Ceiling(radius) + 1;
+            layer.MarkDirty(centerX - r, centerY - r, r * 2 + 1, r * 2 + 1);
 
             IterateCircle(layer, centerX, centerY, radius, (index, dist) =>
             {

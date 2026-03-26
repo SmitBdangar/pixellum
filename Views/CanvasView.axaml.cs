@@ -569,22 +569,24 @@ namespace Pixellum.Views
 
         private Point? GetBitmapCoordinates(PointerEventArgs e)
         {
-            if (_canvasImage?.Bounds == null) return null;
+            if (_canvasImage == null) return null;
 
-            var pos         = e.GetPosition(_canvasImage);
-            var bitmapWidth = _canvasBitmap.PixelSize.Width;
-            var bitmapHeight = _canvasBitmap.PixelSize.Height;
-            var imageBounds = _canvasImage.Bounds;
+            // Map pointer position in the view to bitmap pixel-space using the visual transform chain.
+            // This stays correct under zoom/pan and avoids off-by-one errors from manual centering math.
+            var toView = _canvasImage.TransformToVisual(this);
+            if (toView == null) return null;
 
-            double offsetX = (imageBounds.Width  - bitmapWidth)  / 2.0;
-            double offsetY = (imageBounds.Height - bitmapHeight) / 2.0;
+            var pView = e.GetPosition(this);
+            if (!toView.Value.TryInvert(out var inv)) return null;
 
-            double bitmapX = pos.X - offsetX;
-            double bitmapY = pos.Y - offsetY;
+            var pImg = inv.Transform(pView);
 
-            if (bitmapX < 0 || bitmapY < 0 ||
-                bitmapX >= bitmapWidth || bitmapY >= bitmapHeight)
-                return null;
+            double bitmapX = pImg.X;
+            double bitmapY = pImg.Y;
+
+            int w = _canvasBitmap.PixelSize.Width;
+            int h = _canvasBitmap.PixelSize.Height;
+            if (bitmapX < 0 || bitmapY < 0 || bitmapX >= w || bitmapY >= h) return null;
 
             return new Point(bitmapX, bitmapY);
         }
@@ -1274,9 +1276,18 @@ namespace Pixellum.Views
 
         private void RedrawCanvas()
         {
-            // Compositing and bitmap blit can happen on any thread
-            LayerCompositor.Composite(_document, _layers);
-            _renderer.Render(_document, _canvasBitmap);
+            // Composite + blit only the union dirty rect (much cheaper than full-canvas work).
+            // NOTE: bitmap invalidation is still visual-level, but pixel work is now dirty-rect scoped.
+            IntRect dirty = _document.DirtyRegion;
+            for (int i = 0; i < _layers.Count; i++)
+                dirty = IntRect.Union(dirty, _layers[i].DirtyRegion);
+
+            if (dirty.IsEmpty)
+                dirty = new IntRect(0, 0, _document.Width, _document.Height);
+
+            LayerCompositor.Composite(_document, _layers, dirty);
+            _renderer.Render(_document, _canvasBitmap, dirty);
+            _document.ClearDirty();
 
             // T1: InvalidateVisual MUST run on the UI thread
             Dispatcher.UIThread.Post(() => 

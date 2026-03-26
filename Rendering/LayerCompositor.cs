@@ -24,14 +24,18 @@ namespace Pixellum.Rendering
 
         if (dirtyRect.IsEmpty) return;
 
-        Array.Clear(documentPixels, dirtyRect.Y * w + dirtyRect.X, dirtyRect.Width * dirtyRect.Height);
+        // Clear only pixels inside the dirty rect (rect is not contiguous in the backing array).
+        for (int yi = dirtyRect.Y; yi < dirtyRect.Bottom; yi++)
+        {
+            Array.Clear(documentPixels, yi * w + dirtyRect.X, dirtyRect.Width);
+        }
 
-        int start = dirtyRect.Y * w + dirtyRect.X;
         int count = dirtyRect.Width * dirtyRect.Height;
         if (_baseAlphaBuffer.Length < count)
         {
             _baseAlphaBuffer = new float[count];
         }
+        Array.Clear(_baseAlphaBuffer, 0, count);
 
         for (int li = 0; li < layers.Count; li++)
         {
@@ -52,8 +56,9 @@ namespace Pixellum.Rendering
                 {
                     for (int xi = layerDirty.X; xi < layerDirty.Right; xi++)
                     {
-                        int i = yi * w + xi - start;
-                        _baseAlphaBuffer[i] = ((layerPixels[yi * layer.Width + xi] >> 24) & 0xFF) / 255.0f * layerOpacity;
+                        int i = (yi - dirtyRect.Y) * dirtyRect.Width + (xi - dirtyRect.X);
+                        _baseAlphaBuffer[i] =
+                            ((layerPixels[yi * layer.Width + xi] >> 24) & 0xFF) / 255.0f * layerOpacity;
                     }
                 }
             }
@@ -62,7 +67,7 @@ namespace Pixellum.Rendering
             {
                 for (int xi = layerDirty.X; xi < layerDirty.Right; xi++)
                 {
-                    int i = yi * w + xi - start;
+                    int i = (yi - dirtyRect.Y) * dirtyRect.Width + (xi - dirtyRect.X);
                     uint src = layerPixels[yi * layer.Width + xi];
 
                     float srcA = ((src >> 24) & 0xFF) / 255.0f * layerOpacity;
