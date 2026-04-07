@@ -46,6 +46,9 @@ namespace Pixellum.Views
             RefreshLayersList();
         }
 
+        public void OnAddLayerClickedPublic() =>
+            OnAddLayerClicked(null, new RoutedEventArgs());
+
         private void OnAddFillLayerClicked(object? sender, RoutedEventArgs e)
         {
             if (_canvas == null) return;
@@ -71,6 +74,9 @@ namespace Pixellum.Views
             Array.Copy(source.GetPixels(), newLayer.GetPixels(), source.GetPixels().Length);
             RefreshLayersList();
         }
+
+        public void OnDuplicateLayerClickedPublic() =>
+            OnDuplicateLayerClicked(null, new RoutedEventArgs());
 
         private void OnMergeDownClicked(object? sender, RoutedEventArgs e)
         {
@@ -244,174 +250,148 @@ namespace Pixellum.Views
             var layers     = _canvas.GetLayers();
             int activeIndex = _canvas.GetActiveLayerIndex();
 
-            // Update header info
-            var activeLayerName = this.FindControl<TextBlock>("ActiveLayerName");
-            if (activeLayerName != null && activeIndex >= 0 && activeIndex < layers.Count)
-                activeLayerName.Text = layers[activeIndex].Name;
-
-            var opacitySlider = this.FindControl<Slider>("LayerOpacitySlider");
-            if (opacitySlider != null && activeIndex >= 0 && activeIndex < layers.Count)
-                opacitySlider.Value = layers[activeIndex].Opacity * 100;
-
-            var blendCombo = this.FindControl<ComboBox>("BlendModeComboBox");
-            if (blendCombo != null && activeIndex >= 0 && activeIndex < layers.Count)
-            {
-                string modeName = layers[activeIndex].Mode.ToString();
-                for (int ci = 0; ci < blendCombo.Items.Count; ci++)
-                {
-                    if (blendCombo.Items[ci] is ComboBoxItem cbi &&
-                        cbi.Content?.ToString() == modeName)
-                    {
-                        blendCombo.SelectedIndex = ci;
-                        break;
-                    }
-                }
-            }
-
-            if (activeIndex >= 0 && activeIndex < layers.Count)
+            // Sync main-window blend combo + opacity label
+            var window = this.GetVisualRoot() as Window;
+            if (window != null && activeIndex >= 0 && activeIndex < layers.Count)
             {
                 var layer = layers[activeIndex];
-                var lockTrans = this.FindControl<ToggleButton>("LockTransToggle");
-                if (lockTrans != null) lockTrans.IsChecked = layer.LockTransparency;
 
-                var lockPix = this.FindControl<ToggleButton>("LockPixToggle");
-                if (lockPix != null) lockPix.IsChecked = layer.LockPixels;
+                var blendCombo = window.FindControl<ComboBox>("BlendModeComboBox");
+                if (blendCombo != null)
+                {
+                    string modeName = layer.Mode.ToString();
+                    for (int ci = 0; ci < blendCombo.Items.Count; ci++)
+                    {
+                        if (blendCombo.Items[ci] is ComboBoxItem cbi &&
+                            cbi.Content?.ToString() == modeName)
+                        { blendCombo.SelectedIndex = ci; break; }
+                    }
+                }
 
-                var lockPos = this.FindControl<ToggleButton>("LockPosToggle");
-                if (lockPos != null) lockPos.IsChecked = layer.LockPosition;
-
-                var clipMask = this.FindControl<ToggleButton>("ClipMaskToggle");
-                if (clipMask != null) clipMask.IsChecked = layer.IsClippingMask;
+                var opacityLabel = window.FindControl<TextBlock>("LayerOpacityLabel");
+                if (opacityLabel != null)
+                    opacityLabel.Text = $"{(int)(layer.Opacity * 100)}%";
             }
 
-            // Build layer rows (top to bottom = highest index first)
+            // Build layer rows top-to-bottom (highest index first = top of stack)
             for (int i = layers.Count - 1; i >= 0; i--)
             {
                 stack.Children.Add(CreateLayerItem(layers[i], i, i == activeIndex, layers.Count));
             }
         }
 
-        // ── Layer item UI ─────────────────────────────────────────────────
-
         private Border CreateLayerItem(Layer layer, int layerIndex, bool isActive, int totalLayers)
         {
+            // Row border — highlighted when active (PS blue)
             var border = new Border
             {
                 Background      = isActive
-                    ? new SolidColorBrush(Color.Parse("#1e3a2a"))
-                    : new SolidColorBrush(Color.Parse("#252525")),
-                BorderBrush     = isActive
-                    ? new SolidColorBrush(Color.Parse("#4CAF50"))
-                    : new SolidColorBrush(Color.Parse("#333")),
-                BorderThickness = new Thickness(isActive ? 1 : 1),
-                CornerRadius    = new CornerRadius(6),
-                Padding         = new Thickness(8, 6),
+                    ? new SolidColorBrush(Color.Parse("#1a6496"))
+                    : new SolidColorBrush(Color.Parse("#3c3c3c")),
+                BorderBrush     = new SolidColorBrush(Color.Parse("#2a2a2a")),
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding         = new Thickness(0, 0, 8, 0),
                 Cursor          = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
-                Margin          = new Thickness(0, 0, 0, 0)
+                Height          = 44
             };
 
-            // Left accent stripe for active layer
-            if (isActive)
+            // Main row grid: eye | thumb | [name + info] | type-badge | rename | delete
+            var row = new Grid
             {
-                border.BorderBrush = new SolidColorBrush(Color.Parse("#4CAF50"));
-                border.BorderThickness = new Thickness(3, 1, 1, 1);
-            }
-
-            var mainGrid = new Grid
-            {
-                ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto,Auto,Auto,Auto")
+                ColumnDefinitions = new ColumnDefinitions("36,40,*,Auto,Auto,Auto,Auto")
             };
 
-            // 1. Thumbnail
-            var thumb = CreateThumbnail(layer);
-            Grid.SetColumn(thumb, 0);
-
-            // 2. Name + visibility indicator
-            var center = new StackPanel
+            // ── Eye (visibility toggle) ─────────────────────────────
+            var eyeBtn = new Button
             {
-                Spacing = 2,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(8, 0, 4, 0)
-            };
-            Grid.SetColumn(center, 1);
-
-            center.Children.Add(new TextBlock
-            {
-                Text       = layer.Name,
-                Foreground = isActive ? Brushes.White : new SolidColorBrush(Color.Parse("#bbb")),
-                FontSize   = 12,
-                FontWeight = isActive ? FontWeight.SemiBold : FontWeight.Normal,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxWidth   = 80
-            });
-            center.Children.Add(new TextBlock
-            {
-                Text       = $"{(int)(layer.Opacity * 100)}%  ·  {layer.Mode}",
-                Foreground = new SolidColorBrush(Color.Parse("#666")),
-                FontSize   = 10
-            });
-
-            if (layer.IsClippingMask)
-            {
-                center.Children.Add(new TextBlock
+                Content = new TextBlock
                 {
-                    Text = "↳ Masked",
-                    Foreground = new SolidColorBrush(Color.Parse("#B0BEC5")),
-                    FontSize = 10,
-                    FontWeight = FontWeight.SemiBold
-                });
-                
-                // Indent the thumbnail slightly to show hierarchy
-                thumb.Margin = new Thickness(12, 0, 0, 0);
-            }
-
-            border.PointerPressed += (_, _) =>
-            {
-                _canvas?.SetActiveLayer(layerIndex);
-                RefreshLayersList();
+                    Text       = layer.Visible ? "●" : "○",
+                    FontSize   = 14,
+                    Foreground = layer.Visible
+                        ? new SolidColorBrush(Color.Parse("#cccccc"))
+                        : new SolidColorBrush(Color.Parse("#555")),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment   = VerticalAlignment.Center
+                },
+                Background               = Brushes.Transparent,
+                BorderThickness          = new Thickness(0),
+                Padding                  = new Thickness(0),
+                Width                    = 36,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                VerticalContentAlignment   = VerticalAlignment.Center,
+                Cursor                   = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
             };
-
-            // 3. Visibility toggle
-            var visBtn = MakeSmallButton(layer.Visible ? "👁" : "◌", "#2a2a2a", "#999");
-            ToolTip.SetTip(visBtn, "Toggle visibility");
-            Grid.SetColumn(visBtn, 2);
-            visBtn.Click += (_, e) =>
+            ToolTip.SetTip(eyeBtn, "Toggle visibility");
+            Grid.SetColumn(eyeBtn, 0);
+            eyeBtn.Click += (_, e) =>
             {
-                e.Handled      = true;
-                layer.Visible  = !layer.Visible;
+                e.Handled     = true;
+                layer.Visible = !layer.Visible;
                 _canvas?.TriggerRedraw();
                 RefreshLayersList();
             };
 
-            // 4. Move up
-            var upBtn = MakeSmallButton("↑", "#2a2a2a", "#777");
-            ToolTip.SetTip(upBtn, "Move layer up");
-            upBtn.IsEnabled = layerIndex < totalLayers - 1;
-            Grid.SetColumn(upBtn, 3);
-            upBtn.Click += (_, e) => { e.Handled = true; MoveLayerUp(layerIndex); };
+            // ── Thumbnail ───────────────────────────────────────────
+            var thumb = CreateThumbnail(layer);
+            thumb.Width           = 32;
+            thumb.Height          = 32;
+            thumb.Margin          = new Thickness(2, 0, 4, 0);
+            thumb.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(thumb, 1);
 
-            // 5. Move down
-            var downBtn = MakeSmallButton("↓", "#2a2a2a", "#777");
-            ToolTip.SetTip(downBtn, "Move layer down");
-            downBtn.IsEnabled = layerIndex > 0;
-            Grid.SetColumn(downBtn, 4);
-            downBtn.Click += (_, e) => { e.Handled = true; MoveLayerDown(layerIndex); };
+            // ── Name + sub-info ─────────────────────────────────────
+            var nameStack = new StackPanel
+            {
+                Spacing           = 1,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin            = new Thickness(2, 0, 4, 0)
+            };
+            nameStack.Children.Add(new TextBlock
+            {
+                Text         = layer.Name,
+                Foreground   = isActive ? Brushes.White : new SolidColorBrush(Color.Parse("#cccccc")),
+                FontSize     = 12,
+                FontWeight   = isActive ? FontWeight.SemiBold : FontWeight.Normal,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            });
+            nameStack.Children.Add(new TextBlock
+            {
+                Text       = layer.Mode == BlendMode.Normal
+                    ? $"{(int)(layer.Opacity * 100)}%"
+                    : $"{layer.Mode}  ·  {(int)(layer.Opacity * 100)}%",
+                Foreground = new SolidColorBrush(Color.Parse(isActive ? "#a0c8e8" : "#888888")),
+                FontSize   = 10
+            });
+            Grid.SetColumn(nameStack, 2);
 
-            // 6. Rename
-            var renameBtn = MakeSmallButton("✎", "#1a2a3e", "#64b5f6");
-            ToolTip.SetTip(renameBtn, "Rename layer");
-            Grid.SetColumn(renameBtn, 5);
+            // ── Type badge (T for text, 🔒 for locked) ─────────────
+            var typeBadge = new TextBlock
+            {
+                Text              = GetLayerTypeBadge(layer),
+                Foreground        = new SolidColorBrush(Color.Parse("#888")),
+                FontSize          = 11,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin            = new Thickness(2, 0)
+            };
+            Grid.SetColumn(typeBadge, 3);
+
+            // ── Rename ──────────────────────────────────────────────
+            var renameBtn = MakeSmallButton("✎", "transparent", "#777");
+            ToolTip.SetTip(renameBtn, "Rename");
+            Grid.SetColumn(renameBtn, 4);
             renameBtn.Click += async (_, e) =>
             {
                 e.Handled = true;
                 await ShowRenameDialog(layerIndex, layer.Name);
             };
 
-            // 7. Delete
-            var deleteBtn = MakeSmallButton("×", "#3a1a1a", "#f44336");
-            ToolTip.SetTip(deleteBtn, "Delete layer");
+            // ── Delete ──────────────────────────────────────────────
+            var deleteBtn = MakeSmallButton("×", "transparent", "#e05555");
+            ToolTip.SetTip(deleteBtn, "Delete Layer");
+            deleteBtn.FontSize = 16;
             deleteBtn.IsEnabled = totalLayers > 1;
-            Grid.SetColumn(deleteBtn, 6);
+            Grid.SetColumn(deleteBtn, 5);
             deleteBtn.Click += (_, e) =>
             {
                 e.Handled = true;
@@ -419,16 +399,30 @@ namespace Pixellum.Views
                 RefreshLayersList();
             };
 
-            mainGrid.Children.Add(thumb);
-            mainGrid.Children.Add(center);
-            mainGrid.Children.Add(visBtn);
-            mainGrid.Children.Add(upBtn);
-            mainGrid.Children.Add(downBtn);
-            mainGrid.Children.Add(renameBtn);
-            mainGrid.Children.Add(deleteBtn);
+            // Click to activate
+            border.PointerPressed += (_, _) =>
+            {
+                _canvas?.SetActiveLayer(layerIndex);
+                RefreshLayersList();
+            };
 
-            border.Child = mainGrid;
+            row.Children.Add(eyeBtn);
+            row.Children.Add(thumb);
+            row.Children.Add(nameStack);
+            row.Children.Add(typeBadge);
+            row.Children.Add(renameBtn);
+            row.Children.Add(deleteBtn);
+
+            border.Child = row;
             return border;
+        }
+
+        private static string GetLayerTypeBadge(Layer layer)
+        {
+            if (layer.IsClippingMask) return "↳";
+            if (layer.LockPosition)   return "🔒";
+            if (layer.Name.Contains("Text", StringComparison.OrdinalIgnoreCase)) return "T";
+            return "";
         }
 
         private static Button MakeSmallButton(string content, string bg, string fg) => new Button

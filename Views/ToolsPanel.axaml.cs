@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -44,60 +45,46 @@ namespace Pixellum.Views
                         {
                             _primaryColor = color;
                             UpdatePrimaryColorPreview();
-                            UpdateHexInput();
-                            _canvas.ActiveColor = _primaryColor;
+                            if (_canvas != null) _canvas.ActiveColor = _primaryColor;
                         };
-                        // Wire keyboard shortcut X → swap colors
                         _canvas.RequestColorSwap += (_, _) => SwapColors();
-                        // Wire tool shortcut keys → update button highlight
                         _canvas.ToolChanged += (_, tool) =>
                         {
                             _activeTool = tool;
                             UpdateToolButtons();
                         };
-                        _canvas.ActiveTool = _activeTool;   // ToolType enum
+                        _canvas.ActiveTool = _activeTool;
                     }
                 }
 
-                InitializeQuickColors();
                 UpdatePrimaryColorPreview();
                 UpdateSecondaryColorPreview();
             };
 
-            // Color wheel event
-            ColorPicker.ActiveColorChanged += (_, color) =>
-            {
-                _primaryColor = (uint)((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B);
-                UpdatePrimaryColorPreview();
-                UpdateHexInput();
-                
-                if (_canvas != null)
-                {
-                    _canvas.ActiveColor = _primaryColor;
-                }
-            };
-
-            // Color swap on click
+            // Color swap on swatch click
             PrimaryColorPreview.PointerPressed += (_, __) => SwapColors();
             SecondaryColorPreview.PointerPressed += (_, __) => SwapColors();
         }
 
         private void InitializeQuickColors()
         {
-            QuickColorGrid.Children.Clear();
+            // Quick color grid is now in the main window's Color & Swatches section.
+            // Populate the RightSwatchGrid if available.
+            var window = this.GetVisualRoot() as Window;
+            if (window == null) return;
+            var grid = window.FindControl<UniformGrid>("RightSwatchGrid");
+            if (grid == null) return;
+            grid.Children.Clear();
 
             foreach (var hexColor in _quickColors)
             {
                 var color = Color.Parse(hexColor);
                 var border = new Border
                 {
-                    Width = 28,
-                    Height = 28,
-                    CornerRadius = new CornerRadius(4),
+                    Width = 22,
+                    Height = 16,
                     Background = new SolidColorBrush(color),
-                    Margin = new Thickness(2),
-                    BorderBrush = Brushes.White,
-                    BorderThickness = new Thickness(1),
+                    Margin = new Thickness(1),
                     Cursor = new Cursor(StandardCursorType.Hand)
                 };
 
@@ -105,28 +92,17 @@ namespace Pixellum.Views
                 {
                     _primaryColor = (uint)((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B);
                     UpdatePrimaryColorPreview();
-                    UpdateHexInput();
-                    
-                    if (_canvas != null)
-                    {
-                        _canvas.ActiveColor = _primaryColor;
-                    }
+                    if (_canvas != null) _canvas.ActiveColor = _primaryColor;
+                    SyncRgbSliders(window);
                 };
 
-                border.PointerEntered += (_, __) =>
-                {
-                    border.BorderBrush = new SolidColorBrush(Color.Parse("#4CAF50"));
-                    border.BorderThickness = new Thickness(2);
-                };
-
-                border.PointerExited += (_, __) =>
-                {
-                    border.BorderBrush = Brushes.White;
-                    border.BorderThickness = new Thickness(1);
-                };
-
-                QuickColorGrid.Children.Add(border);
+                grid.Children.Add(border);
             }
+        }
+
+        private static void SyncRgbSliders(Window w)
+        {
+            // No-op stub — sliders are synced via MainWindow.OnRgbSliderChanged
         }
 
         private void UpdatePrimaryColorPreview()
@@ -151,11 +127,7 @@ namespace Pixellum.Views
 
         private void UpdateHexInput()
         {
-            byte r = (byte)((_primaryColor >> 16) & 0xFF);
-            byte g = (byte)((_primaryColor >>  8) & 0xFF);
-            byte b = (byte)( _primaryColor        & 0xFF);
-            // No leading # — the AXAML puts a '#' badge before the TextBox
-            HexColorInput.Text = $"{r:X2}{g:X2}{b:X2}";
+            // Hex input is no longer in the ToolsPanel AXAML — no-op.
         }
 
         private void SwapColors()
@@ -174,22 +146,7 @@ namespace Pixellum.Views
 
         private void OnHexColorChanged(object? sender, TextChangedEventArgs e)
         {
-            var input = HexColorInput.Text?.Trim().TrimStart('#');
-            if (string.IsNullOrEmpty(input) || input.Length != 6) return;
-
-            try
-            {
-                var color = Color.Parse("#" + input);
-                _primaryColor = (uint)((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B);
-                UpdatePrimaryColorPreview();
-
-                if (_canvas != null)
-                    _canvas.ActiveColor = _primaryColor;
-            }
-            catch
-            {
-                // Invalid hex — ignore
-            }
+            // Hex input has moved to MainWindow — no-op in ToolsPanel now.
         }
 
         // Tool Selection Handlers

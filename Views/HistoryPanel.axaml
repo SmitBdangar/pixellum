@@ -2,13 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:core="clr-namespace:Pixellum.Core"
              x:Class="Pixellum.Views.HistoryPanel"
-             Background="#1a1a1a"
-             BorderBrush="#2a2a2a"
-             BorderThickness="0,1,0,0">
+             Background="#161616"
+             BorderBrush="#1e1e1e"
+             BorderThickness="0,1,0,0"
+             FontFamily="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
 
     <UserControl.Styles>
         <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Padding" Value="12,5"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Transitions">
@@ -18,42 +19,43 @@
             </Setter>
         </Style>
         <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#252525"/>
+            <Setter Property="Background" Value="#1e1e1e"/>
         </Style>
         <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1e3d27"/>
+            <Setter Property="Background" Value="#0d1f30"/>
         </Style>
         <Style Selector="ListBoxItem:selected TextBlock">
-            <Setter Property="Foreground" Value="#80e080"/>
+            <Setter Property="Foreground" Value="#31A8FF"/>
         </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*">
+
         <!-- Header -->
         <Border Grid.Row="0"
-                Background="#202020"
-                BorderBrush="#2a2a2a"
+                Background="#1a1a1a"
+                BorderBrush="#202020"
                 BorderThickness="0,0,0,1"
-                Padding="14,10">
+                Padding="14,9">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0"
                            Text="HISTORY"
-                           Foreground="#888"
-                           FontSize="10"
+                           Foreground="#3a3a3a"
+                           FontSize="9.5"
                            FontWeight="SemiBold"
-                           LetterSpacing="1.5"
+                           LetterSpacing="2"
                            VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1"
                            x:Name="StepCountText"
                            Text=""
-                           Foreground="#444"
+                           Foreground="#2e2e2e"
                            FontSize="10"
-                           FontFamily="Consolas, monospace"
+                           FontFamily="Consolas, JetBrains Mono, monospace"
                            VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
-        <!-- History List -->
+        <!-- History list -->
         <ListBox Grid.Row="1"
                  x:Name="HistoryListBox"
                  Background="Transparent"
@@ -61,22 +63,24 @@
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="core:HistoryStep">
-                    <Grid ColumnDefinitions="24,*" Margin="0,1">
-                        <TextBlock Grid.Column="0"
-                                   Text="•"
-                                   Foreground="#3a6a4a"
-                                   FontSize="12"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Center"/>
+                    <Grid ColumnDefinitions="20,*,Auto" Margin="0,1">
+                        <!-- Step indicator line -->
+                        <Border Grid.Column="0"
+                                Width="2" Height="12"
+                                CornerRadius="1"
+                                Background="#2a3a4a"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1"
                                    Text="{Binding ActionName}"
-                                   Foreground="#ccc"
-                                   FontSize="12"
+                                   Foreground="#555555"
+                                   FontSize="11.5"
                                    VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis"/>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+
     </Grid>
 </UserControl>

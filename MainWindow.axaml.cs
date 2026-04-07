@@ -72,6 +72,12 @@ namespace Pixellum
             if (statusText != null) statusText.Text = message;
         }
 
+        private void UpdateDocTitle(string name)
+        {
+            var title = this.FindControl<TextBlock>("DocumentTitleText");
+            if (title != null) title.Text = name;
+        }
+
         private void UpdateCanvasSizeStatus()
         {
             if (_canvasView == null) return;
@@ -100,6 +106,7 @@ namespace Pixellum
             _lastSavePath = null;
             UpdateCanvasSizeStatus();
             RefreshLayersPanel();
+            UpdateDocTitle("Untitled.pxl");
             UpdateStatus($"New canvas: {dialog.DocWidth} × {dialog.DocHeight}");
         }
 
@@ -134,6 +141,7 @@ namespace Pixellum
             _lastSavePath = null;
             UpdateCanvasSizeStatus();
             RefreshLayersPanel();
+            UpdateDocTitle(files[0].Name);
             UpdateStatus($"Opened: {files[0].Name}  ({w} × {h})");
         }
 
@@ -176,6 +184,7 @@ namespace Pixellum
 
             await FileHandler.ExportPng(cv.CanvasBitmap, file);
             _lastSavePath = file.TryGetLocalPath();
+            UpdateDocTitle(file.Name);
             UpdateStatus($"Saved: {file.Name}");
         }
 
@@ -354,6 +363,109 @@ namespace Pixellum
             FindCanvasView()?.FlipCanvas(horizontal: false);
             RefreshLayersPanel();
             UpdateStatus("Flipped Vertical");
+        }
+
+        // ── RGB sliders (Color & Swatches panel) ─────────────────────────
+
+        private bool _rgbUpdating = false;
+        public void OnRgbSliderChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (_rgbUpdating) return;
+            _rgbUpdating = true;
+
+            var r = (int)(this.FindControl<Slider>("RedSlider")?.Value   ?? 0);
+            var g = (int)(this.FindControl<Slider>("GreenSlider")?.Value ?? 0);
+            var b = (int)(this.FindControl<Slider>("BlueSlider")?.Value  ?? 0);
+
+            var rv = this.FindControl<TextBlock>("RedValue");
+            var gv = this.FindControl<TextBlock>("GreenValue");
+            var bv = this.FindControl<TextBlock>("BlueValue");
+            if (rv != null) rv.Text = r.ToString();
+            if (gv != null) gv.Text = g.ToString();
+            if (bv != null) bv.Text = b.ToString();
+
+            // Apply to canvas active color
+            var cv = FindCanvasView();
+            if (cv != null)
+            {
+                uint color = (0xFF000000u) | ((uint)r << 16) | ((uint)g << 8) | (uint)b;
+                cv.ActiveColor = color;
+
+                // Sync ToolsPanel primary swatch
+                var toolPanel = this.FindControl<Views.ToolsPanel>("ToolsPanelControl");
+                if (toolPanel != null)
+                {
+                    var swatch = toolPanel.FindControl<Avalonia.Controls.Border>("PrimaryColorPreview");
+                    if (swatch != null)
+                        swatch.Background = new Avalonia.Media.SolidColorBrush(
+                            Avalonia.Media.Color.FromRgb((byte)r, (byte)g, (byte)b));
+                }
+            }
+
+            _rgbUpdating = false;
+        }
+
+        // ── Blend mode for active layer (routed from MainWindow combo) ────
+
+        public void OnBlendModeChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            var cv = FindCanvasView();
+            if (cv == null) return;
+
+            var combo = sender as ComboBox;
+            if (combo?.SelectedItem is not ComboBoxItem item) return;
+
+            var layers = cv.GetLayers();
+            int idx    = cv.GetActiveLayerIndex();
+            if (idx < 0 || idx >= layers.Count) return;
+
+            layers[idx].Mode = item.Content?.ToString() switch
+            {
+                "Darken"     => Pixellum.Core.BlendMode.Darken,
+                "Multiply"   => Pixellum.Core.BlendMode.Multiply,
+                "ColorBurn"  => Pixellum.Core.BlendMode.ColorBurn,
+                "Lighten"    => Pixellum.Core.BlendMode.Lighten,
+                "Screen"     => Pixellum.Core.BlendMode.Screen,
+                "ColorDodge" => Pixellum.Core.BlendMode.ColorDodge,
+                "Overlay"    => Pixellum.Core.BlendMode.Overlay,
+                "SoftLight"  => Pixellum.Core.BlendMode.SoftLight,
+                "HardLight"  => Pixellum.Core.BlendMode.HardLight,
+                "Difference" => Pixellum.Core.BlendMode.Difference,
+                "Exclusion"  => Pixellum.Core.BlendMode.Exclusion,
+                "Hue"        => Pixellum.Core.BlendMode.Hue,
+                "Saturation" => Pixellum.Core.BlendMode.Saturation,
+                "Color"      => Pixellum.Core.BlendMode.Color,
+                "Luminosity" => Pixellum.Core.BlendMode.Luminosity,
+                _            => Pixellum.Core.BlendMode.Normal
+            };
+
+            layers[idx].MarkDirty(0, 0, layers[idx].Width, layers[idx].Height);
+            cv.TriggerRedraw();
+        }
+
+        // ── Delete active layer button ────────────────────────────────────
+
+        public void OnDeleteActiveLayerClicked(object? sender, RoutedEventArgs e)
+        {
+            var cv = FindCanvasView();
+            if (cv == null) return;
+            var layers = cv.GetLayers();
+            if (layers.Count <= 1) return;
+            cv.DeleteLayer(cv.GetActiveLayerIndex());
+            RefreshLayersPanel();
+        }
+        // ── Layer toolbar buttons (now in MainWindow, route to LayersPanel) ──
+
+        public void OnAddLayerClicked(object? sender, RoutedEventArgs e)
+        {
+            var lp = this.GetVisualDescendants().OfType<Views.LayersPanel>().FirstOrDefault();
+            lp?.OnAddLayerClickedPublic();
+        }
+
+        public void OnDuplicateLayerClicked(object? sender, RoutedEventArgs e)
+        {
+            var lp = this.GetVisualDescendants().OfType<Views.LayersPanel>().FirstOrDefault();
+            lp?.OnDuplicateLayerClickedPublic();
         }
     }
 }

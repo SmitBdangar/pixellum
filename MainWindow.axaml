@@ -3,470 +3,687 @@
         xmlns:views="clr-namespace:Pixellum.Views"
         x:Class="Pixellum.MainWindow"
         Title="Pixellum"
-        Width="1440" Height="920"
+        Width="1440" Height="900"
         MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        Background="#1a1a1a"
-        FontFamily="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif">
+        Background="#2b2b2b"
+        FontFamily="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
 
     <Window.Styles>
 
-        <!-- ── Menu ──────────────────────────────────────────────────────────── -->
+        <!-- ══ MENU ═════════════════════════════════════════════════ -->
         <Style Selector="Menu">
-            <Setter Property="Background" Value="#242424"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#cccccc"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="12.5"/>
         </Style>
         <Style Selector="MenuItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#cccccc"/>
             <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="FontSize" Value="12.5"/>
         </Style>
         <Style Selector="MenuItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
-            <Setter Property="Background" Value="#383838"/>
+            <Setter Property="Background" Value="#3c3c3c"/>
             <Setter Property="TextElement.Foreground" Value="#ffffff"/>
         </Style>
         <Style Selector="MenuItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
-            <Setter Property="Background" Value="#35506e"/>
+            <Setter Property="Background" Value="#1a6496"/>
             <Setter Property="TextElement.Foreground" Value="#ffffff"/>
         </Style>
 
-        <!-- ── Toolbar buttons ───────────────────────────────────────────────── -->
+        <!-- ══ TOOLBAR BUTTONS ══════════════════════════════════════ -->
         <Style Selector="Button.tb">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#b8b8b8"/>
+            <Setter Property="Foreground" Value="#aaa"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="7,4"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Height" Value="26"/>
             <Setter Property="MinWidth" Value="28"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.08"/>
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Button.tb:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#353535"/>
-            <Setter Property="TextElement.Foreground" Value="#ffffff"/>
+            <Setter Property="Background" Value="#3c3c3c"/>
+            <Setter Property="TextElement.Foreground" Value="#fff"/>
         </Style>
         <Style Selector="Button.tb:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#3a4e6a"/>
+            <Setter Property="Background" Value="#1a5276"/>
         </Style>
 
-        <!-- ── Zoom display pill ─────────────────────────────────────────────── -->
+        <!-- ══ ZOOM PILL ════════════════════════════════════════════ -->
         <Style Selector="Border.zoom-pill">
-            <Setter Property="Background" Value="#2c2c2c"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="10,3"/>
+            <Setter Property="Background" Value="#333"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Padding" Value="9,3"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <!-- ── Status bar text ───────────────────────────────────────────────── -->
+        <!-- ══ STATUS ═══════════════════════════════════════════════ -->
         <Style Selector="TextBlock.status">
-            <Setter Property="FontSize" Value="11.5"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="#666666"/>
-        </Style>
-        <Style Selector="TextBlock.status-label">
-            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontSize" Value="11"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Foreground" Value="#888"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="LetterSpacing" Value="0.5"/>
         </Style>
         <Style Selector="Rectangle.status-divider">
             <Setter Property="Width" Value="1"/>
-            <Setter Property="Fill" Value="#333333"/>
-            <Setter Property="Margin" Value="10,5"/>
+            <Setter Property="Fill" Value="#3a3a3a"/>
+            <Setter Property="Margin" Value="10,4"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
         </Style>
 
-        <!-- ── ScrollBar theming ─────────────────────────────────────────────── -->
+        <!-- ══ SCROLLBAR ════════════════════════════════════════════ -->
         <Style Selector="ScrollBar">
             <Setter Property="Background" Value="Transparent"/>
-        </Style>
-        <Style Selector="ScrollBar /template/ Border#PART_Track">
-            <Setter Property="Background" Value="#252525"/>
+            <Setter Property="Width" Value="7"/>
         </Style>
         <Style Selector="ScrollBar /template/ Thumb">
             <Setter Property="Background" Value="#3a3a3a"/>
-            <Setter Property="CornerRadius" Value="2"/>
+            <Setter Property="CornerRadius" Value="3"/>
+        </Style>
+        <Style Selector="ScrollBar /template/ Thumb:pointerover">
+            <Setter Property="Background" Value="#4a4a4a"/>
+        </Style>
+
+        <!-- ══ SPLITTERS ════════════════════════════════════════════ -->
+        <Style Selector="GridSplitter">
+            <Setter Property="Background" Value="#1e1e1e"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="GridSplitter:pointerover">
+            <Setter Property="Background" Value="#4a9eda"/>
+        </Style>
+
+        <!-- ══ PANEL SECTION HEADERS ════════════════════════════════ -->
+        <Style Selector="Border.panel-section-header">
+            <Setter Property="Background" Value="#2c2c2c"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="BorderBrush" Value="#222"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+        <Style Selector="TextBlock.panel-title">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="Regular"/>
+            <Setter Property="Foreground" Value="#cccccc"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.panel-sec-label">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="#888"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
     </Window.Styles>
 
     <DockPanel>
 
-        <!-- ════════════════════════════════════════════════════════════════════
-             MENU BAR
-             ════════════════════════════════════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════════════
+             TITLE BAR + MENU
+             ═══════════════════════════════════════════════════════════ -->
         <Border DockPanel.Dock="Top"
-                Background="#242424"
+                Background="#3c3c3c"
                 BorderBrush="#2a2a2a"
                 BorderThickness="0,0,0,1">
-            <Menu Background="Transparent" Padding="6,0">
+            <Grid ColumnDefinitions="Auto,*">
+                <!-- Brand -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="0"
+                            VerticalAlignment="Center" Margin="10,0,0,0">
+                    <Border Background="#4a9eda" Width="18" Height="18" CornerRadius="2"
+                            VerticalAlignment="Center" Margin="0,0,8,0">
+                        <TextBlock Text="Px" FontSize="9" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Pixellum" FontSize="13" Foreground="#dddddd"
+                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
 
-                <!-- File -->
-                <MenuItem Header="_File">
-                    <MenuItem Header="_New…"          Click="OnNewClicked"       InputGesture="Ctrl+N"/>
-                    <MenuItem Header="_Open Image…"   Click="OnOpenClicked"      InputGesture="Ctrl+O"/>
-                    <Separator Background="#353535"/>
-                    <MenuItem Header="_Save"          Click="OnSaveClicked"      InputGesture="Ctrl+S"/>
-                    <MenuItem Header="Save _As…"      Click="OnSaveAsClicked"    InputGesture="Ctrl+Shift+S"/>
-                    <Separator Background="#353535"/>
-                    <MenuItem Header="Export _PNG…"   Click="OnExportPngClicked" InputGesture="Ctrl+E"/>
-                    <Separator Background="#353535"/>
-                    <MenuItem Header="_Close"         Click="OnCloseDocClicked"/>
-                </MenuItem>
-
-                <!-- Edit -->
-                <MenuItem Header="_Edit">
-                    <MenuItem Header="_Undo" Click="OnUndoClicked" InputGesture="Ctrl+Z"/>
-                    <MenuItem Header="_Redo" Click="OnRedoClicked" InputGesture="Ctrl+Y"/>
-                </MenuItem>
-
-                <!-- Image -->
-                <MenuItem Header="_Image">
-                    <MenuItem Header="Canvas _Size…"  Click="OnCanvasSizeClicked"/>
-                    <MenuItem Header="_Image Size…"   Click="OnImageSizeClicked"/>
-                    <Separator Background="#353535"/>
-                    <MenuItem Header="_Adjustments">
-                        <MenuItem Header="Brightness / _Contrast…" Click="OnBrightnessContrastClicked"/>
-                        <MenuItem Header="_Hue / Saturation…"      Click="OnHueSaturationClicked"/>
-                        <MenuItem Header="_Levels…"                Click="OnLevelsClicked"/>
-                        <MenuItem Header="C_urves…"                Click="OnCurvesClicked"/>
-                        <MenuItem Header="Color _Balance…"         Click="OnColorBalanceClicked"/>
+                <!-- Menu -->
+                <Menu Grid.Column="1" Background="Transparent" Padding="6,0" VerticalAlignment="Center">
+                    <MenuItem Header="_File">
+                        <MenuItem Header="_New…"          Click="OnNewClicked"       InputGesture="Ctrl+N"/>
+                        <MenuItem Header="_Open Image…"   Click="OnOpenClicked"      InputGesture="Ctrl+O"/>
+                        <Separator Background="#3a3a3a"/>
+                        <MenuItem Header="_Save"          Click="OnSaveClicked"      InputGesture="Ctrl+S"/>
+                        <MenuItem Header="Save _As…"      Click="OnSaveAsClicked"    InputGesture="Ctrl+Shift+S"/>
+                        <Separator Background="#3a3a3a"/>
+                        <MenuItem Header="Export _PNG…"   Click="OnExportPngClicked" InputGesture="Ctrl+E"/>
+                        <Separator Background="#3a3a3a"/>
+                        <MenuItem Header="_Close"         Click="OnCloseDocClicked"/>
                     </MenuItem>
-                    <Separator Background="#353535"/>
-                    <MenuItem Header="Rotate Canvas">
-                        <MenuItem Header="90° Clockwise"          Click="OnRotate90CWClicked"/>
-                        <MenuItem Header="90° Counter-Clockwise"  Click="OnRotate90CCWClicked"/>
-                        <MenuItem Header="180°"                   Click="OnRotate180Clicked"/>
+                    <MenuItem Header="_Edit">
+                        <MenuItem Header="_Undo" Click="OnUndoClicked" InputGesture="Ctrl+Z"/>
+                        <MenuItem Header="_Redo" Click="OnRedoClicked" InputGesture="Ctrl+Y"/>
                     </MenuItem>
-                    <MenuItem Header="Flip Canvas">
-                        <MenuItem Header="Flip _Horizontal" Click="OnFlipHClicked"/>
-                        <MenuItem Header="Flip _Vertical"   Click="OnFlipVClicked"/>
+                    <MenuItem Header="_Image">
+                        <MenuItem Header="Canvas _Size…"  Click="OnCanvasSizeClicked"/>
+                        <MenuItem Header="_Image Size…"   Click="OnImageSizeClicked"/>
+                        <Separator Background="#3a3a3a"/>
+                        <MenuItem Header="_Adjustments">
+                            <MenuItem Header="Brightness / _Contrast…" Click="OnBrightnessContrastClicked"/>
+                            <MenuItem Header="_Hue / Saturation…"      Click="OnHueSaturationClicked"/>
+                            <MenuItem Header="_Levels…"                Click="OnLevelsClicked"/>
+                            <MenuItem Header="C_urves…"                Click="OnCurvesClicked"/>
+                            <MenuItem Header="Color _Balance…"         Click="OnColorBalanceClicked"/>
+                        </MenuItem>
+                        <Separator Background="#3a3a3a"/>
+                        <MenuItem Header="Rotate Canvas">
+                            <MenuItem Header="90° Clockwise"         Click="OnRotate90CWClicked"/>
+                            <MenuItem Header="90° Counter-Clockwise" Click="OnRotate90CCWClicked"/>
+                            <MenuItem Header="180°"                  Click="OnRotate180Clicked"/>
+                        </MenuItem>
+                        <MenuItem Header="Flip Canvas">
+                            <MenuItem Header="Flip _Horizontal" Click="OnFlipHClicked"/>
+                            <MenuItem Header="Flip _Vertical"   Click="OnFlipVClicked"/>
+                        </MenuItem>
                     </MenuItem>
-                </MenuItem>
-
-                <!-- View -->
-                <MenuItem Header="_View">
-                    <MenuItem Header="Zoom _In"    Click="OnZoomInClicked"    InputGesture="Ctrl+OemPlus"/>
-                    <MenuItem Header="Zoom _Out"   Click="OnZoomOutClicked"   InputGesture="Ctrl+OemMinus"/>
-                    <MenuItem Header="_Reset Zoom" Click="OnZoomResetClicked" InputGesture="Ctrl+D0"/>
-                    <Separator Background="#353535"/>
-                    <MenuItem Header="Toggle _Grid" Click="OnToggleGridClicked" InputGesture="Ctrl+G"/>
-                </MenuItem>
-
-            </Menu>
+                    <MenuItem Header="_Layer">
+                        <MenuItem Header="_New Layer"/>
+                        <MenuItem Header="Duplicate Layer"/>
+                        <MenuItem Header="Merge Down"/>
+                        <Separator Background="#3a3a3a"/>
+                        <MenuItem Header="Layer Properties…"/>
+                    </MenuItem>
+                    <MenuItem Header="_Type"/>
+                    <MenuItem Header="_Select"/>
+                    <MenuItem Header="_Filter"/>
+                    <MenuItem Header="_View">
+                        <MenuItem Header="Zoom _In"    Click="OnZoomInClicked"    InputGesture="Ctrl+OemPlus"/>
+                        <MenuItem Header="Zoom _Out"   Click="OnZoomOutClicked"   InputGesture="Ctrl+OemMinus"/>
+                        <MenuItem Header="_Reset Zoom" Click="OnZoomResetClicked" InputGesture="Ctrl+D0"/>
+                        <Separator Background="#3a3a3a"/>
+                        <MenuItem Header="Toggle _Grid" Click="OnToggleGridClicked" InputGesture="Ctrl+G"/>
+                        <MenuItem Header="_Rulers"      InputGesture="Ctrl+R"/>
+                    </MenuItem>
+                    <MenuItem Header="_Window"/>
+                    <MenuItem Header="_Help"/>
+                </Menu>
+            </Grid>
         </Border>
 
-        <!-- ════════════════════════════════════════════════════════════════════
-             ICON TOOLBAR
-             ════════════════════════════════════════════════════════════════════ -->
-        <Border DockPanel.Dock="Top"
-                Background="#202020"
-                BorderBrush="#2a2a2a"
-                BorderThickness="0,0,0,1"
-                Padding="8,4">
-            <StackPanel Orientation="Horizontal" Spacing="1" VerticalAlignment="Center">
-
-                <!-- ── File group ── -->
-                <Button Classes="tb" Click="OnNewClicked" ToolTip.Tip="New  Ctrl+N">
-                    <Panel Width="14" Height="14">
-                        <Path Fill="#aaaaaa" Stretch="Uniform"
-                              Data="M1,0 L9,0 L13,4 L13,14 L1,14 Z"/>
-                        <Path Fill="#202020" Stretch="None"
-                              Data="M9,0 L9,4 L13,4"/>
-                        <Path Stroke="#aaaaaa" StrokeThickness="1" Stretch="None"
-                              Data="M9,0 L13,4 L9,4 Z"/>
-                    </Panel>
-                </Button>
-
-                <Button Classes="tb" Click="OnOpenClicked" ToolTip.Tip="Open  Ctrl+O">
-                    <Path Fill="#aaaaaa" Stretch="Uniform" Width="16" Height="13"
-                          Data="M0,4 L0,13 L16,13 L16,6 L13,4 L8,4 L6,2 L2,2 L0,4 Z"/>
-                </Button>
-
-                <Button Classes="tb" Click="OnSaveClicked" ToolTip.Tip="Save  Ctrl+S">
-                    <Panel Width="14" Height="14">
-                        <Path Fill="#aaaaaa" Stretch="Uniform"
-                              Data="M0,0 L11,0 L14,3 L14,14 L0,14 Z"/>
-                        <Path Fill="#202020" Stretch="None"
-                              Data="M3,0 L3,5 L11,5 L11,0"/>
-                        <Rectangle Fill="#202020" Width="6" Height="5"
-                                   HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                   Margin="0,0,0,0"/>
-                    </Panel>
-                </Button>
-
-                <!-- ── Divider ── -->
-                <Rectangle Width="1" Fill="#333333" Margin="5,4" VerticalAlignment="Stretch"/>
-
-                <!-- ── Edit group ── -->
-                <Button Classes="tb" Click="OnUndoClicked" ToolTip.Tip="Undo  Ctrl+Z" Padding="7,4">
-                    <TextBlock Text="↩" FontSize="14" VerticalAlignment="Center"/>
-                </Button>
-                <Button Classes="tb" Click="OnRedoClicked" ToolTip.Tip="Redo  Ctrl+Y" Padding="7,4">
-                    <TextBlock Text="↪" FontSize="14" VerticalAlignment="Center"/>
-                </Button>
-
-                <!-- ── Divider ── -->
-                <Rectangle Width="1" Fill="#333333" Margin="5,4" VerticalAlignment="Stretch"/>
-
-                <!-- ── Zoom group ── -->
-                <Button Classes="tb" Click="OnZoomOutClicked" ToolTip.Tip="Zoom Out  Ctrl+−">
-                    <Path Fill="#aaaaaa" Stretch="Uniform" Width="14" Height="14"
-                          Data="M5.5,0 A5.5,5.5,0,1,0,5.5,11 A5.5,5.5,0,1,0,5.5,0 Z
-                                M9,14 L11.5,11.8
-                                M2.5,5.5 L8.5,5.5"/>
-                </Button>
-
-                <Border Classes="zoom-pill">
-                    <TextBlock x:Name="ZoomText"
-                               Text="100%"
-                               Foreground="#999999"
-                               FontSize="12"
-                               VerticalAlignment="Center"/>
-                </Border>
-
-                <Button Classes="tb" Click="OnZoomInClicked" ToolTip.Tip="Zoom In  Ctrl++">
-                    <Path Fill="#aaaaaa" Stretch="Uniform" Width="14" Height="14"
-                          Data="M5.5,0 A5.5,5.5,0,1,0,5.5,11 A5.5,5.5,0,1,0,5.5,0 Z
-                                M9,14 L11.5,11.8
-                                M5.5,2.5 L5.5,8.5 M2.5,5.5 L8.5,5.5"/>
-                </Button>
-
-                <Button Classes="tb" Click="OnZoomResetClicked" ToolTip.Tip="Reset Zoom  Ctrl+0"
-                        Padding="8,4">
-                    <TextBlock Text="1:1" FontSize="11" Foreground="#888888" VerticalAlignment="Center"/>
-                </Button>
-
-                <!-- ── Divider ── -->
-                <Rectangle Width="1" Fill="#333333" Margin="5,4" VerticalAlignment="Stretch"/>
-
-                <!-- ── View group ── -->
-                <Button Classes="tb" Click="OnToggleGridClicked" ToolTip.Tip="Toggle Grid  Ctrl+G">
-                    <Path Stroke="#aaaaaa" StrokeThickness="1.2" Fill="Transparent"
-                          Stretch="Uniform" Width="14" Height="14"
-                          Data="M0,0 H14 V14 H0 Z  M0,4.7 H14  M0,9.3 H14  M4.7,0 V14  M9.3,0 V14"/>
-                </Button>
-
-            </StackPanel>
-        </Border>
-
-        <!-- ════════════════════════════════════════════════════════════════════
-             TOP OPTIONS BAR  (tool-specific options from custom view)
-             ════════════════════════════════════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════════════
+             OPTIONS BAR (context toolbar)
+             ═══════════════════════════════════════════════════════════ -->
         <views:TopOptionsBar DockPanel.Dock="Top" x:Name="TopOptionsBarControl"/>
 
-        <!-- ════════════════════════════════════════════════════════════════════
-             STATUS BAR
-             ════════════════════════════════════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════════════
+             STATUS BAR — Photoshop-style
+             ═══════════════════════════════════════════════════════════ -->
         <Border DockPanel.Dock="Bottom"
-                Background="#1a1a1a"
-                BorderBrush="#2a2a2a"
+                Background="#2b2b2b"
+                BorderBrush="#1e1e1e"
                 BorderThickness="0,1,0,0"
-                Height="26"
-                Padding="12,0">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                Height="22"
+                Padding="10,0">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
 
-                <!-- Status message -->
+                <!-- Left: doc status -->
                 <TextBlock x:Name="StatusText"
                            Grid.Column="0"
                            Classes="status"
                            Text="Ready"/>
 
-                <!-- │ -->
                 <Rectangle Grid.Column="1" Classes="status-divider"/>
 
-                <!-- Cursor position -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Classes="status-label" Text="XY"/>
-                    <TextBlock x:Name="CursorPosText" Classes="status" Text="—"/>
-                </StackPanel>
-
-                <!-- │ -->
-                <Rectangle Grid.Column="3" Classes="status-divider"/>
-
-                <!-- Canvas size -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Classes="status-label" Text="SIZE"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Classes="status" Text="Doc:"/>
                     <TextBlock x:Name="CanvasSizeText" Classes="status" Text="800 × 600"/>
                 </StackPanel>
 
-                <!-- │ -->
+                <Rectangle Grid.Column="3" Classes="status-divider"/>
+
+                <TextBlock Grid.Column="4" Classes="status" Text="72 ppi" VerticalAlignment="Center"/>
+
                 <Rectangle Grid.Column="5" Classes="status-divider"/>
 
-                <!-- Color Mode -->
-                <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Classes="status-label" Text="MODE"/>
-                    <TextBlock x:Name="ColorModeText" Classes="status" Text="RGBA 8"/>
-                </StackPanel>
+                <TextBlock x:Name="ColorModeText" Grid.Column="6" Classes="status" Text="RGB/8" VerticalAlignment="Center"/>
 
-                <!-- │ -->
                 <Rectangle Grid.Column="7" Classes="status-divider"/>
 
-                <!-- Active tool -->
+                <!-- Right: Zoom -->
                 <StackPanel Grid.Column="8" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Classes="status-label" Text="TOOL"/>
-                    <TextBlock x:Name="ActiveToolText" Classes="status" Text="Brush"/>
-                </StackPanel>
-
-                <!-- │ -->
-                <Rectangle Grid.Column="9" Classes="status-divider"/>
-
-                <!-- Zoom level -->
-                <StackPanel Grid.Column="10" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Classes="status-label" Text="ZOOM"/>
+                    <TextBlock Classes="status" Text="Zoom:"/>
                     <TextBlock x:Name="StatusZoomText" Classes="status" Text="100%"/>
                 </StackPanel>
 
             </Grid>
         </Border>
 
-        <!-- ════════════════════════════════════════════════════════════════════
-             MAIN WORK AREA  — Tools | Canvas | Layers + History
-             ════════════════════════════════════════════════════════════════════ -->
-        <Grid ColumnDefinitions="210,4,*,4,260">
+        <!-- ═══════════════════════════════════════════════════════════
+             MAIN AREA: Icon Strip | Canvas | Right Panels
+             ═══════════════════════════════════════════════════════════ -->
+        <Grid ColumnDefinitions="52,1,*,1,280">
 
-            <!-- ── Tools panel ── -->
+            <!-- ══ LEFT: ICON TOOL STRIP ═══════════════════════════════ -->
             <Border Grid.Column="0"
-                    Background="#1f1f1f"
-                    BorderBrush="#2a2a2a"
+                    Background="#383838"
+                    BorderBrush="#282828"
                     BorderThickness="0,0,1,0">
                 <views:ToolsPanel x:Name="ToolsPanelControl"/>
             </Border>
 
-            <!-- ── Column splitter (left) ── -->
+            <!-- Splitter -->
             <GridSplitter Grid.Column="1"
-                          Background="#2a2a2a"
                           ResizeBehavior="PreviousAndNext"
                           ResizeDirection="Columns"
                           HorizontalAlignment="Stretch"/>
 
-            <!-- ── Canvas viewport ── -->
-            <Border Grid.Column="2"
-                    Background="#252525"
-                    ClipToBounds="True">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Auto"
-                              Background="Transparent">
-                    <Grid HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Margin="48">
+            <!-- ══ CENTER: CANVAS + RULERS ════════════════════════════ -->
+            <Grid Grid.Column="2" RowDefinitions="18,*" ColumnDefinitions="18,*">
 
-                        <!-- Checkerboard transparency pattern -->
-                        <Border x:Name="CanvasCheckerBg">
-                            <Border.Background>
-                                <DrawingBrush TileMode="Tile"
-                                              SourceRect="0,0,8,8"
-                                              DestinationRect="0,0,8,8">
-                                    <DrawingBrush.Drawing>
-                                        <DrawingGroup>
-                                            <GeometryDrawing Brush="#303030">
-                                                <GeometryDrawing.Geometry>
-                                                    <RectangleGeometry Rect="0,0,8,8"/>
-                                                </GeometryDrawing.Geometry>
-                                            </GeometryDrawing>
-                                            <GeometryDrawing Brush="#3a3a3a">
-                                                <GeometryDrawing.Geometry>
-                                                    <GeometryGroup>
-                                                        <RectangleGeometry Rect="0,0,4,4"/>
-                                                        <RectangleGeometry Rect="4,4,4,4"/>
-                                                    </GeometryGroup>
-                                                </GeometryDrawing.Geometry>
-                                            </GeometryDrawing>
-                                        </DrawingGroup>
-                                    </DrawingBrush.Drawing>
-                                </DrawingBrush>
-                            </Border.Background>
-                        </Border>
+                <!-- Corner cap -->
+                <Border Grid.Row="0" Grid.Column="0"
+                        Background="#3c3c3c"
+                        BorderBrush="#2a2a2a"
+                        BorderThickness="0,0,1,1"/>
 
-                        <!-- Canvas with layered shadow -->
-                        <Border BoxShadow="0 2 8 0 #99000000, 0 8 32 8 #CC000000"
-                                CornerRadius="2"
-                                Background="Transparent">
-                            <views:CanvasView x:Name="MainCanvasView"/>
-                        </Border>
+                <!-- Top ruler -->
+                <Border Grid.Row="0" Grid.Column="1"
+                        Background="#3c3c3c"
+                        BorderBrush="#2a2a2a"
+                        BorderThickness="0,0,0,1"
+                        ClipToBounds="True">
+                    <Canvas x:Name="TopRulerCanvas" Background="Transparent"/>
+                </Border>
 
-                    </Grid>
-                </ScrollViewer>
-            </Border>
+                <!-- Left ruler -->
+                <Border Grid.Row="1" Grid.Column="0"
+                        Background="#3c3c3c"
+                        BorderBrush="#2a2a2a"
+                        BorderThickness="0,0,1,0"
+                        ClipToBounds="True">
+                    <Canvas x:Name="LeftRulerCanvas" Background="Transparent"/>
+                </Border>
 
-            <!-- ── Column splitter (right) ── -->
+                <!-- Canvas viewport -->
+                <Border Grid.Row="1" Grid.Column="1"
+                        Background="#444444"
+                        ClipToBounds="True">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Background="Transparent">
+                        <Grid HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Margin="40">
+
+                            <!-- Checkerboard -->
+                            <Border x:Name="CanvasCheckerBg">
+                                <Border.Background>
+                                    <DrawingBrush TileMode="Tile"
+                                                  SourceRect="0,0,16,16"
+                                                  DestinationRect="0,0,16,16">
+                                        <DrawingBrush.Drawing>
+                                            <DrawingGroup>
+                                                <GeometryDrawing Brush="#404040">
+                                                    <GeometryDrawing.Geometry>
+                                                        <RectangleGeometry Rect="0,0,16,16"/>
+                                                    </GeometryDrawing.Geometry>
+                                                </GeometryDrawing>
+                                                <GeometryDrawing Brush="#4a4a4a">
+                                                    <GeometryDrawing.Geometry>
+                                                        <GeometryGroup>
+                                                            <RectangleGeometry Rect="0,0,8,8"/>
+                                                            <RectangleGeometry Rect="8,8,8,8"/>
+                                                        </GeometryGroup>
+                                                    </GeometryDrawing.Geometry>
+                                                </GeometryDrawing>
+                                            </DrawingGroup>
+                                        </DrawingBrush.Drawing>
+                                    </DrawingBrush>
+                                </Border.Background>
+                            </Border>
+
+                            <!-- Canvas shadow -->
+                            <Border BoxShadow="0 4 24 0 #AA000000"
+                                    CornerRadius="1"
+                                    Background="Transparent">
+                                <views:CanvasView x:Name="MainCanvasView"/>
+                            </Border>
+
+                        </Grid>
+                    </ScrollViewer>
+                </Border>
+
+            </Grid>
+
+            <!-- Splitter -->
             <GridSplitter Grid.Column="3"
-                          Background="#2a2a2a"
                           ResizeBehavior="PreviousAndNext"
                           ResizeDirection="Columns"
                           HorizontalAlignment="Stretch"/>
 
-            <!-- ══════════════════════════════════════════════════════════════════
-                 RIGHT PANEL — stacked collapsible Expanders
-                 ══════════════════════════════════════════════════════════════════ -->
+            <!-- ══ RIGHT: PANELS (PS-style stacked) ══════════════════ -->
             <Border Grid.Column="4"
-                    Background="#1a1a1a"
+                    Background="#3c3c3c"
                     BorderBrush="#2a2a2a"
                     BorderThickness="1,0,0,0">
-                <Border.Styles>
-                    <!-- Expander header style -->
-                    <Style Selector="Expander">
-                        <Setter Property="Background" Value="#1a1a1a"/>
-                        <Setter Property="Foreground" Value="#cccccc"/>
-                        <Setter Property="BorderBrush" Value="#2a2a2a"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        <Setter Property="Padding" Value="0"/>
-                    </Style>
-                    <Style Selector="Expander > /template/ ToggleButton">
-                        <Setter Property="Background" Value="#212121"/>
-                        <Setter Property="Padding" Value="12,9"/>
-                        <Setter Property="BorderBrush" Value="#2a2a2a"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                    </Style>
-                    <Style Selector="Expander > /template/ ToggleButton:pointerover /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#2a2a2a"/>
-                    </Style>
-                    <Style Selector="Expander > /template/ ToggleButton TextBlock">
-                        <Setter Property="FontSize" Value="10"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="LetterSpacing" Value="1.5"/>
-                        <Setter Property="Foreground" Value="#999999"/>
-                    </Style>
-                    <Style Selector="Expander:expanded > /template/ ToggleButton TextBlock">
-                        <Setter Property="Foreground" Value="#31A8FF"/>
-                    </Style>
-                </Border.Styles>
+                <Grid RowDefinitions="Auto,Auto,*">
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel>
+                    <!-- ── (a) COLOR & SWATCHES ──────────────────────── -->
+                    <Border Grid.Row="0"
+                            BorderBrush="#252525"
+                            BorderThickness="0,0,0,1">
+                        <StackPanel>
+                            <!-- Header -->
+                            <Border Classes="panel-section-header">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" Classes="panel-title" Text="Color &amp; Swatches"/>
+                                    <TextBlock Grid.Column="1" Text="▾" Foreground="#666" FontSize="10" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
 
-                        <!-- ── a) Layers Panel ── -->
-                        <Expander Header="LAYERS" IsExpanded="True">
-                            <Border Height="340"
+                            <!-- RGB Sliders -->
+                            <StackPanel Spacing="0" Margin="10,8,10,6">
+
+                                <!-- R -->
+                                <Grid ColumnDefinitions="12,*,44" Margin="0,0,0,4">
+                                    <TextBlock Grid.Column="0" Text="R" Foreground="#e05555"
+                                               FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Slider Grid.Column="1"
+                                            x:Name="RedSlider"
+                                            Minimum="0" Maximum="255"
+                                            Value="0"
+                                            Foreground="#cc3333"
+                                            VerticalAlignment="Center"
+                                            Margin="6,0"
+                                            ValueChanged="OnRgbSliderChanged"/>
+                                    <Border Grid.Column="2"
+                                            Background="#252525"
+                                            CornerRadius="3"
+                                            BorderBrush="#333"
+                                            BorderThickness="1"
+                                            Padding="4,2">
+                                        <TextBlock x:Name="RedValue" Text="0"
+                                                   FontSize="11" Foreground="#c0c0c0"
+                                                   FontFamily="Consolas, monospace"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+
+                                <!-- G -->
+                                <Grid ColumnDefinitions="12,*,44" Margin="0,0,0,4">
+                                    <TextBlock Grid.Column="0" Text="G" Foreground="#55bb55"
+                                               FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Slider Grid.Column="1"
+                                            x:Name="GreenSlider"
+                                            Minimum="0" Maximum="255"
+                                            Value="0"
+                                            Foreground="#339933"
+                                            VerticalAlignment="Center"
+                                            Margin="6,0"
+                                            ValueChanged="OnRgbSliderChanged"/>
+                                    <Border Grid.Column="2"
+                                            Background="#252525"
+                                            CornerRadius="3"
+                                            BorderBrush="#333"
+                                            BorderThickness="1"
+                                            Padding="4,2">
+                                        <TextBlock x:Name="GreenValue" Text="0"
+                                                   FontSize="11" Foreground="#c0c0c0"
+                                                   FontFamily="Consolas, monospace"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+
+                                <!-- B -->
+                                <Grid ColumnDefinitions="12,*,44">
+                                    <TextBlock Grid.Column="0" Text="B" Foreground="#4a9eda"
+                                               FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Slider Grid.Column="1"
+                                            x:Name="BlueSlider"
+                                            Minimum="0" Maximum="255"
+                                            Value="46"
+                                            Foreground="#2266aa"
+                                            VerticalAlignment="Center"
+                                            Margin="6,0"
+                                            ValueChanged="OnRgbSliderChanged"/>
+                                    <Border Grid.Column="2"
+                                            Background="#252525"
+                                            CornerRadius="3"
+                                            BorderBrush="#333"
+                                            BorderThickness="1"
+                                            Padding="4,2">
+                                        <TextBlock x:Name="BlueValue" Text="46"
+                                                   FontSize="11" Foreground="#c0c0c0"
+                                                   FontFamily="Consolas, monospace"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Swatches row (compact) -->
+                            <Border Background="#333"
+                                    BorderBrush="#252525"
+                                    BorderThickness="0,1,0,0"
+                                    Padding="10,6">
+                                <UniformGrid x:Name="RightSwatchGrid"
+                                             Columns="10"
+                                             Height="16"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── (b) ADJUSTMENTS ────────────────────────────── -->
+                    <Border Grid.Row="1"
+                            BorderBrush="#252525"
+                            BorderThickness="0,0,0,1">
+                        <StackPanel>
+                            <!-- Header -->
+                            <Border Classes="panel-section-header">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" Classes="panel-title" Text="Adjustments"/>
+                                    <TextBlock Grid.Column="1" Text="▾" Foreground="#666" FontSize="10" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Compact button grid (2 rows like PS) -->
+                            <StackPanel Spacing="4" Margin="10,8,10,10">
+                                <!-- Row 1 -->
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Button x:Name="AdjBrightnessBtn" Classes="adj-pill"
+                                            Content="B/C" Width="38" Height="24"
+                                            Click="OnBrightnessContrastClicked"
+                                            ToolTip.Tip="Brightness / Contrast"/>
+                                    <Button x:Name="AdjLevelsBtn" Classes="adj-pill"
+                                            Content="Lvl" Width="38" Height="24"
+                                            Click="OnLevelsClicked"
+                                            ToolTip.Tip="Levels"/>
+                                    <Button x:Name="AdjCurvesBtn" Classes="adj-pill"
+                                            Content="Crv" Width="38" Height="24"
+                                            Click="OnCurvesClicked"
+                                            ToolTip.Tip="Curves"/>
+                                    <Button x:Name="AdjHueSatBtn" Classes="adj-pill"
+                                            Content="H/S" Width="38" Height="24"
+                                            Click="OnHueSaturationClicked"
+                                            ToolTip.Tip="Hue / Saturation"/>
+                                    <Button x:Name="AdjColorBalBtn" Classes="adj-pill"
+                                            Content="C/B" Width="38" Height="24"
+                                            Click="OnColorBalanceClicked"
+                                            ToolTip.Tip="Color Balance"/>
+                                    <Button x:Name="AdjVibranceBtn" Classes="adj-pill"
+                                            Content="Vib" Width="38" Height="24"
+                                            ToolTip.Tip="Vibrance"/>
+                                </StackPanel>
+                                <!-- Row 2 -->
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Button x:Name="AdjFilterBtn" Classes="adj-pill"
+                                            Content="Flt" Width="38" Height="24"
+                                            ToolTip.Tip="Photo Filter"/>
+                                    <Button x:Name="AdjGradientBtn" Classes="adj-pill"
+                                            Content="Grd" Width="38" Height="24"
+                                            ToolTip.Tip="Gradient Map"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── (c) LAYERS ─────────────────────────────────── -->
+                    <Border Grid.Row="2"
+                            BorderBrush="#252525"
+                            BorderThickness="0,0,0,0">
+                        <DockPanel>
+
+                            <!-- Layer panel header -->
+                            <Border DockPanel.Dock="Top"
+                                    Classes="panel-section-header"
+                                    BorderBrush="#252525"
+                                    BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" Classes="panel-title" Text="Layers"/>
+                                    <TextBlock Grid.Column="1" Text="▾" Foreground="#666" FontSize="10" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Mode + Opacity row (PS-style) -->
+                            <Border DockPanel.Dock="Top"
+                                    Background="#363636"
+                                    Padding="8,5"
                                     BorderBrush="#2a2a2a"
                                     BorderThickness="0,0,0,1">
-                                <views:LayersPanel x:Name="LayersPanelControl"/>
-                            </Border>
-                        </Expander>
+                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <!-- Blend mode -->
+                                    <ComboBox Grid.Column="0"
+                                              x:Name="BlendModeComboBox"
+                                              Background="#2d2d2d"
+                                              Foreground="#cccccc"
+                                              BorderBrush="#3a3a3a"
+                                              BorderThickness="1"
+                                              CornerRadius="3"
+                                              Padding="6,3"
+                                              FontSize="11"
+                                              SelectionChanged="OnBlendModeChanged">
+                                        <ComboBoxItem Content="Normal"     IsSelected="True"/>
+                                        <ComboBoxItem Content="Darken"/>
+                                        <ComboBoxItem Content="Multiply"/>
+                                        <ComboBoxItem Content="ColorBurn"/>
+                                        <ComboBoxItem Content="Lighten"/>
+                                        <ComboBoxItem Content="Screen"/>
+                                        <ComboBoxItem Content="ColorDodge"/>
+                                        <ComboBoxItem Content="Overlay"/>
+                                        <ComboBoxItem Content="SoftLight"/>
+                                        <ComboBoxItem Content="HardLight"/>
+                                        <ComboBoxItem Content="Difference"/>
+                                        <ComboBoxItem Content="Exclusion"/>
+                                        <ComboBoxItem Content="Hue"/>
+                                        <ComboBoxItem Content="Saturation"/>
+                                        <ComboBoxItem Content="Color"/>
+                                        <ComboBoxItem Content="Luminosity"/>
+                                    </ComboBox>
 
-                        <!-- ── b) History Panel ── -->
-                        <Expander Header="HISTORY" IsExpanded="True">
-                            <Border Height="180"
+                                    <!-- Opacity label -->
+                                    <TextBlock Grid.Column="1"
+                                               Text="Opacity:"
+                                               FontSize="11"
+                                               Foreground="#888"
+                                               VerticalAlignment="Center"
+                                               Margin="8,0,5,0"/>
+
+                                    <!-- Opacity value -->
+                                    <Border Grid.Column="2"
+                                            Background="#2d2d2d"
+                                            CornerRadius="3"
+                                            BorderBrush="#3a3a3a"
+                                            BorderThickness="1"
+                                            Padding="5,2"
+                                            MinWidth="48">
+                                        <TextBlock x:Name="LayerOpacityLabel"
+                                                   Text="100%"
+                                                   FontSize="11"
+                                                   Foreground="#cccccc"
+                                                   FontFamily="Consolas, monospace"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Layer bottom toolbar -->
+                            <Border DockPanel.Dock="Bottom"
+                                    Background="#353535"
                                     BorderBrush="#2a2a2a"
-                                    BorderThickness="0,0,0,1">
-                                <views:HistoryPanel x:Name="HistoryPanelControl"/>
+                                    BorderThickness="0,1,0,0"
+                                    Padding="8,5">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto">
+                                    <!-- + new layer -->
+                                    <Button Grid.Column="0"
+                                            x:Name="AddLayerButton"
+                                            Content="+" FontSize="18" FontWeight="Bold"
+                                            Width="28" Height="24"
+                                            Background="Transparent" Foreground="#aaa"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="OnAddLayerClicked"
+                                            ToolTip.Tip="New Layer"/>
+
+                                    <!-- fx effects -->
+                                    <Button Grid.Column="1"
+                                            Content="fx" FontSize="12"
+                                            Width="28" Height="24"
+                                            Background="Transparent" Foreground="#aaa"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            ToolTip.Tip="Add Layer Style"/>
+
+                                    <!-- ⊕ mask -->
+                                    <Button Grid.Column="3"
+                                            Content="⊕" FontSize="14"
+                                            Width="28" Height="24"
+                                            Background="Transparent" Foreground="#aaa"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            ToolTip.Tip="Add Layer Mask"/>
+
+                                    <!-- Duplicate -->
+                                    <Button Grid.Column="4"
+                                            x:Name="DuplicateLayerButton"
+                                            Content="⎘" FontSize="13"
+                                            Width="28" Height="24"
+                                            Background="Transparent" Foreground="#aaa"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="OnDuplicateLayerClicked"
+                                            ToolTip.Tip="Duplicate Layer"/>
+
+                                    <!-- 🗑 delete -->
+                                    <Button Grid.Column="5"
+                                            x:Name="DeleteLayerProxyButton"
+                                            Content="🗑" FontSize="12"
+                                            Width="28" Height="24"
+                                            Background="Transparent" Foreground="#e05555"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="OnDeleteActiveLayerClicked"
+                                            ToolTip.Tip="Delete Layer"/>
+                                </Grid>
                             </Border>
-                        </Expander>
 
-                        <!-- ── c) Adjustments Panel ── -->
-                        <Expander Header="ADJUSTMENTS" IsExpanded="False">
-                            <views:AdjustmentsPanel x:Name="AdjustmentsPanelControl"/>
-                        </Expander>
+                            <!-- Layer list -->
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="LayersStack" Spacing="0"/>
+                            </ScrollViewer>
 
-                    </StackPanel>
-                </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+
+                </Grid>
             </Border>
 
         </Grid>
 
     </DockPanel>
+
 </Window>
