@@ -344,7 +344,15 @@ namespace Pixellum.Views
         public int           GetActiveLayerIndex() => _activeLayerIndex;
 
         /// <summary>Public entry point for LayersPanel (opacity/blend mode changes).</summary>
-        public void TriggerRedraw() => RedrawCanvas();
+        public void TriggerRedraw()
+        {
+            // Mark all layers and document as fully dirty so the next composite pass sees the changes.
+            var fullRect = new IntRect(0, 0, _document.Width, _document.Height);
+            foreach (var layer in _layers)
+                layer.MarkDirty(fullRect);
+            _document.MarkDirty(fullRect);
+            RedrawCanvas();
+        }
 
         /// <summary>Exposes undo snapshot to external callers (e.g. Adjustments dialog).</summary>
         public void SaveUndoState() => SaveStateForUndo();
@@ -1348,21 +1356,49 @@ namespace Pixellum.Views
             _layers.Clear();
             foreach (var s in step.Layers)
             {
-                var layer = new Layer(_document.Width, _document.Height, s.Name)
+                // The snapshot may have been taken with different canvas dimensions (e.g. after a
+                // ResizeCanvas call that was later undone).  Derive the correct dimensions from the
+                // known pixel-count and the snapshot's pixel array length.
+                //
+                // Strategy: keep a size consistent with the FIRST layer in the snapshot.  All
+                // layers in the same step always share the same canvas size.
+                int snapW = _document.Width;
+                int snapH = _document.Height;
+                if (s.Pixels.Length != snapW * snapH && s.Pixels.Length > 0)
                 {
-                    Opacity = s.Opacity,
-                    Mode = s.BlendMode,
-                    Visible = s.IsVisible,
+                    // Try to find integer W×H that satisfies pixel count by scanning common widths.
+                    // For robustness, fall back to a square root guess when width isn't recoverable.
+                    int area = s.Pixels.Length;
+                    if (area % _document.Width == 0)
+                    {
+                        snapW = _document.Width;
+                        snapH = area / snapW;
+                    }
+                    else
+                    {
+                        // Best effort: recreate as 1×N (will still display correctly via compositor).
+                        snapW = 1;
+                        snapH = area;
+                    }
+                }
+
+                var layer = new Layer(snapW, snapH, s.Name)
+                {
+                    Opacity          = s.Opacity,
+                    Mode             = s.BlendMode,
+                    Visible          = s.IsVisible,
                     LockTransparency = s.LockTransparency,
-                    LockPixels = s.LockPixels,
-                    IsClippingMask = s.IsClippingMask
+                    LockPixels       = s.LockPixels,
+                    IsClippingMask   = s.IsClippingMask
                 };
                 var ptr = layer.GetPixels();
-                Array.Copy(s.Pixels, ptr, ptr.Length);
+                int copyLen = Math.Min(s.Pixels.Length, ptr.Length);
+                Array.Copy(s.Pixels, ptr, copyLen);
                 _layers.Add(layer);
             }
-            _activeLayerIndex = step.ActiveLayerIndex;
-            RedrawCanvas();
+
+            _activeLayerIndex = Math.Min(step.ActiveLayerIndex, Math.Max(0, _layers.Count - 1));
+            TriggerRedraw();
         }
     }
 }

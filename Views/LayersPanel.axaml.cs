@@ -149,12 +149,26 @@ namespace Pixellum.Views
 
             layers[activeIndex].Mode = item.Content?.ToString() switch
             {
-                "Multiply" => BlendMode.Multiply,
-                "Screen"   => BlendMode.Screen,
-                "Overlay"  => BlendMode.Overlay,
-                _          => BlendMode.Normal
+                "Darken"     => BlendMode.Darken,
+                "Multiply"   => BlendMode.Multiply,
+                "ColorBurn"  => BlendMode.ColorBurn,
+                "Lighten"    => BlendMode.Lighten,
+                "Screen"     => BlendMode.Screen,
+                "ColorDodge" => BlendMode.ColorDodge,
+                "Overlay"    => BlendMode.Overlay,
+                "SoftLight"  => BlendMode.SoftLight,
+                "HardLight"  => BlendMode.HardLight,
+                "Difference" => BlendMode.Difference,
+                "Exclusion"  => BlendMode.Exclusion,
+                "Hue"        => BlendMode.Hue,
+                "Saturation" => BlendMode.Saturation,
+                "Color"      => BlendMode.Color,
+                "Luminosity" => BlendMode.Luminosity,
+                _            => BlendMode.Normal
             };
 
+            // Force the entire layer dirty so it re-composites with the new blend mode
+            layers[activeIndex].MarkDirty(0, 0, layers[activeIndex].Width, layers[activeIndex].Height);
             _canvas.TriggerRedraw();
         }
 

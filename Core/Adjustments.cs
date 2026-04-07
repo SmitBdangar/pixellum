@@ -157,12 +157,11 @@ namespace Pixellum.Core
                 uint a = (p >> 24) & 0xFF;
                 if (a == 0) continue;
 
-                uint r = (p >> 16) & 0xFF;
-                uint g = (p >>  8) & 0xFF;
-                uint bv =  p       & 0xFF;
+                uint r  = (p >> 16) & 0xFF;
+                uint g  = (p >>  8) & 0xFF;
+                uint bv =  p        & 0xFF;
 
-                pixels[i] = (a << 24) | ((uint)rMap[r] << 16) | ((uint)gMap[g] << 8) | gMap[bv];
-                // Note: bv uses bMap
+                // Apply all three channel look-up tables in a single write.
                 pixels[i] = (a << 24) | ((uint)rMap[r] << 16) | ((uint)gMap[g] << 8) | bMap[bv];
             }
         }

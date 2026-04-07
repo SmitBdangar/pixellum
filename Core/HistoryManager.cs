@@ -53,13 +53,11 @@ namespace Pixellum.Core
 
         public void AddStep(string actionName, List<Layer> currentLayers, int activeLayerIndex)
         {
-            // Truncate future steps if we are adding a new action after undoing
-            if (CurrentIndex < Steps.Count - 1 && CurrentIndex >= 0)
+            // Truncate any future (redoable) steps when a new action is committed
+            if (CurrentIndex < Steps.Count - 1)
             {
                 while (Steps.Count > CurrentIndex + 1)
-                {
                     Steps.RemoveAt(Steps.Count - 1);
-                }
             }
 
             var step = new HistoryStep
@@ -76,14 +74,14 @@ namespace Pixellum.Core
 
                 step.Layers.Add(new LayerSnapshot
                 {
-                    Name = layer.Name,
-                    Pixels = snapshot,
-                    Opacity = layer.Opacity,
-                    BlendMode = layer.Mode,
-                    IsVisible = layer.Visible,
+                    Name             = layer.Name,
+                    Pixels           = snapshot,
+                    Opacity          = layer.Opacity,
+                    BlendMode        = layer.Mode,
+                    IsVisible        = layer.Visible,
                     LockTransparency = layer.LockTransparency,
-                    LockPixels = layer.LockPixels,
-                    IsClippingMask = layer.IsClippingMask
+                    LockPixels       = layer.LockPixels,
+                    IsClippingMask   = layer.IsClippingMask
                 });
             }
 
@@ -92,8 +90,8 @@ namespace Pixellum.Core
             if (Steps.Count > _maxHistory)
             {
                 Steps.RemoveAt(0);
-                if (CurrentIndex >= Steps.Count)
-                    CurrentIndex = Steps.Count - 1;
+                // After removing the oldest step, keep CurrentIndex within bounds.
+                CurrentIndex = Math.Max(0, Math.Min(CurrentIndex, Steps.Count - 1));
             }
             else
             {
@@ -101,6 +99,7 @@ namespace Pixellum.Core
             }
         }
 
+        /// <summary>True when there is a prior state to restore (index > 0 means at least one earlier snapshot).</summary>
         public bool CanUndo => CurrentIndex > 0;
         public bool CanRedo => CurrentIndex < Steps.Count - 1;
 

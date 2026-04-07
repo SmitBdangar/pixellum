@@ -42,14 +42,13 @@ namespace Pixellum.Rendering
             var layer = layers[li];
             if (!layer.Visible || layer.Opacity <= 0.001f) continue;
 
+            IntRect layerDirty = IntRect.Intersect(layer.DirtyRegion, dirtyRect);
+            if (layerDirty.IsEmpty) continue;
+
             uint[] layerPixels = layer.GetPixels();
             float layerOpacity = layer.Opacity;
 
-            IntRect layerDirty = IntRect.Intersect(layer.DirtyRegion, dirtyRect);
-            if (layerDirty.IsEmpty) continue;
-            layer.ClearDirty();
-
-            // Clip to dirty rect for this layer
+            // If this is a non-clipping layer, update the base alpha buffer for future clipping masks
             if (!layer.IsClippingMask)
             {
                 for (int yi = layerDirty.Y; yi < layerDirty.Bottom; yi++)
@@ -57,8 +56,7 @@ namespace Pixellum.Rendering
                     for (int xi = layerDirty.X; xi < layerDirty.Right; xi++)
                     {
                         int i = (yi - dirtyRect.Y) * dirtyRect.Width + (xi - dirtyRect.X);
-                        _baseAlphaBuffer[i] =
-                            ((layerPixels[yi * layer.Width + xi] >> 24) & 0xFF) / 255.0f * layerOpacity;
+                        _baseAlphaBuffer[i] = ((layerPixels[yi * layer.Width + xi] >> 24) & 0xFF) / 255.0f * layerOpacity;
                     }
                 }
             }
@@ -115,6 +113,8 @@ namespace Pixellum.Rendering
                     documentPixels[yi * w + xi] = (a << 24) | (r << 16) | (g << 8) | b;
                 }
             }
+            
+            layer.ClearDirty();
         }
 
         document.MarkDirty(dirtyRect);
