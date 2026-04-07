@@ -35,9 +35,11 @@ namespace Pixellum
 
                 _canvasView.ZoomChanged += (_, zoom) =>
                 {
+                    var pct = $"{(int)(zoom * 100)}%";
                     var zoomText = this.FindControl<TextBlock>("ZoomText");
-                    if (zoomText != null)
-                        zoomText.Text = $"{(int)(zoom * 100)}%";
+                    if (zoomText != null) zoomText.Text = pct;
+                    var statusZoom = this.FindControl<TextBlock>("StatusZoomText");
+                    if (statusZoom != null) statusZoom.Text = pct;
                 };
 
                 _canvasView.ToolChanged += (_, tool) =>

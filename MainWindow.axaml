@@ -267,7 +267,7 @@
                 BorderThickness="0,1,0,0"
                 Height="26"
                 Padding="12,0">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
 
                 <!-- Status message -->
                 <TextBlock x:Name="StatusText"
@@ -296,10 +296,28 @@
                 <!-- │ -->
                 <Rectangle Grid.Column="5" Classes="status-divider"/>
 
-                <!-- Active tool -->
+                <!-- Color Mode -->
                 <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Classes="status-label" Text="MODE"/>
+                    <TextBlock x:Name="ColorModeText" Classes="status" Text="RGBA 8"/>
+                </StackPanel>
+
+                <!-- │ -->
+                <Rectangle Grid.Column="7" Classes="status-divider"/>
+
+                <!-- Active tool -->
+                <StackPanel Grid.Column="8" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <TextBlock Classes="status-label" Text="TOOL"/>
                     <TextBlock x:Name="ActiveToolText" Classes="status" Text="Brush"/>
+                </StackPanel>
+
+                <!-- │ -->
+                <Rectangle Grid.Column="9" Classes="status-divider"/>
+
+                <!-- Zoom level -->
+                <StackPanel Grid.Column="10" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Classes="status-label" Text="ZOOM"/>
+                    <TextBlock x:Name="StatusZoomText" Classes="status" Text="100%"/>
                 </StackPanel>
 
             </Grid>
@@ -308,7 +326,7 @@
         <!-- ════════════════════════════════════════════════════════════════════
              MAIN WORK AREA  — Tools | Canvas | Layers + History
              ════════════════════════════════════════════════════════════════════ -->
-        <Grid ColumnDefinitions="210,4,*,4,280">
+        <Grid ColumnDefinitions="210,4,*,4,260">
 
             <!-- ── Tools panel ── -->
             <Border Grid.Column="0"
@@ -381,32 +399,71 @@
                           ResizeDirection="Columns"
                           HorizontalAlignment="Stretch"/>
 
-            <!-- ── Right side: Layers + History ── -->
+            <!-- ══════════════════════════════════════════════════════════════════
+                 RIGHT PANEL — stacked collapsible Expanders
+                 ══════════════════════════════════════════════════════════════════ -->
             <Border Grid.Column="4"
-                    Background="#1f1f1f"
+                    Background="#1a1a1a"
                     BorderBrush="#2a2a2a"
                     BorderThickness="1,0,0,0">
-                <Grid RowDefinitions="3*,4,2*">
+                <Border.Styles>
+                    <!-- Expander header style -->
+                    <Style Selector="Expander">
+                        <Setter Property="Background" Value="#1a1a1a"/>
+                        <Setter Property="Foreground" Value="#cccccc"/>
+                        <Setter Property="BorderBrush" Value="#2a2a2a"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="Padding" Value="0"/>
+                    </Style>
+                    <Style Selector="Expander > /template/ ToggleButton">
+                        <Setter Property="Background" Value="#212121"/>
+                        <Setter Property="Padding" Value="12,9"/>
+                        <Setter Property="BorderBrush" Value="#2a2a2a"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                    </Style>
+                    <Style Selector="Expander > /template/ ToggleButton:pointerover /template/ ContentPresenter">
+                        <Setter Property="Background" Value="#2a2a2a"/>
+                    </Style>
+                    <Style Selector="Expander > /template/ ToggleButton TextBlock">
+                        <Setter Property="FontSize" Value="10"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="LetterSpacing" Value="1.5"/>
+                        <Setter Property="Foreground" Value="#999999"/>
+                    </Style>
+                    <Style Selector="Expander:expanded > /template/ ToggleButton TextBlock">
+                        <Setter Property="Foreground" Value="#31A8FF"/>
+                    </Style>
+                </Border.Styles>
 
-                    <!-- Layers panel -->
-                    <Border Grid.Row="0"
-                            BorderBrush="#2a2a2a"
-                            BorderThickness="0,0,0,1">
-                        <views:LayersPanel x:Name="LayersPanelControl"/>
-                    </Border>
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
 
-                    <!-- Row splitter -->
-                    <GridSplitter Grid.Row="1"
-                                  Background="#2a2a2a"
-                                  ResizeBehavior="PreviousAndNext"
-                                  ResizeDirection="Rows"
-                                  HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Stretch"/>
+                        <!-- ── a) Layers Panel ── -->
+                        <Expander Header="LAYERS" IsExpanded="True">
+                            <Border Height="340"
+                                    BorderBrush="#2a2a2a"
+                                    BorderThickness="0,0,0,1">
+                                <views:LayersPanel x:Name="LayersPanelControl"/>
+                            </Border>
+                        </Expander>
 
-                    <!-- History panel -->
-                    <views:HistoryPanel Grid.Row="2" x:Name="HistoryPanelControl"/>
+                        <!-- ── b) History Panel ── -->
+                        <Expander Header="HISTORY" IsExpanded="True">
+                            <Border Height="180"
+                                    BorderBrush="#2a2a2a"
+                                    BorderThickness="0,0,0,1">
+                                <views:HistoryPanel x:Name="HistoryPanelControl"/>
+                            </Border>
+                        </Expander>
 
-                </Grid>
+                        <!-- ── c) Adjustments Panel ── -->
+                        <Expander Header="ADJUSTMENTS" IsExpanded="False">
+                            <views:AdjustmentsPanel x:Name="AdjustmentsPanelControl"/>
+                        </Expander>
+
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
 
         </Grid>
