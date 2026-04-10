@@ -14,7 +14,9 @@ namespace Pixellum.ViewModels
             _canExecute = canExecute;
         }
 
+#pragma warning disable CS0067 // Required by ICommand interface
         public event EventHandler? CanExecuteChanged;
+#pragma warning restore CS0067
 
         public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
 

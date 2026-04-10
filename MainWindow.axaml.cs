@@ -419,25 +419,7 @@ namespace Pixellum
             int idx    = cv.GetActiveLayerIndex();
             if (idx < 0 || idx >= layers.Count) return;
 
-            layers[idx].Mode = item.Content?.ToString() switch
-            {
-                "Darken"     => Pixellum.Core.BlendMode.Darken,
-                "Multiply"   => Pixellum.Core.BlendMode.Multiply,
-                "ColorBurn"  => Pixellum.Core.BlendMode.ColorBurn,
-                "Lighten"    => Pixellum.Core.BlendMode.Lighten,
-                "Screen"     => Pixellum.Core.BlendMode.Screen,
-                "ColorDodge" => Pixellum.Core.BlendMode.ColorDodge,
-                "Overlay"    => Pixellum.Core.BlendMode.Overlay,
-                "SoftLight"  => Pixellum.Core.BlendMode.SoftLight,
-                "HardLight"  => Pixellum.Core.BlendMode.HardLight,
-                "Difference" => Pixellum.Core.BlendMode.Difference,
-                "Exclusion"  => Pixellum.Core.BlendMode.Exclusion,
-                "Hue"        => Pixellum.Core.BlendMode.Hue,
-                "Saturation" => Pixellum.Core.BlendMode.Saturation,
-                "Color"      => Pixellum.Core.BlendMode.Color,
-                "Luminosity" => Pixellum.Core.BlendMode.Luminosity,
-                _            => Pixellum.Core.BlendMode.Normal
-            };
+            layers[idx].Mode = ColorMath.ParseBlendMode(item.Content?.ToString());
 
             layers[idx].MarkDirty(0, 0, layers[idx].Width, layers[idx].Height);
             cv.TriggerRedraw();
@@ -466,6 +448,12 @@ namespace Pixellum
         {
             var lp = this.GetVisualDescendants().OfType<Views.LayersPanel>().FirstOrDefault();
             lp?.OnDuplicateLayerClickedPublic();
+        }
+
+        public void OnMergeDownClicked(object? sender, RoutedEventArgs e)
+        {
+            var lp = this.GetVisualDescendants().OfType<Views.LayersPanel>().FirstOrDefault();
+            lp?.OnMergeDownClickedPublic();
         }
     }
 }

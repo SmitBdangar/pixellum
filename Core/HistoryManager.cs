@@ -8,12 +8,15 @@ namespace Pixellum.Core
     public class LayerSnapshot
     {
         public string Name { get; set; } = "";
+        public int Width { get; set; }
+        public int Height { get; set; }
         public uint[] Pixels { get; set; } = Array.Empty<uint>();
         public float Opacity { get; set; }
         public BlendMode BlendMode { get; set; }
         public bool IsVisible { get; set; }
         public bool LockTransparency { get; set; }
         public bool LockPixels { get; set; }
+        public bool LockPosition { get; set; }
         public bool IsClippingMask { get; set; }
     }
 
@@ -75,12 +78,15 @@ namespace Pixellum.Core
                 step.Layers.Add(new LayerSnapshot
                 {
                     Name             = layer.Name,
+                    Width            = layer.Width,
+                    Height           = layer.Height,
                     Pixels           = snapshot,
                     Opacity          = layer.Opacity,
                     BlendMode        = layer.Mode,
                     IsVisible        = layer.Visible,
                     LockTransparency = layer.LockTransparency,
                     LockPixels       = layer.LockPixels,
+                    LockPosition     = layer.LockPosition,
                     IsClippingMask   = layer.IsClippingMask
                 });
             }

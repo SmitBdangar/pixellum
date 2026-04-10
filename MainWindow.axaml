@@ -188,11 +188,11 @@
                         </MenuItem>
                     </MenuItem>
                     <MenuItem Header="_Layer">
-                        <MenuItem Header="_New Layer"/>
-                        <MenuItem Header="Duplicate Layer"/>
-                        <MenuItem Header="Merge Down"/>
+                        <MenuItem Header="_New Layer"       Click="OnAddLayerClicked"/>
+                        <MenuItem Header="Duplicate Layer"  Click="OnDuplicateLayerClicked"/>
+                        <MenuItem Header="Merge Down"       Click="OnMergeDownClicked"/>
                         <Separator Background="#3a3a3a"/>
-                        <MenuItem Header="Layer Properties…"/>
+                        <MenuItem Header="Delete Layer"     Click="OnDeleteActiveLayerClicked"/>
                     </MenuItem>
                     <MenuItem Header="_Type"/>
                     <MenuItem Header="_Select"/>

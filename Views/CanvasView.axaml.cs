@@ -115,6 +115,7 @@ namespace Pixellum.Views
         public event EventHandler<uint>? ColorPicked;
 
         private uint  _activeColor  = 0xFFFF0000;
+        private uint  _secondaryColor = 0xFFFFFFFF;
         private float _brushRadius  = 15f;
         private float _brushOpacity = 1f;
 
@@ -363,37 +364,37 @@ namespace Pixellum.Views
         public void ResizeCanvas(int newW, int newH, int anchorX = 0, int anchorY = 0)
         {
             SaveStateForUndo();
-            foreach (var layer in _layers)
-            {
-                var src = layer.GetPixels();
-                var dst = new uint[newW * newH];
-                int copyW = Math.Min(layer.Width, newW);
-                int copyH = Math.Min(layer.Height, newH);
-                for (int y = 0; y < copyH; y++)
-                    for (int x = 0; x < copyW; x++)
-                        dst[(y + anchorY) * newW + (x + anchorX)]
-                            = src[y * layer.Width + x];
-                Array.Copy(dst, src.Length == dst.Length ? src : (layer.GetPixels()), Math.Min(src.Length, dst.Length));
-            }
 
-            // Rebuild layers with new size
+            // Rebuild layers with new size — copies pixel data with anchor offset
             var newLayers = new Layer[_layers.Count];
             for (int i = 0; i < _layers.Count; i++)
             {
                 var oldLayer = _layers[i];
                 var newLayer = new Layer(newW, newH, oldLayer.Name)
                 {
-                    Visible = oldLayer.Visible,
-                    Opacity = oldLayer.Opacity,
-                    Mode    = oldLayer.Mode
+                    Visible          = oldLayer.Visible,
+                    Opacity          = oldLayer.Opacity,
+                    Mode             = oldLayer.Mode,
+                    LockTransparency = oldLayer.LockTransparency,
+                    LockPixels       = oldLayer.LockPixels,
+                    LockPosition     = oldLayer.LockPosition,
+                    IsClippingMask   = oldLayer.IsClippingMask
                 };
-                var src2 = oldLayer.GetPixels();
-                var dst2 = newLayer.GetPixels();
-                int copyW = Math.Min(oldLayer.Width,  newW);
-                int copyH = Math.Min(oldLayer.Height, newH);
+                var src = oldLayer.GetPixels();
+                var dst = newLayer.GetPixels();
+                int copyW = Math.Min(oldLayer.Width,  newW - anchorX);
+                int copyH = Math.Min(oldLayer.Height, newH - anchorY);
                 for (int y = 0; y < copyH; y++)
+                {
+                    int dstY = y + anchorY;
+                    if (dstY < 0 || dstY >= newH) continue;
                     for (int x = 0; x < copyW; x++)
-                        dst2[(y + anchorY) * newW + (x + anchorX)] = src2[y * oldLayer.Width + x];
+                    {
+                        int dstX = x + anchorX;
+                        if (dstX < 0 || dstX >= newW) continue;
+                        dst[dstY * newW + dstX] = src[y * oldLayer.Width + x];
+                    }
+                }
                 newLayers[i] = newLayer;
             }
 
@@ -401,11 +402,7 @@ namespace Pixellum.Views
             foreach (var l in newLayers) _layers.Add(l);
             _document = new Document(newW, newH);
 
-            _canvasBitmap = new WriteableBitmap(
-                new PixelSize(newW, newH),
-                new Vector(96, 96),
-                PixelFormat.Bgra8888,
-                AlphaFormat.Unpremul);
+            _canvasBitmap = BitmapFactory.Create(newW, newH);
             if (_canvasImage != null) _canvasImage.Source = _canvasBitmap;
 
             RedrawCanvas();
@@ -1217,7 +1214,7 @@ namespace Pixellum.Views
             uint[] pixels = ActiveLayer.GetPixels();
             uint fillAlpha = (uint)(255 * _brushOpacity);
             uint startColor = (fillAlpha << 24) | (_activeColor & 0x00FFFFFF);
-            uint endColor   = 0x00FFFFFF; // Transparent white
+            uint endColor   = (fillAlpha << 24) | (_secondaryColor & 0x00FFFFFF);
 
             float sA = ((startColor >> 24) & 0xFF);
             float sR = ((startColor >> 16) & 0xFF);
@@ -1250,31 +1247,10 @@ namespace Pixellum.Views
                     uint B = (uint)Math.Clamp(sB + (eB - sB) * t, 0, 255);
 
                     uint gradPx = (A << 24) | (R << 16) | (G << 8) | B;
-                    
-                    // Alpha over active layer
-                    uint dstPx = pixels[y * _document.Width + x];
-                    float srcAlpha = A / 255.0f;
-                    float dstAlpha = ((dstPx >> 24) & 0xFF) / 255.0f;
-                    float invA = 1.0f - srcAlpha;
-                    float outA = srcAlpha + dstAlpha * invA;
 
-                    if (outA > 0)
-                    {
-                        float dR_ = ((dstPx >> 16) & 0xFF) / 255.0f;
-                        float dG_ = ((dstPx >> 8) & 0xFF) / 255.0f;
-                        float dB_ = (dstPx & 0xFF) / 255.0f;
-
-                        float oR = ((R / 255.0f) * srcAlpha + dR_ * dstAlpha * invA) / outA;
-                        float oG = ((G / 255.0f) * srcAlpha + dG_ * dstAlpha * invA) / outA;
-                        float oB = ((B / 255.0f) * srcAlpha + dB_ * dstAlpha * invA) / outA;
-
-                        uint fA = (uint)Math.Clamp(outA * 255f, 0, 255);
-                        uint fR = (uint)Math.Clamp(oR * 255f, 0, 255);
-                        uint fG = (uint)Math.Clamp(oG * 255f, 0, 255);
-                        uint fB = (uint)Math.Clamp(oB * 255f, 0, 255);
-
-                        pixels[y * _document.Width + x] = (fA << 24) | (fR << 16) | (fG << 8) | fB;
-                    }
+                    // Alpha composite using shared utility
+                    pixels[y * _document.Width + x] = ColorMath.AlphaComposite(
+                        gradPx, pixels[y * _document.Width + x]);
                 }
             }
             RedrawCanvas();
@@ -1354,41 +1330,41 @@ namespace Pixellum.Views
         private void RestoreHistoryStep(HistoryStep step)
         {
             _layers.Clear();
+
+            // Determine canvas dimensions from the first snapshot (all layers share the same size)
+            int snapW = _document.Width;
+            int snapH = _document.Height;
+            if (step.Layers.Count > 0)
+            {
+                var first = step.Layers[0];
+                if (first.Width > 0 && first.Height > 0)
+                {
+                    snapW = first.Width;
+                    snapH = first.Height;
+                }
+            }
+
+            // Rebuild document and bitmap if dimensions changed
+            if (snapW != _document.Width || snapH != _document.Height)
+            {
+                _document = new Document(snapW, snapH);
+                _canvasBitmap = BitmapFactory.Create(snapW, snapH);
+                if (_canvasImage != null) _canvasImage.Source = _canvasBitmap;
+            }
+
             foreach (var s in step.Layers)
             {
-                // The snapshot may have been taken with different canvas dimensions (e.g. after a
-                // ResizeCanvas call that was later undone).  Derive the correct dimensions from the
-                // known pixel-count and the snapshot's pixel array length.
-                //
-                // Strategy: keep a size consistent with the FIRST layer in the snapshot.  All
-                // layers in the same step always share the same canvas size.
-                int snapW = _document.Width;
-                int snapH = _document.Height;
-                if (s.Pixels.Length != snapW * snapH && s.Pixels.Length > 0)
-                {
-                    // Try to find integer W×H that satisfies pixel count by scanning common widths.
-                    // For robustness, fall back to a square root guess when width isn't recoverable.
-                    int area = s.Pixels.Length;
-                    if (area % _document.Width == 0)
-                    {
-                        snapW = _document.Width;
-                        snapH = area / snapW;
-                    }
-                    else
-                    {
-                        // Best effort: recreate as 1×N (will still display correctly via compositor).
-                        snapW = 1;
-                        snapH = area;
-                    }
-                }
+                int layerW = s.Width  > 0 ? s.Width  : snapW;
+                int layerH = s.Height > 0 ? s.Height : snapH;
 
-                var layer = new Layer(snapW, snapH, s.Name)
+                var layer = new Layer(layerW, layerH, s.Name)
                 {
                     Opacity          = s.Opacity,
                     Mode             = s.BlendMode,
                     Visible          = s.IsVisible,
                     LockTransparency = s.LockTransparency,
                     LockPixels       = s.LockPixels,
+                    LockPosition     = s.LockPosition,
                     IsClippingMask   = s.IsClippingMask
                 };
                 var ptr = layer.GetPixels();

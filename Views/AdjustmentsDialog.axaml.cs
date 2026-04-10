@@ -22,12 +22,18 @@ namespace Pixellum.Views
     public partial class AdjustmentsDialog : Window
     {
         private readonly AdjustmentType _type;
-        private readonly CanvasView     _canvas;
+        private readonly CanvasView     _canvas = null!;
         private uint[]?  _snapshot;   // pixel state before any adjustment (for cancel/reset)
 
         // Slider references (filled in BuildSliders)
-        private Slider?  _s1, _s2, _s3, _s4, _s5, _s6;
-        private TextBlock? _v1, _v2, _v3, _v4, _v5, _v6;
+        private Slider?  _s1, _s2, _s3, _s4, _s5;
+#pragma warning disable CS0169, CS0649 // Reserved for future adjustment types
+        private Slider?  _s6;
+#pragma warning restore CS0169, CS0649
+        private TextBlock? _v1, _v2, _v3, _v4, _v5;
+#pragma warning disable CS0169
+        private TextBlock? _v6;
+#pragma warning restore CS0169
         private CheckBox? _previewCheck;
 
         public AdjustmentsDialog()

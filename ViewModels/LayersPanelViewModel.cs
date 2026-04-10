@@ -49,8 +49,8 @@ namespace Pixellum.ViewModels
         {
             _canvasVM = canvasVM;
             AddLayerCommand = new RelayCommand(_ => AddLayer());
-            DeleteLayerCommand = new RelayCommand(idx => DeleteLayer((int)idx), _ => CanDeleteLayer());
-            RenameLayerCommand = new RelayCommand(data => RenameLayer((string[])data));
+            DeleteLayerCommand = new RelayCommand(idx => { if (idx is int i) DeleteLayer(i); }, _ => CanDeleteLayer());
+            RenameLayerCommand = new RelayCommand(data => { if (data is string[] d) RenameLayer(d); });
         }
 
         private void AddLayer()

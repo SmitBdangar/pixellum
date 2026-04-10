@@ -6,119 +6,121 @@ namespace Pixellum.Rendering
 {
     public static class LayerCompositor
     {
-        private static float[] _baseAlphaBuffer = Array.Empty<float>();
+        // ThreadStatic ensures thread-safety if compositing ever runs on multiple threads
+        [ThreadStatic]
+        private static float[]? _baseAlphaBuffer;
 
-    /// <summary>Full canvas composite.</summary>
-    public static void Composite(Document document, IReadOnlyList<Layer> layers)
-    {
-        Composite(document, layers, new IntRect(0, 0, document.Width, document.Height));
-    }
-
-    /// <summary>Dirty rect composite for perf.</summary>
-    public static void Composite(Document document, IReadOnlyList<Layer> layers, IntRect dirtyRect)
-    {
-        uint[] documentPixels = document.GetPixelsRaw();
-        int w = document.Width;
-        int h = document.Height;
-        dirtyRect = IntRect.Intersect(dirtyRect, new IntRect(0, 0, w, h));
-
-        if (dirtyRect.IsEmpty) return;
-
-        // Clear only pixels inside the dirty rect (rect is not contiguous in the backing array).
-        for (int yi = dirtyRect.Y; yi < dirtyRect.Bottom; yi++)
+        /// <summary>Full canvas composite.</summary>
+        public static void Composite(Document document, IReadOnlyList<Layer> layers)
         {
-            Array.Clear(documentPixels, yi * w + dirtyRect.X, dirtyRect.Width);
+            Composite(document, layers, new IntRect(0, 0, document.Width, document.Height));
         }
 
-        int count = dirtyRect.Width * dirtyRect.Height;
-        if (_baseAlphaBuffer.Length < count)
+        /// <summary>Dirty rect composite for perf.</summary>
+        public static void Composite(Document document, IReadOnlyList<Layer> layers, IntRect dirtyRect)
         {
-            _baseAlphaBuffer = new float[count];
-        }
-        Array.Clear(_baseAlphaBuffer, 0, count);
+            uint[] documentPixels = document.GetPixelsRaw();
+            int w = document.Width;
+            int h = document.Height;
+            dirtyRect = IntRect.Intersect(dirtyRect, new IntRect(0, 0, w, h));
 
-        for (int li = 0; li < layers.Count; li++)
-        {
-            var layer = layers[li];
-            if (!layer.Visible || layer.Opacity <= 0.001f) continue;
+            if (dirtyRect.IsEmpty) return;
 
-            IntRect layerDirty = IntRect.Intersect(layer.DirtyRegion, dirtyRect);
-            if (layerDirty.IsEmpty) continue;
-
-            uint[] layerPixels = layer.GetPixels();
-            float layerOpacity = layer.Opacity;
-
-            // If this is a non-clipping layer, update the base alpha buffer for future clipping masks
-            if (!layer.IsClippingMask)
+            // Clear only pixels inside the dirty rect
+            for (int yi = dirtyRect.Y; yi < dirtyRect.Bottom; yi++)
             {
+                Array.Clear(documentPixels, yi * w + dirtyRect.X, dirtyRect.Width);
+            }
+
+            int count = dirtyRect.Width * dirtyRect.Height;
+            if (_baseAlphaBuffer == null || _baseAlphaBuffer.Length < count)
+            {
+                _baseAlphaBuffer = new float[count];
+            }
+            Array.Clear(_baseAlphaBuffer, 0, count);
+
+            for (int li = 0; li < layers.Count; li++)
+            {
+                var layer = layers[li];
+                if (!layer.Visible || layer.Opacity <= 0.001f) continue;
+
+                IntRect layerDirty = IntRect.Intersect(layer.DirtyRegion, dirtyRect);
+                if (layerDirty.IsEmpty) continue;
+
+                uint[] layerPixels = layer.GetPixels();
+                float layerOpacity = layer.Opacity;
+
+                // If this is a non-clipping layer, update the base alpha buffer for future clipping masks
+                if (!layer.IsClippingMask)
+                {
+                    for (int yi = layerDirty.Y; yi < layerDirty.Bottom; yi++)
+                    {
+                        for (int xi = layerDirty.X; xi < layerDirty.Right; xi++)
+                        {
+                            int i = (yi - dirtyRect.Y) * dirtyRect.Width + (xi - dirtyRect.X);
+                            _baseAlphaBuffer[i] = ((layerPixels[yi * layer.Width + xi] >> 24) & 0xFF) / 255.0f * layerOpacity;
+                        }
+                    }
+                }
+
                 for (int yi = layerDirty.Y; yi < layerDirty.Bottom; yi++)
                 {
                     for (int xi = layerDirty.X; xi < layerDirty.Right; xi++)
                     {
                         int i = (yi - dirtyRect.Y) * dirtyRect.Width + (xi - dirtyRect.X);
-                        _baseAlphaBuffer[i] = ((layerPixels[yi * layer.Width + xi] >> 24) & 0xFF) / 255.0f * layerOpacity;
+                        uint src = layerPixels[yi * layer.Width + xi];
+
+                        float srcA = ((src >> 24) & 0xFF) / 255.0f * layerOpacity;
+
+                        if (layer.IsClippingMask)
+                        {
+                            srcA *= _baseAlphaBuffer[i];
+                        }
+
+                        if (srcA <= 0.001f) continue;
+
+                        uint dst = documentPixels[yi * w + xi];
+                        float dstA = ((dst >> 24) & 0xFF) / 255.0f;
+                        float invSrcA = 1.0f - srcA;
+
+                        float srcR = ((src >> 16) & 0xFF) / 255.0f;
+                        float srcG = ((src >>  8) & 0xFF) / 255.0f;
+                        float srcB = ( src & 0xFF) / 255.0f;
+
+                        float dstR = ((dst >> 16) & 0xFF) / 255.0f;
+                        float dstG = ((dst >>  8) & 0xFF) / 255.0f;
+                        float dstB = ( dst & 0xFF) / 255.0f;
+
+                        float blendR, blendG, blendB;
+                        ApplyBlendMode(layer.Mode, srcR, srcG, srcB, dstR, dstG, dstB, out blendR, out blendG, out blendB);
+
+                        float outA = srcA + dstA * invSrcA;
+                        float outR, outG, outB;
+                        if (outA < 1e-6f)
+                        {
+                            outR = outG = outB = 0f;
+                        }
+                        else
+                        {
+                            outR = (blendR * srcA + dstR * dstA * invSrcA) / outA;
+                            outG = (blendG * srcA + dstG * dstA * invSrcA) / outA;
+                            outB = (blendB * srcA + dstB * dstA * invSrcA) / outA;
+                        }
+
+                        uint a = (uint)Math.Clamp(outA * 255f, 0, 255);
+                        uint r = (uint)Math.Clamp(outR * 255f, 0, 255);
+                        uint g = (uint)Math.Clamp(outG * 255f, 0, 255);
+                        uint b = (uint)Math.Clamp(outB * 255f, 0, 255);
+
+                        documentPixels[yi * w + xi] = (a << 24) | (r << 16) | (g << 8) | b;
                     }
                 }
+
+                layer.ClearDirty();
             }
 
-            for (int yi = layerDirty.Y; yi < layerDirty.Bottom; yi++)
-            {
-                for (int xi = layerDirty.X; xi < layerDirty.Right; xi++)
-                {
-                    int i = (yi - dirtyRect.Y) * dirtyRect.Width + (xi - dirtyRect.X);
-                    uint src = layerPixels[yi * layer.Width + xi];
-
-                    float srcA = ((src >> 24) & 0xFF) / 255.0f * layerOpacity;
-                    
-                    if (layer.IsClippingMask)
-                    {
-                        srcA *= _baseAlphaBuffer[i];
-                    }
-
-                    if (srcA <= 0.001f) continue;
-
-                    uint dst = documentPixels[yi * w + xi];
-                    float dstA = ((dst >> 24) & 0xFF) / 255.0f;
-                    float invSrcA = 1.0f - srcA;
-
-                    float srcR = ((src >> 16) & 0xFF) / 255.0f;
-                    float srcG = ((src >>  8) & 0xFF) / 255.0f;
-                    float srcB = ( src & 0xFF) / 255.0f;
-
-                    float dstR = ((dst >> 16) & 0xFF) / 255.0f;
-                    float dstG = ((dst >>  8) & 0xFF) / 255.0f;
-                    float dstB = ( dst & 0xFF) / 255.0f;
-
-                    float blendR, blendG, blendB;
-                    ApplyBlendMode(layer.Mode, srcR, srcG, srcB, dstR, dstG, dstB, out blendR, out blendG, out blendB);
-
-                    float outA = srcA + dstA * invSrcA;
-                    float outR, outG, outB;
-                    if (outA < 1e-6f)
-                    {
-                        outR = outG = outB = 0f;
-                    }
-                    else
-                    {
-                        outR = (blendR * srcA + dstR * dstA * invSrcA) / outA;
-                        outG = (blendG * srcA + dstG * dstA * invSrcA) / outA;
-                        outB = (blendB * srcA + dstB * dstA * invSrcA) / outA;
-                    }
-
-                    uint a = (uint)Math.Clamp(outA * 255f, 0, 255);
-                    uint r = (uint)Math.Clamp(outR * 255f, 0, 255);
-                    uint g = (uint)Math.Clamp(outG * 255f, 0, 255);
-                    uint b = (uint)Math.Clamp(outB * 255f, 0, 255);
-
-                    documentPixels[yi * w + xi] = (a << 24) | (r << 16) | (g << 8) | b;
-                }
-            }
-            
-            layer.ClearDirty();
+            document.MarkDirty(dirtyRect);
         }
-
-        document.MarkDirty(dirtyRect);
-    }
 
         // ─── Blend mode dispatch ─────────────────────────────────────────────
 
@@ -158,7 +160,6 @@ namespace Pixellum.Rendering
                     return;
 
                 case BlendMode.HardLight:
-                    // Hard light = Overlay with src/dst swapped
                     outR = Overlay(dr,sr); outG = Overlay(dg,sg); outB = Overlay(db,sb);
                     return;
 
@@ -174,28 +175,29 @@ namespace Pixellum.Rendering
                     outR = sr+dr-2*sr*dr; outG = sg+dg-2*sg*dg; outB = sb+db-2*sb*db;
                     return;
 
+                // HSL blend modes now use shared ColorMath utility
                 case BlendMode.Hue:
-                    RgbToHsl(sr,sg,sb, out float sh, out _, out _);
-                    RgbToHsl(dr,dg,db, out _, out float ds, out float dl);
-                    HslToRgb(sh,ds,dl, out outR, out outG, out outB);
+                    ColorMath.RgbToHsl(sr,sg,sb, out float sh, out _, out _);
+                    ColorMath.RgbToHsl(dr,dg,db, out _, out float ds, out float dl);
+                    ColorMath.HslToRgb(sh,ds,dl, out outR, out outG, out outB);
                     return;
 
                 case BlendMode.Saturation:
-                    RgbToHsl(dr,dg,db, out float dh2, out _, out float dl2);
-                    RgbToHsl(sr,sg,sb, out _, out float ss2, out _);
-                    HslToRgb(dh2,ss2,dl2, out outR, out outG, out outB);
+                    ColorMath.RgbToHsl(dr,dg,db, out float dh2, out _, out float dl2);
+                    ColorMath.RgbToHsl(sr,sg,sb, out _, out float ss2, out _);
+                    ColorMath.HslToRgb(dh2,ss2,dl2, out outR, out outG, out outB);
                     return;
 
                 case BlendMode.Color:
-                    RgbToHsl(sr,sg,sb, out float sh3, out float ss3, out _);
-                    RgbToHsl(dr,dg,db, out _, out _, out float dl3);
-                    HslToRgb(sh3,ss3,dl3, out outR, out outG, out outB);
+                    ColorMath.RgbToHsl(sr,sg,sb, out float sh3, out float ss3, out _);
+                    ColorMath.RgbToHsl(dr,dg,db, out _, out _, out float dl3);
+                    ColorMath.HslToRgb(sh3,ss3,dl3, out outR, out outG, out outB);
                     return;
 
                 case BlendMode.Luminosity:
-                    RgbToHsl(dr,dg,db, out float dh4, out float ds4, out _);
-                    RgbToHsl(sr,sg,sb, out _, out _, out float sl4);
-                    HslToRgb(dh4,ds4,sl4, out outR, out outG, out outB);
+                    ColorMath.RgbToHsl(dr,dg,db, out float dh4, out float ds4, out _);
+                    ColorMath.RgbToHsl(sr,sg,sb, out _, out _, out float sl4);
+                    ColorMath.HslToRgb(dh4,ds4,sl4, out outR, out outG, out outB);
                     return;
 
                 default: // Normal
@@ -223,49 +225,6 @@ namespace Pixellum.Rendering
                 ? ((16f*d - 12f)*d + 4f)*d
                 : MathF.Sqrt(d);
             return d + (2f*s - 1f) * (dSqrt - d);
-        }
-
-        // ─── HSL ↔ RGB conversion ─────────────────────────────────────────────
-
-        private static void RgbToHsl(float r, float g, float b,
-            out float h, out float s, out float l)
-        {
-            float max = Math.Max(r, Math.Max(g, b));
-            float min = Math.Min(r, Math.Min(g, b));
-            float delta = max - min;
-
-            l = (max + min) / 2f;
-
-            if (delta < 1e-6f) { h = s = 0f; return; }
-
-            s = l < 0.5f ? delta / (max + min) : delta / (2f - max - min);
-
-            if      (max == r) h = ((g - b) / delta + (g < b ? 6f : 0f)) / 6f;
-            else if (max == g) h = ((b - r) / delta + 2f) / 6f;
-            else               h = ((r - g) / delta + 4f) / 6f;
-        }
-
-        private static void HslToRgb(float h, float s, float l,
-            out float r, out float g, out float b)
-        {
-            if (s < 1e-6f) { r = g = b = l; return; }
-
-            float q = l < 0.5f ? l * (1f + s) : l + s - l * s;
-            float p = 2f * l - q;
-
-            r = Hue2Rgb(p, q, h + 1f/3f);
-            g = Hue2Rgb(p, q, h);
-            b = Hue2Rgb(p, q, h - 1f/3f);
-        }
-
-        private static float Hue2Rgb(float p, float q, float t)
-        {
-            if (t < 0f) t += 1f;
-            if (t > 1f) t -= 1f;
-            if (t < 1f/6f) return p + (q-p)*6f*t;
-            if (t < 1f/2f) return q;
-            if (t < 2f/3f) return p + (q-p)*(2f/3f-t)*6f;
-            return p;
         }
     }
 }

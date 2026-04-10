@@ -118,8 +118,6 @@ namespace Pixellum.Rendering
 
         // ── Alpha compositing ─────────────────────────────────────────────────
 
-        // ── Alpha compositing ─────────────────────────────────────────────────
-
         private static uint AlphaBlend(float srcR, float srcG, float srcB, float srcA, uint dst, bool lockTrans = false)
         {
             float dstA = ((dst >> 24) & 0xFF) / 255.0f;

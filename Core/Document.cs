@@ -38,9 +38,6 @@ namespace Pixellum.Core
 
         public void ClearDirty() => DirtyRegion = default;
 
-        [System.Obsolete("GetRectPixels is not yet implemented correctly. Use GetPixelsRaw() until Phase 2.")]
-        public uint[] GetRectPixels(int x, int y, int w, int h) => _pixels;
-
         public uint[] GetPixelsRaw() => _pixels;
     }
 }

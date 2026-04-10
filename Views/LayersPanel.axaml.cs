@@ -78,6 +78,9 @@ namespace Pixellum.Views
         public void OnDuplicateLayerClickedPublic() =>
             OnDuplicateLayerClicked(null, new RoutedEventArgs());
 
+        public void OnMergeDownClickedPublic() =>
+            OnMergeDownClicked(null, new RoutedEventArgs());
+
         private void OnMergeDownClicked(object? sender, RoutedEventArgs e)
         {
             if (_canvas == null) return;
@@ -92,31 +95,10 @@ namespace Pixellum.Views
             var srcPixels   = activeLayer.GetPixels();
             var dstPixels   = belowLayer.GetPixels();
 
-            // Straight-alpha src-over merge
+            // Merge using shared alpha compositing
             for (int i = 0; i < srcPixels.Length; i++)
             {
-                uint src  = srcPixels[i];
-                uint dst  = dstPixels[i];
-                float srcA = ((src >> 24) & 0xFF) / 255.0f;
-                float dstA = ((dst >> 24) & 0xFF) / 255.0f;
-                float invSrcA = 1.0f - srcA;
-                float outA = srcA + dstA * invSrcA;
-
-                if (outA < 1e-6f) { dstPixels[i] = 0; continue; }
-
-                float srcR = ((src >> 16) & 0xFF) / 255.0f;
-                float srcG = ((src >>  8) & 0xFF) / 255.0f;
-                float srcB = ( src        & 0xFF) / 255.0f;
-                float dstR = ((dst >> 16) & 0xFF) / 255.0f;
-                float dstG = ((dst >>  8) & 0xFF) / 255.0f;
-                float dstB = ( dst        & 0xFF) / 255.0f;
-
-                uint A = (uint)Math.Clamp(outA * 255f, 0, 255);
-                uint R = (uint)Math.Clamp(((srcR * srcA + dstR * dstA * invSrcA) / outA) * 255f, 0, 255);
-                uint G = (uint)Math.Clamp(((srcG * srcA + dstG * dstA * invSrcA) / outA) * 255f, 0, 255);
-                uint B = (uint)Math.Clamp(((srcB * srcA + dstB * dstA * invSrcA) / outA) * 255f, 0, 255);
-
-                dstPixels[i] = (A << 24) | (R << 16) | (G << 8) | B;
+                dstPixels[i] = ColorMath.AlphaComposite(srcPixels[i], dstPixels[i]);
             }
 
             _canvas.DeleteLayer(activeIndex);
@@ -153,25 +135,7 @@ namespace Pixellum.Views
             int activeIndex = _canvas.GetActiveLayerIndex();
             if (activeIndex < 0 || activeIndex >= layers.Count) return;
 
-            layers[activeIndex].Mode = item.Content?.ToString() switch
-            {
-                "Darken"     => BlendMode.Darken,
-                "Multiply"   => BlendMode.Multiply,
-                "ColorBurn"  => BlendMode.ColorBurn,
-                "Lighten"    => BlendMode.Lighten,
-                "Screen"     => BlendMode.Screen,
-                "ColorDodge" => BlendMode.ColorDodge,
-                "Overlay"    => BlendMode.Overlay,
-                "SoftLight"  => BlendMode.SoftLight,
-                "HardLight"  => BlendMode.HardLight,
-                "Difference" => BlendMode.Difference,
-                "Exclusion"  => BlendMode.Exclusion,
-                "Hue"        => BlendMode.Hue,
-                "Saturation" => BlendMode.Saturation,
-                "Color"      => BlendMode.Color,
-                "Luminosity" => BlendMode.Luminosity,
-                _            => BlendMode.Normal
-            };
+            layers[activeIndex].Mode = ColorMath.ParseBlendMode(item.Content?.ToString());
 
             // Force the entire layer dirty so it re-composites with the new blend mode
             layers[activeIndex].MarkDirty(0, 0, layers[activeIndex].Width, layers[activeIndex].Height);

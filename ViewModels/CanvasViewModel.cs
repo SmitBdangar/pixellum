@@ -16,7 +16,7 @@ namespace Pixellum.ViewModels
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private Document _document;
+        private Document _document = null!;
         private ObservableCollection<Layer> _layers = new();
         private int _activeLayerIndex = 0;
         private Pixellum.Core.ToolType _activeTool = Pixellum.Core.ToolType.Brush;
@@ -29,10 +29,12 @@ namespace Pixellum.ViewModels
         private bool _gridVisible = false;
 
         // Events (MVVM-friendly)
-        public event EventHandler<uint>? ColorPicked;
         public event EventHandler<ToolType>? ToolChanged;
         public event EventHandler<double>? ZoomChanged;
+#pragma warning disable CS0067 // Events wired by future MVVM integration
+        public event EventHandler<uint>? ColorPicked;
         public event EventHandler? RequestColorSwap;
+#pragma warning restore CS0067
 
         public CanvasViewModel()
         {
