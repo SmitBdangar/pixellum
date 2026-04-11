@@ -35,6 +35,8 @@ namespace Pixellum.Views
         private Canvas?         _overlayCanvas;
         private Avalonia.Controls.Shapes.Rectangle? _selectionMarquee;
         private Avalonia.Controls.Shapes.Rectangle? _selectionMarqueeInner;
+        private Avalonia.Controls.Shapes.Rectangle? _shapePreviewRect;
+        private Avalonia.Controls.Shapes.Ellipse? _brushPreview;
         private TextBox?        _textOverlayBox;
         private Avalonia.Controls.Shapes.Rectangle? _gridOverlayRect;
 
@@ -169,6 +171,8 @@ namespace Pixellum.Views
             _overlayCanvas = this.FindControl<Canvas>("OverlayCanvas");
             _selectionMarquee = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("SelectionMarquee");
             _selectionMarqueeInner = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("SelectionMarqueeInner");
+            _shapePreviewRect = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("ShapePreview");
+            _brushPreview = this.FindControl<Avalonia.Controls.Shapes.Ellipse>("BrushPreview");
             _textOverlayBox = this.FindControl<TextBox>("TextOverlayBox");
             _gridOverlayRect = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("GridOverlayRect");
 
@@ -737,9 +741,27 @@ namespace Pixellum.Views
                 return;
             }
 
-            if (!_isDrawing) return;
-
             var coords = GetBitmapCoordinates(e);
+
+            if (_brushPreview != null)
+            {
+                if (coords != null && (ActiveTool == ToolType.Brush || ActiveTool == ToolType.Eraser))
+                {
+                    double diameter = _brushRadius * 2;
+                    _brushPreview.Width = diameter;
+                    _brushPreview.Height = diameter;
+                    Avalonia.Controls.Canvas.SetLeft(_brushPreview, coords.Value.X - _brushRadius);
+                    Avalonia.Controls.Canvas.SetTop(_brushPreview, coords.Value.Y - _brushRadius);
+                    if (_scaleTransform != null) _brushPreview.StrokeThickness = 1.0 / Math.Max(0.01, _scaleTransform.ScaleX);
+                    _brushPreview.IsVisible = true;
+                }
+                else
+                {
+                    _brushPreview.IsVisible = false;
+                }
+            }
+
+            if (!_isDrawing) return;
             if (coords == null) return;
 
             if (ActiveTool == ToolType.Select && _selDragging)
@@ -753,7 +775,25 @@ namespace Pixellum.Views
 
             if (ActiveTool == ToolType.Shape && _shapeDragging)
             {
-                // To do live preview of shape, we could erase and redraw, but for now we draw on release.
+                if (_shapePreviewRect != null)
+                {
+                    int endX = (int)coords.Value.X;
+                    int endY = (int)coords.Value.Y;
+                    int minX = Math.Min(_shapeStartX, endX);
+                    int minY = Math.Min(_shapeStartY, endY);
+                    int maxX = Math.Max(_shapeStartX, endX);
+                    int maxY = Math.Max(_shapeStartY, endY);
+                    
+                    Avalonia.Controls.Canvas.SetLeft(_shapePreviewRect, minX);
+                    Avalonia.Controls.Canvas.SetTop(_shapePreviewRect, minY);
+                    _shapePreviewRect.Width = Math.Max(1, maxX - minX);
+                    _shapePreviewRect.Height = Math.Max(1, maxY - minY);
+                    
+                    uint fillAlpha = (uint)(255 * _brushOpacity);
+                    var color = Avalonia.Media.Color.FromArgb((byte)fillAlpha, (byte)((_activeColor >> 16) & 0xFF), (byte)((_activeColor >> 8) & 0xFF), (byte)(_activeColor & 0xFF));
+                    _shapePreviewRect.Fill = new SolidColorBrush(color);
+                    _shapePreviewRect.IsVisible = true;
+                }
                 e.Handled = true;
                 return;
             }
@@ -797,9 +837,9 @@ namespace Pixellum.Views
                     double steps = Math.Max(1, dist / (_brushRadius * 0.25));
 
                     // BE4: Start from i=0 so the segment start point is always stamped
-                    for (int i = 0; i <= steps; i++)
+                    for (int i = 1; i <= steps; i++)
                     {
-                        double t = steps == 0 ? 1.0 : i / steps;
+                        double t = i / steps;
                         double x = _lastPoint.Value.X + (coords.Value.X - _lastPoint.Value.X) * t;
                         double y = _lastPoint.Value.Y + (coords.Value.Y - _lastPoint.Value.Y) * t;
                         DrawAtPoint(x, y);
@@ -835,6 +875,7 @@ namespace Pixellum.Views
             if (_shapeDragging)
             {
                 _shapeDragging = false;
+                if (_shapePreviewRect != null) _shapePreviewRect.IsVisible = false;
                 var coords = GetBitmapCoordinates(e);
                 if (coords != null)
                 {
@@ -1108,7 +1149,7 @@ namespace Pixellum.Views
             {
                 for (int x = minX; x <= maxX; x++)
                 {
-                    pixels[y * _document.Width + x] = color; 
+                    pixels[y * _document.Width + x] = ColorMath.AlphaComposite(color, pixels[y * _document.Width + x]); 
                 }
             }
 

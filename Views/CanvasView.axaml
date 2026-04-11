@@ -23,7 +23,7 @@
                    Stretch="None"
                    RenderOptions.BitmapInterpolationMode="None"/>
             
-            <Canvas Name="OverlayCanvas" Background="Transparent" IsHitTestVisible="False">
+            <Canvas Name="OverlayCanvas" Background="{x:Null}">
                 <Rectangle Name="SelectionMarquee"
                            Stroke="#90ffffff"
                            StrokeThickness="1"
@@ -35,6 +35,14 @@
                            StrokeDashArray="4,4"
                            StrokeDashOffset="4"
                            IsVisible="False" />
+                <Rectangle Name="ShapePreview"
+                           IsVisible="False"
+                           IsHitTestVisible="False" />
+                <Ellipse Name="BrushPreview"
+                         IsVisible="False"
+                         IsHitTestVisible="False"
+                         Stroke="DarkGray"
+                         StrokeThickness="1" />
                 <TextBox Name="TextOverlayBox"
                          IsVisible="False"
                          Background="#44000000"
