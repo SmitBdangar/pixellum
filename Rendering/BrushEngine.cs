@@ -18,7 +18,7 @@ namespace Pixellum.Rendering
 
         // ── Public API ────────────────────────────────────────────────────────
 
-        public void ApplyBrush(Layer layer, int centerX, int centerY, uint brushColor, float radius)
+        public void ApplyBrush(Layer layer, int centerX, int centerY, uint brushColor, float radius, IntRect? maskRect = null)
         {
             if (layer.LockPixels) return;
 
@@ -35,7 +35,7 @@ namespace Pixellum.Rendering
             int r = (int)MathF.Ceiling(radius) + 1;
             layer.MarkDirty(centerX - r, centerY - r, r * 2 + 1, r * 2 + 1);
 
-            IterateCircle(layer, centerX, centerY, radius, (index, dist) =>
+            IterateCircle(layer, centerX, centerY, radius, maskRect, (index, dist) =>
             {
                 float t       = dist / radius;
                 float falloff = ComputeFalloff(t, Hardness);
@@ -45,7 +45,7 @@ namespace Pixellum.Rendering
             });
         }
 
-        public void ApplyEraser(Layer layer, int centerX, int centerY, float radius)
+        public void ApplyEraser(Layer layer, int centerX, int centerY, float radius, IntRect? maskRect = null)
         {
             if (layer.LockPixels || layer.LockTransparency) return;
 
@@ -54,7 +54,7 @@ namespace Pixellum.Rendering
             int r = (int)MathF.Ceiling(radius) + 1;
             layer.MarkDirty(centerX - r, centerY - r, r * 2 + 1, r * 2 + 1);
 
-            IterateCircle(layer, centerX, centerY, radius, (index, dist) =>
+            IterateCircle(layer, centerX, centerY, radius, maskRect, (index, dist) =>
             {
                 float t       = dist / radius;
                 float falloff = ComputeFalloff(t, Hardness) * Flow;
@@ -95,8 +95,7 @@ namespace Pixellum.Rendering
 
         // ── Iteration ─────────────────────────────────────────────────────────
 
-        private static void IterateCircle(Layer layer, int cx, int cy, float radius,
-            Action<int, float> callback)
+        private static void IterateCircle(Layer layer, int cx, int cy, float radius, IntRect? maskRect, Action<int, float> callback)
         {
             int minX = Math.Max(0, (int)(cx - radius));
             int minY = Math.Max(0, (int)(cy - radius));
@@ -107,6 +106,8 @@ namespace Pixellum.Rendering
             {
                 for (int x = minX; x < maxX; x++)
                 {
+                    if (maskRect.HasValue && !maskRect.Value.Contains(x, y)) continue;
+
                     float dx   = x - cx;
                     float dy   = y - cy;
                     float dist = MathF.Sqrt(dx * dx + dy * dy);

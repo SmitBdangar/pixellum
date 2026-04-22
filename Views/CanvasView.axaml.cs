@@ -40,6 +40,9 @@ namespace Pixellum.Views
         private TextBox?        _textOverlayBox;
         private Avalonia.Controls.Shapes.Rectangle? _gridOverlayRect;
 
+        private bool _shiftHeld = false;
+        private Point? _shiftStartPoint = null;
+
         // ── Drawing state ────────────────────────────────────────────────────
         private Point? _lastPoint = null;
         private bool   _isDrawing = false;
@@ -189,7 +192,10 @@ namespace Pixellum.Views
             PointerWheelChanged += CanvasView_PointerWheelChanged;
 
             KeyDown += CanvasView_KeyDown;
-            KeyUp   += (_, e) => { if (e.Key == Key.Space) _spaceHeld = false; };
+            KeyUp   += (_, e) => { 
+                if (e.Key == Key.Space) _spaceHeld = false; 
+                if (e.Key == Key.LeftShift || e.Key == Key.RightShift) _shiftHeld = false;
+            };
             Focusable = true;
 
             RedrawCanvas();
@@ -713,6 +719,7 @@ namespace Pixellum.Views
 
             _isDrawing = true;
             _lastPoint = coords.Value;
+            _shiftStartPoint = coords.Value;
             SaveStateForUndo();
             DrawAtPoint(coords.Value.X, coords.Value.Y);
             e.Handled = true;
@@ -779,6 +786,13 @@ namespace Pixellum.Views
                 {
                     int endX = (int)coords.Value.X;
                     int endY = (int)coords.Value.Y;
+                    if (_shiftHeld) {
+                        int dx = endX - _shapeStartX;
+                        int dy = endY - _shapeStartY;
+                        int size = Math.Max(Math.Abs(dx), Math.Abs(dy));
+                        endX = _shapeStartX + Math.Sign(dx) * size;
+                        endY = _shapeStartY + Math.Sign(dy) * size;
+                    }
                     int minX = Math.Min(_shapeStartX, endX);
                     int minY = Math.Min(_shapeStartY, endY);
                     int maxX = Math.Max(_shapeStartX, endX);
@@ -829,29 +843,37 @@ namespace Pixellum.Views
 
             if (ActiveTool == ToolType.Brush || ActiveTool == ToolType.Eraser)
             {
+                Point target = coords.Value;
+                if (_shiftHeld && _shiftStartPoint.HasValue)
+                {
+                    double dx = Math.Abs(target.X - _shiftStartPoint.Value.X);
+                    double dy = Math.Abs(target.Y - _shiftStartPoint.Value.Y);
+                    if (dx > dy) target = new Point(target.X, _shiftStartPoint.Value.Y);
+                    else         target = new Point(_shiftStartPoint.Value.X, target.Y);
+                }
+
                 if (_lastPoint.HasValue)
                 {
                     double dist  = Math.Sqrt(
-                        Math.Pow(coords.Value.X - _lastPoint.Value.X, 2) +
-                        Math.Pow(coords.Value.Y - _lastPoint.Value.Y, 2));
+                        Math.Pow(target.X - _lastPoint.Value.X, 2) +
+                        Math.Pow(target.Y - _lastPoint.Value.Y, 2));
                     double steps = Math.Max(1, dist / (_brushRadius * 0.25));
 
-                    // BE4: Start from i=0 so the segment start point is always stamped
                     for (int i = 1; i <= steps; i++)
                     {
                         double t = i / steps;
-                        double x = _lastPoint.Value.X + (coords.Value.X - _lastPoint.Value.X) * t;
-                        double y = _lastPoint.Value.Y + (coords.Value.Y - _lastPoint.Value.Y) * t;
+                        double x = _lastPoint.Value.X + (target.X - _lastPoint.Value.X) * t;
+                        double y = _lastPoint.Value.Y + (target.Y - _lastPoint.Value.Y) * t;
                         DrawAtPoint(x, y);
                     }
                 }
                 else
                 {
-                    DrawAtPoint(coords.Value.X, coords.Value.Y);
+                    DrawAtPoint(target.X, target.Y);
                 }
+                _lastPoint = target;
             }
 
-            _lastPoint = coords.Value;
             e.Handled  = true;
         }
 
@@ -881,6 +903,13 @@ namespace Pixellum.Views
                 {
                     int endX = (int)coords.Value.X;
                     int endY = (int)coords.Value.Y;
+                    if (_shiftHeld) {
+                        int dx = endX - _shapeStartX;
+                        int dy = endY - _shapeStartY;
+                        int size = Math.Max(Math.Abs(dx), Math.Abs(dy));
+                        endX = _shapeStartX + Math.Sign(dx) * size;
+                        endY = _shapeStartY + Math.Sign(dy) * size;
+                    }
                     DrawShape(_shapeStartX, _shapeStartY, endX, endY);
                 }
                 e.Handled = true;
@@ -955,6 +984,7 @@ namespace Pixellum.Views
         private void CanvasView_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Space) { _spaceHeld = true; e.Handled = true; return; }
+            if (e.Key == Key.LeftShift || e.Key == Key.RightShift) { _shiftHeld = true; e.Handled = true; return; }
 
             // Ignore when a TextBox has focus
             if (e.Source is TextBox) return;
@@ -999,6 +1029,16 @@ namespace Pixellum.Views
 
         // ── Drawing ──────────────────────────────────────────────────────────
 
+        private IntRect? GetSelectionRect()
+        {
+            if (!_hasSelection) return null;
+            int minX = Math.Min(_selStartX, _selEndX);
+            int minY = Math.Min(_selStartY, _selEndY);
+            int maxX = Math.Max(_selStartX, _selEndX);
+            int maxY = Math.Max(_selStartY, _selEndY);
+            return new IntRect(minX, minY, maxX - minX + 1, maxY - minY + 1);
+        }
+
         private void DrawAtPoint(double x, double y)
         {
             if (ActiveLayer == null) return;   // B1 guard
@@ -1010,11 +1050,11 @@ namespace Pixellum.Views
             {
                 uint newAlpha    = (uint)(255 * _brushOpacity);
                 uint dynamicColor = (newAlpha << 24) | (_activeColor & 0x00FFFFFF);
-                _brushEngine.ApplyBrush(ActiveLayer, px, py, dynamicColor, _brushRadius);
+                _brushEngine.ApplyBrush(ActiveLayer, px, py, dynamicColor, _brushRadius, GetSelectionRect());
             }
             else if (ActiveTool == ToolType.Eraser)
             {
-                _brushEngine.ApplyEraser(ActiveLayer, px, py, _brushRadius);
+                _brushEngine.ApplyEraser(ActiveLayer, px, py, _brushRadius, GetSelectionRect());
             }
 
             RedrawCanvas();
@@ -1028,6 +1068,9 @@ namespace Pixellum.Views
             int    w       = ActiveLayer.Width;
             int    h       = ActiveLayer.Height;
             if (startX < 0 || startX >= w || startY < 0 || startY >= h) return;
+
+            var selRect = GetSelectionRect();
+            if (selRect.HasValue && !selRect.Value.Contains(startX, startY)) return;
 
             uint[] pixels  = ActiveLayer.GetPixels();
             uint   targetColor = pixels[startY * w + startX];
@@ -1049,17 +1092,17 @@ namespace Pixellum.Views
 
                 // Scan-line fill
                 int left = x;
-                while (left > 0     && pixels[y * w + (left - 1)] == targetColor) left--;
+                while (left > 0     && pixels[y * w + (left - 1)] == targetColor && (!selRect.HasValue || selRect.Value.Contains(left - 1, y))) left--;
 
                 int right = x;
-                while (right < w - 1 && pixels[y * w + (right + 1)] == targetColor) right++;
+                while (right < w - 1 && pixels[y * w + (right + 1)] == targetColor && (!selRect.HasValue || selRect.Value.Contains(right + 1, y))) right++;
 
                 for (int i = left; i <= right; i++)
                 {
                     pixels[y * w + i] = replacementColor;
 
-                    if (y > 0     && pixels[(y - 1) * w + i] == targetColor) q.Enqueue((i, y - 1));
-                    if (y < h - 1 && pixels[(y + 1) * w + i] == targetColor) q.Enqueue((i, y + 1));
+                    if (y > 0     && pixels[(y - 1) * w + i] == targetColor && (!selRect.HasValue || selRect.Value.Contains(i, y - 1))) q.Enqueue((i, y - 1));
+                    if (y < h - 1 && pixels[(y + 1) * w + i] == targetColor && (!selRect.HasValue || selRect.Value.Contains(i, y + 1))) q.Enqueue((i, y + 1));
                 }
             }
         }
@@ -1144,11 +1187,13 @@ namespace Pixellum.Views
             uint fillAlpha = (uint)(255 * _brushOpacity);
             uint color = (fillAlpha << 24) | (_activeColor & 0x00FFFFFF);
             uint[] pixels = ActiveLayer.GetPixels();
+            var selRect = GetSelectionRect();
 
             for (int y = minY; y <= maxY; y++)
             {
                 for (int x = minX; x <= maxX; x++)
                 {
+                    if (selRect.HasValue && !selRect.Value.Contains(x, y)) continue;
                     pixels[y * _document.Width + x] = ColorMath.AlphaComposite(color, pixels[y * _document.Width + x]); 
                 }
             }
@@ -1270,11 +1315,14 @@ namespace Pixellum.Views
             double dx = endX - startX;
             double dy = endY - startY;
             double lenSq = dx * dx + dy * dy;
+            var selRect = GetSelectionRect();
 
             for (int y = 0; y < _document.Height; y++)
             {
                 for (int x = 0; x < _document.Width; x++)
                 {
+                    if (selRect.HasValue && !selRect.Value.Contains(x, y)) continue;
+
                     double t = 0;
                     if (lenSq > 0)
                     {
