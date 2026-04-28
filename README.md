@@ -14,6 +14,20 @@
 
 ---
 
+## Preview
+
+![Pixellum Banner](YOUR_BANNER_IMAGE_LINK_HERE)
+
+<p align="center">
+  <img src="YOUR_SCREENSHOT_1_LINK_HERE" alt="Pixellum Screenshot 1" width="48%" />
+  <img src="YOUR_SCREENSHOT_2_LINK_HERE" alt="Pixellum Screenshot 2" width="48%" />
+</p>
+
+<p align="center">
+  <img src="YOUR_SCREENSHOT_3_LINK_HERE" alt="Pixellum Screenshot 3" width="48%" />
+  <img src="YOUR_SCREENSHOT_4_LINK_HERE" alt="Pixellum Screenshot 4" width="48%" />
+</p>
+
 ## Overview
 
 Pixellum is a raster image editor designed for a straightforward desktop workflow. It includes essential editing tools, layer controls, image adjustments, canvas transforms, and export support in a native Avalonia-based interface.
