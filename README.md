@@ -2,7 +2,7 @@
   <h1>Pixellum</h1>
   <p><strong>A modern desktop image editor built with C# and Avalonia UI.</strong></p>
   <p>
-    Layer-based editing, drawing tools, color adjustments, transforms, and PNG export in a clean cross-platform desktop app.
+    Layer-based editing, drawing tools, image adjustments, transforms, and PNG export in a clean cross-platform desktop app.
   </p>
 
   <p>
@@ -16,16 +16,13 @@
 
 ## Preview
 
-![Pixellum Banner](YOUR_BANNER_IMAGE_LINK_HERE)
-
 <p align="center">
-  <img src="YOUR_SCREENSHOT_1_LINK_HERE" alt="Pixellum Screenshot 1" width="48%" />
-  <img src="YOUR_SCREENSHOT_2_LINK_HERE" alt="Pixellum Screenshot 2" width="48%" />
+  <img src="./assets/screenshot-1.png" alt="Pixellum Screenshot 1" width="48%" />
+  <img src="./assets/screenshot-2.png" alt="Pixellum Screenshot 2" width="48%" />
 </p>
 
 <p align="center">
-  <img src="YOUR_SCREENSHOT_3_LINK_HERE" alt="Pixellum Screenshot 3" width="48%" />
-  <img src="YOUR_SCREENSHOT_4_LINK_HERE" alt="Pixellum Screenshot 4" width="48%" />
+  <img src="./assets/screenshot-3.png" alt="Pixellum Screenshot 3" width="48%" />
 </p>
 
 ## Overview
@@ -153,7 +150,3 @@ dotnet publish -c Release
 ## Contributing
 
 Contributions are welcome through issues and pull requests. For major changes, open an issue first to discuss the proposed update.
-
-## License
-
-Add the project license here.
