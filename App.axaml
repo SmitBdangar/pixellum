@@ -3,8 +3,13 @@
              x:Class="Pixellum.App"
              RequestedThemeVariant="Dark">
 
+    <Application.Resources>
+        <!-- DesignSystem is now a Style, included below -->
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme/>
+        <StyleInclude Source="/Themes/DesignSystem.axaml"/>
     </Application.Styles>
 
 </Application>

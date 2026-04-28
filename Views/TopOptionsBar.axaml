@@ -1,63 +1,62 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Pixellum.Views.TopOptionsBar"
-             Height="36"
-             Background="#3c3c3c"
-             BorderBrush="#2a2a2a"
+             Height="32"
+             Background="{StaticResource PanelBgBrush}"
+             BorderBrush="{StaticResource BorderBrush}"
              BorderThickness="0,0,0,1"
              FontFamily="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
 
     <UserControl.Styles>
+        
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#2d2d2d"/>
-            <Setter Property="Foreground" Value="#cccccc"/>
-            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="Background" Value="{StaticResource InputBgBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Padding" Value="6,3"/>
-            <Setter Property="MinHeight" Value="24"/>
-            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="MinHeight" Value="22"/>
+            <Setter Property="FontSize" Value="11"/>
         </Style>
         <Style Selector="Slider">
-            <Setter Property="Foreground" Value="#4a9eda"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <Style Selector="TextBlock.opt-label">
-            <Setter Property="Foreground" Value="#aaa"/>
-            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDimBrush}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <Style Selector="Border.opt-val">
-            <Setter Property="Background" Value="#2d2d2d"/>
+            <Setter Property="Background" Value="{StaticResource InputBgBrush}"/>
             <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Padding" Value="6,3"/>
-            <Setter Property="BorderBrush" Value="#3a3a3a"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="MinWidth" Value="50"/>
+            <Setter Property="MinWidth" Value="40"/>
         </Style>
         <Style Selector="TextBlock.opt-val-text">
-            <Setter Property="Foreground" Value="#cccccc"/>
-            <Setter Property="FontSize" Value="11.5"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="FontSize" Value="10.5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Orientation="Horizontal" Spacing="0"
-                VerticalAlignment="Center" Margin="8,0">
+    <StackPanel Orientation="Horizontal" Spacing="16"
+                VerticalAlignment="Center" Margin="12,0">
 
         <!-- Tool name indicator (hidden, used by code-behind) -->
-        <TextBlock x:Name="ActiveToolName"
-                   IsVisible="False"
-                   Text="Brush"/>
+        <TextBlock x:Name="ActiveToolName" IsVisible="False" Text="Brush"/>
 
         <!-- Mode -->
-        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,0" VerticalAlignment="Center">
-            <TextBlock Text="Mode:" Classes="opt-label"/>
-            <ComboBox x:Name="BrushPresetsComboBox"
-                      Width="110"
-                      SelectionChanged="OnBrushPresetChanged">
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="MODE" Classes="opt-label"/>
+            <ComboBox x:Name="BrushPresetsComboBox" Width="100" SelectionChanged="OnBrushPresetChanged">
                 <ComboBoxItem Content="Normal" IsSelected="True"/>
                 <ComboBoxItem Content="Dissolve"/>
                 <ComboBoxItem Content="Multiply"/>
@@ -74,45 +73,42 @@
             </ComboBox>
         </StackPanel>
 
+        <Rectangle Width="1" Fill="{StaticResource BorderBrush}" Height="16" VerticalAlignment="Center"/>
+
         <!-- Opacity -->
-        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,0" VerticalAlignment="Center">
-            <TextBlock Text="Opacity:" Classes="opt-label"/>
-            <Slider x:Name="OpacitySlider"
-                    Minimum="0" Maximum="1" Value="1"
-                    Width="80" VerticalAlignment="Center"/>
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="OPACITY" Classes="opt-label"/>
+            <Slider x:Name="OpacitySlider" Minimum="0" Maximum="1" Value="1" Width="70"/>
             <Border Classes="opt-val">
                 <TextBlock x:Name="OpacityValue" Text="100%" Classes="opt-val-text"/>
             </Border>
         </StackPanel>
 
+        <Rectangle Width="1" Fill="{StaticResource BorderBrush}" Height="16" VerticalAlignment="Center"/>
+
         <!-- Flow -->
-        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,0" VerticalAlignment="Center">
-            <TextBlock Text="Flow:" Classes="opt-label"/>
-            <Slider x:Name="FlowSlider"
-                    Minimum="0" Maximum="1" Value="1"
-                    Width="80" VerticalAlignment="Center"/>
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="FLOW" Classes="opt-label"/>
+            <Slider x:Name="FlowSlider" Minimum="0" Maximum="1" Value="1" Width="70"/>
             <Border Classes="opt-val">
                 <TextBlock x:Name="FlowValue" Text="100%" Classes="opt-val-text"/>
             </Border>
         </StackPanel>
 
+        <Rectangle Width="1" Fill="{StaticResource BorderBrush}" Height="16" VerticalAlignment="Center"/>
+
         <!-- Size -->
-        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,12,0" VerticalAlignment="Center">
-            <TextBlock Text="Size:" Classes="opt-label"/>
-            <Slider x:Name="BrushSizeSlider"
-                    Minimum="1" Maximum="150" Value="20"
-                    Width="80" VerticalAlignment="Center"/>
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="SIZE" Classes="opt-label"/>
+            <Slider x:Name="BrushSizeSlider" Minimum="1" Maximum="150" Value="20" Width="70"/>
             <Border Classes="opt-val">
                 <TextBlock x:Name="BrushSizeValue" Text="20px" Classes="opt-val-text"/>
             </Border>
         </StackPanel>
 
-        <!-- Hardness (hidden, needed by code-behind) -->
-        <Slider x:Name="HardnessSlider"
-                IsVisible="False"
-                Minimum="0" Maximum="1" Value="1"/>
+        <!-- Hidden sliders for code-behind compatibility -->
+        <Slider x:Name="HardnessSlider" IsVisible="False" Minimum="0" Maximum="1" Value="1"/>
         <TextBlock x:Name="HardnessValue" IsVisible="False" Text="100%"/>
 
     </StackPanel>
-
 </UserControl>

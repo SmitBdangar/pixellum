@@ -9,6 +9,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
 using Avalonia.Platform;
+using Avalonia.Controls.Shapes;
 using Pixellum.Core;
 
 namespace Pixellum.Views
@@ -246,51 +247,63 @@ namespace Pixellum.Views
 
         private Border CreateLayerItem(Layer layer, int layerIndex, bool isActive, int totalLayers)
         {
-            // Row border — highlighted when active (PS blue)
+            // Row border — highlighted when active
             var border = new Border
             {
                 Background      = isActive
-                    ? new SolidColorBrush(Color.Parse("#1a6496"))
-                    : new SolidColorBrush(Color.Parse("#3c3c3c")),
-                BorderBrush     = new SolidColorBrush(Color.Parse("#2a2a2a")),
+                    ? new SolidColorBrush(Color.Parse("#2d2d2d")) // Slightly lighter than panel
+                    : Brushes.Transparent,
+                BorderBrush     = new SolidColorBrush(Color.Parse("#1a1a1a")),
                 BorderThickness = new Thickness(0, 0, 0, 1),
-                Padding         = new Thickness(0, 0, 8, 0),
+                Padding         = new Thickness(4, 0, 8, 0),
                 Cursor          = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
-                Height          = 44
+                Height          = 48
             };
+
+            if (isActive)
+            {
+                // Add a left accent bar for the active layer
+                border.BorderThickness = new Thickness(3, 0, 0, 1);
+                border.BorderBrush = new SolidColorBrush(Color.Parse("#007acc"));
+            }
 
             // Main row grid: eye | thumb | [name + info] | type-badge | rename | delete
             var row = new Grid
             {
-                ColumnDefinitions = new ColumnDefinitions("36,40,*,Auto,Auto,Auto,Auto")
+                ColumnDefinitions = new ColumnDefinitions("32,44,*,Auto,Auto,Auto")
             };
 
             // ── Eye (visibility toggle) ─────────────────────────────
+            var eyeIcon = new Path
+            {
+                Data = layer.Visible 
+                    ? Geometry.Parse("M12,4.5C7,4.5 2.73,7.61 1,12c1.73,4.39 6,7.5 11,7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12,17c-2.76,0-5-2.24-5-5s2.24-5 5-5 5,2.24 5,5-2.24,5-5,5zm0-8c-1.66,0-3,1.34-3,3s1.34,3 3,3 3-1.34,3-3-1.34-3-3-3z")
+                    : Geometry.Parse("M12,7c2.76,0,5,2.24,5,5 0,0.65-0.13,1.26-0.36,1.82l2.92,2.92c1.51-1.39,2.72-3.13,3.44-5.04-1.73-4.39-6-7.5-11-7.5-1.4,0-2.74,0.25-3.98,0.7l2.16,2.16C10.74,7.13,11.35,7,12,7zM2,4.27l2.28,2.28.46.46C3.08,8.3 1.78,10.03 1,12c1.73,4.39,6,7.5,11,7.5 1.55,0,3.03-0.3,4.38-0.84l0.42,0.42L19.73,22 21,20.73 3.27,3 2,4.27zM7.53,9.8l1.55,1.55c-0.05,0.21-0.08,0.43-0.08,0.65 0,1.66,1.34,3,3,3 0.22,0,0.44-0.03,0.65-0.08l1.55,1.55c-0.67,0.33-1.41,0.53-2.2,0.53-2.76,0-5-2.24-5-5 0-0.79,0.2-1.53,0.53-2.2zM11.84,9.02l3.15,3.15c0.01-0.06,0.01-0.12,0.01-0.17 0-1.66-1.34-3-3-3-0.05,0-0.11,0-0.16,0.02z"),
+                Fill = layer.Visible 
+                    ? new SolidColorBrush(Color.Parse("#aaaaaa"))
+                    : new SolidColorBrush(Color.Parse("#555555")),
+                Stretch = Stretch.Uniform,
+                Width = 16,
+                Height = 16
+            };
+
             var eyeBtn = new Button
             {
-                Content = new TextBlock
-                {
-                    Text       = layer.Visible ? "●" : "○",
-                    FontSize   = 14,
-                    Foreground = layer.Visible
-                        ? new SolidColorBrush(Color.Parse("#cccccc"))
-                        : new SolidColorBrush(Color.Parse("#555")),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment   = VerticalAlignment.Center
-                },
-                Background               = Brushes.Transparent,
-                BorderThickness          = new Thickness(0),
-                Padding                  = new Thickness(0),
-                Width                    = 36,
+                Content = eyeIcon,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(0),
+                Width = 32,
+                Height = 32,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
-                VerticalContentAlignment   = VerticalAlignment.Center,
-                Cursor                   = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
             };
             ToolTip.SetTip(eyeBtn, "Toggle visibility");
             Grid.SetColumn(eyeBtn, 0);
             eyeBtn.Click += (_, e) =>
             {
-                e.Handled     = true;
+                e.Handled = true;
                 layer.Visible = !layer.Visible;
                 _canvas?.TriggerRedraw();
                 RefreshLayersList();
@@ -298,50 +311,49 @@ namespace Pixellum.Views
 
             // ── Thumbnail ───────────────────────────────────────────
             var thumb = CreateThumbnail(layer);
-            thumb.Width           = 32;
-            thumb.Height          = 32;
-            thumb.Margin          = new Thickness(2, 0, 4, 0);
+            thumb.Width = 36;
+            thumb.Height = 36;
+            thumb.Margin = new Thickness(4, 0, 8, 0);
             thumb.VerticalAlignment = VerticalAlignment.Center;
             Grid.SetColumn(thumb, 1);
 
             // ── Name + sub-info ─────────────────────────────────────
             var nameStack = new StackPanel
             {
-                Spacing           = 1,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin            = new Thickness(2, 0, 4, 0)
+                Spacing = 0,
+                VerticalAlignment = VerticalAlignment.Center
             };
             nameStack.Children.Add(new TextBlock
             {
                 Text         = layer.Name,
                 Foreground   = isActive ? Brushes.White : new SolidColorBrush(Color.Parse("#cccccc")),
-                FontSize     = 12,
-                FontWeight   = isActive ? FontWeight.SemiBold : FontWeight.Normal,
+                FontSize     = 11.5,
+                FontWeight   = isActive ? FontWeight.Bold : FontWeight.Normal,
                 TextTrimming = TextTrimming.CharacterEllipsis
             });
             nameStack.Children.Add(new TextBlock
             {
                 Text       = layer.Mode == BlendMode.Normal
-                    ? $"{(int)(layer.Opacity * 100)}%"
-                    : $"{layer.Mode}  ·  {(int)(layer.Opacity * 100)}%",
-                Foreground = new SolidColorBrush(Color.Parse(isActive ? "#a0c8e8" : "#888888")),
-                FontSize   = 10
+                    ? $"{(int)(layer.Opacity * 100)}% Opacity"
+                    : $"{layer.Mode} · {(int)(layer.Opacity * 100)}%",
+                Foreground = new SolidColorBrush(Color.Parse(isActive ? "#808080" : "#666666")),
+                FontSize   = 9.5
             });
             Grid.SetColumn(nameStack, 2);
 
-            // ── Type badge (T for text, 🔒 for locked) ─────────────
+            // ── Type badge ──────────────────────────────────────────
             var typeBadge = new TextBlock
             {
                 Text              = GetLayerTypeBadge(layer),
                 Foreground        = new SolidColorBrush(Color.Parse("#888")),
-                FontSize          = 11,
+                FontSize          = 10,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin            = new Thickness(2, 0)
+                Margin            = new Thickness(4, 0)
             };
             Grid.SetColumn(typeBadge, 3);
 
             // ── Rename ──────────────────────────────────────────────
-            var renameBtn = MakeSmallButton("✎", "transparent", "#777");
+            var renameBtn = MakeSmallButton("M3,17.25V21h3.75L17.81,9.94l-3.75-3.75L3,17.25z M20.71,7.04c0.39-0.39,0.39-1.02,0-1.41l-2.34-2.34c-0.39-0.39-1.02-0.39-1.41,0l-1.83,1.83l3.75,3.75L20.71,7.04z", "Transparent", "#888");
             ToolTip.SetTip(renameBtn, "Rename");
             Grid.SetColumn(renameBtn, 4);
             renameBtn.Click += async (_, e) =>
@@ -351,9 +363,8 @@ namespace Pixellum.Views
             };
 
             // ── Delete ──────────────────────────────────────────────
-            var deleteBtn = MakeSmallButton("×", "transparent", "#e05555");
+            var deleteBtn = MakeSmallButton("M6,19c0,1.1,0.9,2,2,2h8c1.1,0,2-0.9,2-2V7H6V19z M19,4h-3.5l-1-1h-5l-1,1H5v2h14V4z", "Transparent", "#e05555");
             ToolTip.SetTip(deleteBtn, "Delete Layer");
-            deleteBtn.FontSize = 16;
             deleteBtn.IsEnabled = totalLayers > 1;
             Grid.SetColumn(deleteBtn, 5);
             deleteBtn.Click += (_, e) =>
@@ -383,26 +394,31 @@ namespace Pixellum.Views
 
         private static string GetLayerTypeBadge(Layer layer)
         {
-            if (layer.IsClippingMask) return "↳";
-            if (layer.LockPosition)   return "🔒";
-            if (layer.Name.Contains("Text", StringComparison.OrdinalIgnoreCase)) return "T";
+            if (layer.IsClippingMask) return "CLIP";
+            if (layer.LockPosition)   return "LOCK";
             return "";
         }
 
-        private static Button MakeSmallButton(string content, string bg, string fg) => new Button
+        private static Button MakeSmallButton(string pathData, string bg, string fg) => new Button
         {
-            Content                  = content,
-            FontSize                 = 13,
-            Width                    = 24,
-            Height                   = 24,
-            Background               = new SolidColorBrush(Color.Parse(bg)),
-            Foreground               = new SolidColorBrush(Color.Parse(fg)),
+            Content = new Path
+            {
+                Data = Geometry.Parse(pathData),
+                Fill = new SolidColorBrush(Color.Parse(fg)),
+                Stretch = Stretch.Uniform,
+                Width = 12,
+                Height = 12
+            },
+            Width = 28,
+            Height = 28,
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
-            Padding                  = new Thickness(0),
-            Margin                   = new Thickness(2, 0, 0, 0),
-            CornerRadius             = new CornerRadius(4),
-            Cursor                   = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+            Padding = new Thickness(0),
+            Margin = new Thickness(0, 0, 0, 0),
+            CornerRadius = new CornerRadius(4),
+            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
         };
 
         // ── Thumbnail ─────────────────────────────────────────────────────

@@ -1,163 +1,126 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Pixellum.Views.AdjustmentsPanel"
-             Background="#161616"
+             Background="{StaticResource PanelBgBrush}"
              FontFamily="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
 
     <UserControl.Styles>
+        
         <Style Selector="Button.adj-btn">
-            <Setter Property="Background" Value="#1a1a1a"/>
-            <Setter Property="Foreground" Value="#808080"/>
-            <Setter Property="BorderBrush" Value="#252525"/>
+            <Setter Property="Background" Value="{StaticResource AppBgBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="0"/>
+            <Setter Property="Width" Value="52"/>
+            <Setter Property="Height" Value="52"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
                 </Transitions>
             </Setter>
         </Style>
-        <Style Selector="Button.adj-btn /template/ ContentPresenter">
+        
+        <Style Selector="Button.adj-btn:pointerover">
+            <Setter Property="Background" Value="#252525"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+        </Style>
+        
+        <Style Selector="Button.adj-btn Path">
+            <Setter Property="Fill" Value="{StaticResource TextDimBrush}"/>
+            <Setter Property="Stretch" Value="Uniform"/>
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
             <Setter Property="Transitions">
                 <Transitions>
-                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                    <BrushTransition Property="Fill" Duration="0:0:0.1"/>
                 </Transitions>
             </Setter>
         </Style>
-        <Style Selector="Button.adj-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="RenderTransform" Value="scale(1.05)"/>
+        
+        <Style Selector="Button.adj-btn:pointerover Path">
+            <Setter Property="Fill" Value="{StaticResource AccentBrush}"/>
         </Style>
-        <Style Selector="Button.adj-btn:pointerover">
-            <Setter Property="Background" Value="#222222"/>
-            <Setter Property="BorderBrush" Value="#31A8FF"/>
-            <Setter Property="Foreground" Value="#ffffff"/>
-        </Style>
-        <Style Selector="Button.adj-btn:pressed">
-            <Setter Property="Background" Value="#0d1f30"/>
-        </Style>
+
         <Style Selector="TextBlock.adj-label">
             <Setter Property="FontSize" Value="8.5"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="TextAlignment" Value="Center"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="Foreground" Value="#4a4a4a"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDimBrush}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="LetterSpacing" Value="0.5"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Spacing="10" Margin="10,12,10,14">
-
+    <StackPanel Spacing="16" Margin="12,16">
         <TextBlock Text="IMAGE ADJUSTMENTS"
-                   Foreground="#3a3a3a"
-                   FontSize="9"
-                   FontWeight="SemiBold"
-                   LetterSpacing="2"/>
+                   Foreground="{StaticResource TextDimBrush}"
+                   FontSize="10"
+                   FontWeight="Bold"
+                   LetterSpacing="1.5"/>
 
-        <UniformGrid Columns="4" HorizontalAlignment="Stretch">
-
+        <UniformGrid Columns="4">
             <!-- Brightness / Contrast -->
-            <Border Margin="3">
-                <Button x:Name="BrightnessContrastBtn" Classes="adj-btn"
-                        Width="54" Height="56" HorizontalAlignment="Center"
-                        Click="OnBrightnessContrastClicked" ToolTip.Tip="Brightness / Contrast">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <TextBlock Text="☀" FontSize="20" HorizontalAlignment="Center" Foreground="#e8c84a"/>
-                        <TextBlock Text="B / C" Classes="adj-label"/>
-                    </StackPanel>
+            <StackPanel Margin="2">
+                <Button x:Name="BrightnessContrastBtn" Classes="adj-btn" Click="OnBrightnessContrastClicked" ToolTip.Tip="Brightness / Contrast">
+                    <Path Data="M10,2 A8,8 0 1,0 10,18 A8,8 0 1,0 10,2 M10,4 V16 A6,6 0 1,1 10,4"/>
                 </Button>
-            </Border>
+                <TextBlock Text="BRIGHT" Classes="adj-label"/>
+            </StackPanel>
 
             <!-- Levels -->
-            <Border Margin="3">
-                <Button x:Name="LevelsBtn" Classes="adj-btn"
-                        Width="54" Height="56" HorizontalAlignment="Center"
-                        Click="OnLevelsClicked" ToolTip.Tip="Levels">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <TextBlock Text="▊" FontSize="20" HorizontalAlignment="Center" Foreground="#5ab87a"/>
-                        <TextBlock Text="Levels" Classes="adj-label"/>
-                    </StackPanel>
+            <StackPanel Margin="2">
+                <Button x:Name="LevelsBtn" Classes="adj-btn" Click="OnLevelsClicked" ToolTip.Tip="Levels">
+                    <Path Data="M2,16 H18 V18 H2 Z M4,14 H6 V10 H4 Z M9,14 H11 V4 H9 Z M14,14 H16 V8 H14 Z"/>
                 </Button>
-            </Border>
+                <TextBlock Text="LEVELS" Classes="adj-label"/>
+            </StackPanel>
 
             <!-- Curves -->
-            <Border Margin="3">
-                <Button x:Name="CurvesBtn" Classes="adj-btn"
-                        Width="54" Height="56" HorizontalAlignment="Center"
-                        Click="OnCurvesClicked" ToolTip.Tip="Curves">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <TextBlock Text="∿" FontSize="22" HorizontalAlignment="Center" Foreground="#5a90d8"/>
-                        <TextBlock Text="Curves" Classes="adj-label"/>
-                    </StackPanel>
+            <StackPanel Margin="2">
+                <Button x:Name="CurvesBtn" Classes="adj-btn" Click="OnCurvesClicked" ToolTip.Tip="Curves">
+                    <Path Data="M2,18 C2,18 6,14 10,10 C14,6 18,2 18,2" Stroke="{StaticResource TextDimBrush}" StrokeThickness="2" Fill="Transparent"/>
                 </Button>
-            </Border>
+                <TextBlock Text="CURVES" Classes="adj-label"/>
+            </StackPanel>
 
             <!-- Hue / Saturation -->
-            <Border Margin="3">
-                <Button x:Name="HueSatBtn" Classes="adj-btn"
-                        Width="54" Height="56" HorizontalAlignment="Center"
-                        Click="OnHueSaturationClicked" ToolTip.Tip="Hue / Saturation">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <TextBlock Text="🎨" FontSize="19" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Hue/Sat" Classes="adj-label"/>
-                    </StackPanel>
+            <StackPanel Margin="2">
+                <Button x:Name="HueSatBtn" Classes="adj-btn" Click="OnHueSaturationClicked" ToolTip.Tip="Hue / Saturation">
+                    <Path Data="M10,2 L18,10 L10,18 L2,10 Z"/>
                 </Button>
-            </Border>
+                <TextBlock Text="HUE" Classes="adj-label"/>
+            </StackPanel>
 
             <!-- Color Balance -->
-            <Border Margin="3">
-                <Button x:Name="ColorBalanceBtn" Classes="adj-btn"
-                        Width="54" Height="56" HorizontalAlignment="Center"
-                        Click="OnColorBalanceClicked" ToolTip.Tip="Color Balance">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <TextBlock Text="⚖" FontSize="20" HorizontalAlignment="Center" Foreground="#a87ad8"/>
-                        <TextBlock Text="Balance" Classes="adj-label"/>
-                    </StackPanel>
+            <StackPanel Margin="2">
+                <Button x:Name="ColorBalanceBtn" Classes="adj-btn" Click="OnColorBalanceClicked" ToolTip.Tip="Color Balance">
+                    <Path Data="M12,2 L12,6 M12,18 L12,22 M2,12 L6,12 M18,12 L22,12 M5,5 L8,8 M16,16 L19,19 M5,19 L8,16 M16,8 L19,5" Stroke="{StaticResource TextDimBrush}" StrokeThickness="2"/>
                 </Button>
-            </Border>
-
-            <!-- Vibrance -->
-            <Border Margin="3">
-                <Button x:Name="VibranceBtn" Classes="adj-btn"
-                        Width="54" Height="56" HorizontalAlignment="Center"
-                        Click="OnVibranceClicked" ToolTip.Tip="Vibrance / Saturation">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <TextBlock Text="✦" FontSize="20" HorizontalAlignment="Center" Foreground="#e08060"/>
-                        <TextBlock Text="Vibrance" Classes="adj-label"/>
-                    </StackPanel>
-                </Button>
-            </Border>
+                <TextBlock Text="BAL" Classes="adj-label"/>
+            </StackPanel>
 
             <!-- Exposure -->
-            <Border Margin="3">
-                <Button x:Name="ExposureBtn" Classes="adj-btn"
-                        Width="54" Height="56" HorizontalAlignment="Center"
-                        Click="OnExposureClicked" ToolTip.Tip="Exposure">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <TextBlock Text="◎" FontSize="20" HorizontalAlignment="Center" Foreground="#e0d060"/>
-                        <TextBlock Text="Exposure" Classes="adj-label"/>
-                    </StackPanel>
+            <StackPanel Margin="2">
+                <Button x:Name="ExposureBtn" Classes="adj-btn" Click="OnExposureClicked" ToolTip.Tip="Exposure">
+                    <Path Data="M12,7 A5,5 0 1,0 12,17 A5,5 0 1,0 12,7 M12,2 V5 M12,19 V22 M2,12 H5 M19,12 H22 M4.9,4.9 L7,7 M17,17 L19.1,19.1 M4.9,19.1 L7,17 M17,7 L19.1,4.9" Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.5"/>
                 </Button>
-            </Border>
+                <TextBlock Text="EXP" Classes="adj-label"/>
+            </StackPanel>
 
             <!-- Invert -->
-            <Border Margin="3">
-                <Button x:Name="InvertBtn" Classes="adj-btn"
-                        Width="54" Height="56" HorizontalAlignment="Center"
-                        Click="OnInvertClicked" ToolTip.Tip="Invert Colors  Ctrl+I">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <TextBlock Text="⬛" FontSize="20" HorizontalAlignment="Center" Foreground="#6090d8"/>
-                        <TextBlock Text="Invert" Classes="adj-label"/>
-                    </StackPanel>
+            <StackPanel Margin="2">
+                <Button x:Name="InvertBtn" Classes="adj-btn" Click="OnInvertClicked" ToolTip.Tip="Invert">
+                    <Path Data="M12,2 A10,10 0 1,0 12,22 A10,10 0 1,0 12,2 M12,4 V20 A8,8 0 1,1 12,4"/>
                 </Button>
-            </Border>
+                <TextBlock Text="INV" Classes="adj-label"/>
+            </StackPanel>
 
+            <!-- Add more as needed -->
         </UniformGrid>
     </StackPanel>
-
 </UserControl>

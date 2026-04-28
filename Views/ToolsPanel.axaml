@@ -11,13 +11,14 @@
         <Style Selector="Button.tool-btn">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width" Value="52"/>
+            <Setter Property="Width" Value="36"/>
             <Setter Property="Height" Value="36"/>
             <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="4,2"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.1"/>
@@ -25,86 +26,74 @@
             </Setter>
         </Style>
         <Style Selector="Button.tool-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#4d4d4d"/>
-        </Style>
-        <Style Selector="Button.tool-btn:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#383838"/>
+            <Setter Property="Background" Value="#454545"/>
         </Style>
         <Style Selector="Button.tool-btn.active /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2980b9"/>
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
         </Style>
         <Style Selector="Button.tool-btn.active:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#3498db"/>
+            <Setter Property="Background" Value="{StaticResource AccentHoverColor}"/>
         </Style>
 
         <!-- ════════ SEPARATOR ══════════════════════════════════════ -->
         <Style Selector="Rectangle.tool-sep">
             <Setter Property="Height" Value="1"/>
-            <Setter Property="Fill" Value="#303030"/>
-            <Setter Property="Margin" Value="8,1"/>
+            <Setter Property="Fill" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="Margin" Value="8,6"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
 
         <!-- ════════ GROUP LABEL ════════════════════════════════════ -->
         <Style Selector="TextBlock.group-label">
-            <Setter Property="FontSize" Value="7.5"/>
-            <Setter Property="Foreground" Value="#505050"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="8"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDimBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="LetterSpacing" Value="1"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="0,3,0,0"/>
+            <Setter Property="Margin" Value="0,8,0,2"/>
         </Style>
 
     </UserControl.Styles>
 
-    <Border Background="#383838"
-            BorderBrush="#282828"
+    <Border Background="{StaticResource PanelBgBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
             BorderThickness="0,0,1,0"
-            Width="52">
+            Width="46">
         <DockPanel>
 
             <!-- ══ COLOR SWATCHES ══════════════════════════════════ -->
             <Border DockPanel.Dock="Bottom"
-                    Background="#383838"
-                    BorderBrush="#282828"
+                    Background="Transparent"
+                    BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="0,1,0,0"
-                    Padding="0,9,0,9">
-                <Grid Width="40" Height="40" HorizontalAlignment="Center">
-
+                    Padding="0,12">
+                <Grid Width="32" Height="32" HorizontalAlignment="Center">
                     <!-- BG swatch -->
                     <Border x:Name="SecondaryColorPreview"
-                            Width="22" Height="22"
+                            Width="18" Height="18"
                             CornerRadius="2"
                             Background="White"
-                            BorderBrush="#5a5a5a"
-                            BorderThickness="1.5"
+                            BorderBrush="#404040"
+                            BorderThickness="1"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"
-                            Cursor="Hand">
+                            Cursor="Hand"
+                            BoxShadow="0 2 4 0 #40000000">
                         <ToolTip.Tip>Background Color · Click to swap [X]</ToolTip.Tip>
                     </Border>
-
                     <!-- FG swatch -->
                     <Border x:Name="PrimaryColorPreview"
-                            Width="26" Height="26"
+                            Width="18" Height="18"
                             CornerRadius="2"
                             Background="Black"
-                            BorderBrush="#aaaaaa"
-                            BorderThickness="1.5"
+                            BorderBrush="#808080"
+                            BorderThickness="1"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            Cursor="Hand">
+                            Cursor="Hand"
+                            BoxShadow="0 2 4 0 #40000000">
                         <ToolTip.Tip>Foreground Color · Click to swap [X]</ToolTip.Tip>
                     </Border>
-
-                    <!-- Swap arrows -->
-                    <Path HorizontalAlignment="Right"
-                          VerticalAlignment="Top"
-                          Margin="0,1,1,0"
-                          Stroke="#888888" StrokeThickness="1.2" Fill="Transparent"
-                          Data="M0,3 L5,0 L5,2 L9,2 M9,6 L4,9 L4,7 L0,7"
-                          Width="10" Height="9" Stretch="Fill"/>
-
                 </Grid>
             </Border>
 

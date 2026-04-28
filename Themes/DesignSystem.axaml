@@ -1,0 +1,82 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <!-- ══ COLORS ═════════════════════════════════════════════════ -->
+        <Color x:Key="AppBgColor">#1e1e1e</Color>
+        <Color x:Key="PanelBgColor">#252526</Color>
+        <Color x:Key="HeaderBgColor">#323233</Color>
+        <Color x:Key="BorderColor">#3f3f40</Color>
+        <Color x:Key="AccentColor">#007acc</Color>
+        <Color x:Key="AccentHoverColor">#1c97ea</Color>
+        <Color x:Key="TextColor">#cccccc</Color>
+        <Color x:Key="TextDimColor">#858585</Color>
+        <Color x:Key="InputBgColor">#3c3c3c</Color>
+
+        <SolidColorBrush x:Key="AppBgBrush" Color="{StaticResource AppBgColor}"/>
+        <SolidColorBrush x:Key="PanelBgBrush" Color="{StaticResource PanelBgColor}"/>
+        <SolidColorBrush x:Key="HeaderBgBrush" Color="{StaticResource HeaderBgColor}"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+        <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
+        <SolidColorBrush x:Key="TextDimBrush" Color="{StaticResource TextDimColor}"/>
+        <SolidColorBrush x:Key="InputBgBrush" Color="{StaticResource InputBgColor}"/>
+    </Styles.Resources>
+
+    <!-- ══ SHARED STYLES ══════════════════════════════════════════ -->
+    
+    <!-- Enterprise Button -->
+    <Style Selector="Button.ent">
+        <Setter Property="Background" Value="{StaticResource InputBgBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.ent:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#454545"/>
+        <Setter Property="BorderBrush" Value="#505050"/>
+        <Setter Property="TextElement.Foreground" Value="#ffffff"/>
+    </Style>
+    <Style Selector="Button.ent:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="#2d2d2d"/>
+    </Style>
+
+    <!-- Accent Button -->
+    <Style Selector="Button.accent">
+        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.1"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource AccentHoverColor}"/>
+        <Setter Property="TextElement.Foreground" Value="White"/>
+    </Style>
+
+    <!-- Panel Header -->
+    <Style Selector="Border.panel-header">
+        <Setter Property="Background" Value="{StaticResource HeaderBgBrush}"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+</Styles>
