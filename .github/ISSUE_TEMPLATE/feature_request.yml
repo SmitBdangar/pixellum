@@ -1,0 +1,53 @@
+name: Feature request
+description: Suggest an improvement or new feature for Pixellum
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: It is hard to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: Add a layer opacity slider...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature area
+      options:
+        - Canvas
+        - Layers
+        - Tools
+        - Adjustments
+        - Export
+        - Performance
+        - UI
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Other ways to solve this...
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      placeholder: Mockups, screenshots, examples, links...
