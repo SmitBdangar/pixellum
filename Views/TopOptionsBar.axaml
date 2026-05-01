@@ -50,10 +50,8 @@
     <StackPanel Orientation="Horizontal" Spacing="16"
                 VerticalAlignment="Center" Margin="12,0">
 
-        <!-- Tool name indicator (hidden, used by code-behind) -->
         <TextBlock x:Name="ActiveToolName" IsVisible="False" Text="Brush"/>
 
-        <!-- Mode -->
         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="MODE" Classes="opt-label"/>
             <ComboBox x:Name="BrushPresetsComboBox" Width="100" SelectionChanged="OnBrushPresetChanged">
@@ -70,12 +68,15 @@
                 <ComboBoxItem Content="Lighten"/>
                 <ComboBoxItem Content="Difference"/>
                 <ComboBoxItem Content="Exclusion"/>
+                <ComboBoxItem Content="Hue"/>
+                <ComboBoxItem Content="Saturation"/>
+                <ComboBoxItem Content="Color"/>
+                <ComboBoxItem Content="Luminosity"/>
             </ComboBox>
         </StackPanel>
 
         <Rectangle Width="1" Fill="{StaticResource BorderBrush}" Height="16" VerticalAlignment="Center"/>
 
-        <!-- Opacity -->
         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="OPACITY" Classes="opt-label"/>
             <Slider x:Name="OpacitySlider" Minimum="0" Maximum="1" Value="1" Width="70"/>
@@ -86,7 +87,6 @@
 
         <Rectangle Width="1" Fill="{StaticResource BorderBrush}" Height="16" VerticalAlignment="Center"/>
 
-        <!-- Flow -->
         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="FLOW" Classes="opt-label"/>
             <Slider x:Name="FlowSlider" Minimum="0" Maximum="1" Value="1" Width="70"/>
@@ -97,7 +97,6 @@
 
         <Rectangle Width="1" Fill="{StaticResource BorderBrush}" Height="16" VerticalAlignment="Center"/>
 
-        <!-- Size -->
         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="SIZE" Classes="opt-label"/>
             <Slider x:Name="BrushSizeSlider" Minimum="1" Maximum="150" Value="20" Width="70"/>
@@ -106,9 +105,15 @@
             </Border>
         </StackPanel>
 
-        <!-- Hidden sliders for code-behind compatibility -->
-        <Slider x:Name="HardnessSlider" IsVisible="False" Minimum="0" Maximum="1" Value="1"/>
-        <TextBlock x:Name="HardnessValue" IsVisible="False" Text="100%"/>
+        <Rectangle Width="1" Fill="{StaticResource BorderBrush}" Height="16" VerticalAlignment="Center"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="HARDNESS" Classes="opt-label"/>
+            <Slider x:Name="HardnessSlider" Minimum="0" Maximum="1" Value="1" Width="70"/>
+            <Border Classes="opt-val">
+                <TextBlock x:Name="HardnessValue" Text="100%" Classes="opt-val-text"/>
+            </Border>
+        </StackPanel>
 
     </StackPanel>
 </UserControl>

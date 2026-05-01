@@ -4,13 +4,59 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     FontFamily="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif"
     Background="#3c3c3c">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Background="#2d2d2d" BorderBrush="#1a1a1a" BorderThickness="0,0,0,1" Padding="8,8">
+            <StackPanel Spacing="6">
+                <ComboBox x:Name="BlendModeComboBox" HorizontalAlignment="Stretch" SelectionChanged="OnBlendModeChanged" Height="24" FontSize="11">
+                    <ComboBoxItem Content="Normal" IsSelected="True"/>
+                    <ComboBoxItem Content="Darken"/>
+                    <ComboBoxItem Content="Multiply"/>
+                    <ComboBoxItem Content="ColorBurn"/>
+                    <ComboBoxItem Content="Lighten"/>
+                    <ComboBoxItem Content="Screen"/>
+                    <ComboBoxItem Content="ColorDodge"/>
+                    <ComboBoxItem Content="Overlay"/>
+                    <ComboBoxItem Content="SoftLight"/>
+                    <ComboBoxItem Content="HardLight"/>
+                    <ComboBoxItem Content="Difference"/>
+                    <ComboBoxItem Content="Exclusion"/>
+                    <ComboBoxItem Content="Hue"/>
+                    <ComboBoxItem Content="Saturation"/>
+                    <ComboBoxItem Content="Color"/>
+                    <ComboBoxItem Content="Luminosity"/>
+                </ComboBox>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Opacity:" VerticalAlignment="Center" Foreground="#aaaaaa" FontSize="11" Margin="0,0,8,0"/>
+                    <Slider Grid.Column="1" x:Name="LayerOpacitySlider" Minimum="0" Maximum="100" Value="100" VerticalAlignment="Center" ValueChanged="OnLayerOpacityChanged"/>
+                    <TextBlock Grid.Column="2" x:Name="LayerOpacityLabel" Text="100%" VerticalAlignment="Center" Foreground="#ffffff" FontSize="11" Width="32" TextAlignment="Right" Margin="8,0,0,0"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*" Margin="0,2,0,0">
+                    <TextBlock Grid.Column="0" Text="Lock:" VerticalAlignment="Center" Foreground="#aaaaaa" FontSize="11" Margin="0,0,8,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <ToggleButton x:Name="LockTransToggle" Width="24" Height="24" Padding="0" CornerRadius="4" Checked="OnLockToggled" Unchecked="OnLockToggled" ToolTip.Tip="Lock Transparency">
+                            <Path Fill="#aaaaaa" Data="M10,2h4v4h-4zM6,6h4v4H6zM14,6h4v4h-4zM10,10h4v4h-4z" Stretch="Uniform" Width="12" Height="12"/>
+                        </ToggleButton>
+                        <ToggleButton x:Name="LockPixToggle" Width="24" Height="24" Padding="0" CornerRadius="4" Checked="OnLockToggled" Unchecked="OnLockToggled" ToolTip.Tip="Lock Pixels">
+                            <Path Fill="#aaaaaa" Data="M18,14H6v2h12V14z M18,10H6v2h12V10z M18,6H6v2h12V6z" Stretch="Uniform" Width="12" Height="12"/>
+                        </ToggleButton>
+                        <ToggleButton x:Name="LockPosToggle" Width="24" Height="24" Padding="0" CornerRadius="4" Checked="OnLockToggled" Unchecked="OnLockToggled" ToolTip.Tip="Lock Position">
+                            <Path Fill="#aaaaaa" Data="M10,2 L12.5,5.5 L11,5.5 L11,9 L14.5,9 L14.5,7.5 L19,10 L14.5,12.5 L14.5,11 L11,11 L11,14.5 L12.5,14.5 L10,19 L7.5,14.5 L9,14.5 L9,11 L5.5,11 L5.5,12.5 L1,10 L5.5,7.5 L5.5,9 L9,9 L9,5.5 L7.5,5.5 Z" Stretch="Uniform" Width="12" Height="12"/>
+                        </ToggleButton>
+                        <ToggleButton x:Name="ClipMaskToggle" Width="24" Height="24" Padding="0" CornerRadius="4" Checked="OnLockToggled" Unchecked="OnLockToggled" ToolTip.Tip="Clipping Mask">
+                            <Path Fill="#aaaaaa" Data="M12,2L2,22h20L12,2z M12,6.5l6.5,13h-13L12,6.5z" Stretch="Uniform" Width="12" Height="12"/>
+                        </ToggleButton>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
 
-    <!-- The LayersPanel now only contains the layer list.
-         Header, blend mode and toolbar are hosted in MainWindow. -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled"
-                  Background="Transparent">
-        <StackPanel x:Name="LayersStack" Spacing="0"/>
-    </ScrollViewer>
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Background="Transparent">
+            <StackPanel x:Name="LayersStack" Spacing="0"/>
+        </ScrollViewer>
+    </DockPanel>
 
 </UserControl>

@@ -10,9 +10,6 @@
         FontFamily="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
 
     <Window.Styles>
-        <!-- Import Global Styles (now handled in App.axaml, but keeping for design-time if needed) -->
-
-        <!-- ══ MENU ═════════════════════════════════════════════════ -->
         <Style Selector="Menu">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
@@ -32,7 +29,6 @@
             <Setter Property="TextElement.Foreground" Value="#ffffff"/>
         </Style>
 
-        <!-- ══ TOOLBAR BUTTONS ══════════════════════════════════════ -->
         <Style Selector="Button.tb">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextDimBrush}"/>
@@ -52,14 +48,12 @@
             <Setter Property="TextElement.Foreground" Value="#fff"/>
         </Style>
 
-        <!-- ══ STATUS ═══════════════════════════════════════════════ -->
         <Style Selector="TextBlock.status">
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Foreground" Value="{StaticResource TextDimBrush}"/>
         </Style>
 
-        <!-- ══ SPLITTERS ════════════════════════════════════════════ -->
         <Style Selector="GridSplitter">
             <Setter Property="Background" Value="#1a1a1a"/>
             <Setter Property="Width" Value="2"/>
@@ -68,7 +62,6 @@
             <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
         </Style>
 
-        <!-- ══ PANEL SECTION HEADERS ════════════════════════════════ -->
         <Style Selector="Border.panel-section-header">
             <Setter Property="Background" Value="{StaticResource HeaderBgBrush}"/>
             <Setter Property="Padding" Value="12,8"/>
@@ -87,16 +80,12 @@
 
     <DockPanel Background="{StaticResource AppBgBrush}">
 
-        <!-- ═══════════════════════════════════════════════════════════
-             TITLE BAR + MENU
-             ═══════════════════════════════════════════════════════════ -->
         <Border DockPanel.Dock="Top"
                 Background="{StaticResource PanelBgBrush}"
                 BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Height="36">
             <Grid ColumnDefinitions="Auto,*">
-                <!-- Brand -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="0"
                             VerticalAlignment="Center" Margin="12,0,12,0">
                     <Border Background="{StaticResource AccentBrush}" Width="20" Height="20" CornerRadius="4"
@@ -108,7 +97,6 @@
                                LetterSpacing="1.5" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Menu -->
                 <Menu Grid.Column="1" Background="Transparent" Padding="6,0" VerticalAlignment="Center">
                     <MenuItem Header="_File">
                         <MenuItem Header="_New…"          Click="OnNewClicked"       InputGesture="Ctrl+N"/>
@@ -165,10 +153,6 @@
                 </Menu>
             </Grid>
         </Border>
-
-        <!-- ═══════════════════════════════════════════════════════════
-             STATUS BAR
-             ═══════════════════════════════════════════════════════════ -->
         <Border DockPanel.Dock="Bottom"
                 Background="{StaticResource PanelBgBrush}"
                 BorderBrush="{StaticResource BorderBrush}"
@@ -177,7 +161,6 @@
                 Padding="12,0">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto">
 
-                <!-- Left: doc status -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
                     <TextBlock x:Name="StatusText" Classes="status" Text="Ready"/>
                 </StackPanel>
@@ -197,7 +180,6 @@
 
                 <Rectangle Grid.Column="5" Width="1" Fill="{StaticResource BorderBrush}" Margin="12,4"/>
 
-                <!-- Right: Zoom -->
                 <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <TextBlock Classes="status" Text="Zoom:"/>
                     <TextBlock x:Name="StatusZoomText" Classes="status" Text="100%" Foreground="{StaticResource AccentBrush}" FontWeight="Bold"/>
@@ -205,24 +187,17 @@
             </Grid>
         </Border>
 
-        <!-- ═══════════════════════════════════════════════════════════
-             MAIN AREA: Icon Strip | Canvas | Right Panels
-             ═══════════════════════════════════════════════════════════ -->
         <Grid ColumnDefinitions="46,*,280">
 
-            <!-- ══ LEFT: ICON TOOL STRIP ═══════════════════════════════ -->
             <views:ToolsPanel Grid.Column="0" x:Name="ToolsPanelControl"/>
 
-            <!-- ══ CENTER: CANVAS ═════════════════════════════════════ -->
             <Grid Grid.Column="1" RowDefinitions="18,*" ColumnDefinitions="18,*">
 
-                <!-- Corner cap -->
                 <Border Grid.Row="0" Grid.Column="0"
                         Background="{StaticResource HeaderBgBrush}"
                         BorderBrush="{StaticResource BorderBrush}"
                         BorderThickness="0,0,1,1"/>
 
-                <!-- Top ruler -->
                 <Border Grid.Row="0" Grid.Column="1"
                         Background="{StaticResource HeaderBgBrush}"
                         BorderBrush="{StaticResource BorderBrush}"
@@ -230,7 +205,6 @@
                     <Canvas x:Name="TopRulerCanvas" Background="Transparent"/>
                 </Border>
 
-                <!-- Left ruler -->
                 <Border Grid.Row="1" Grid.Column="0"
                         Background="{StaticResource HeaderBgBrush}"
                         BorderBrush="{StaticResource BorderBrush}"
@@ -238,11 +212,9 @@
                     <Canvas x:Name="LeftRulerCanvas" Background="Transparent"/>
                 </Border>
 
-                <!-- Canvas viewport -->
                 <Border Grid.Row="1" Grid.Column="1" Background="#181818" ClipToBounds="True">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="100">
-                            <!-- Checkerboard -->
                             <Border x:Name="CanvasCheckerBg">
                                 <Border.Background>
                                     <DrawingBrush TileMode="Tile" SourceRect="0,0,16,16" DestinationRect="0,0,16,16">
@@ -264,7 +236,6 @@
                                 </Border.Background>
                             </Border>
 
-                            <!-- Canvas shadow -->
                             <Border BoxShadow="0 10 40 0 #80000000" CornerRadius="0">
                                 <views:CanvasView x:Name="MainCanvasView"/>
                             </Border>
@@ -273,33 +244,28 @@
                 </Border>
             </Grid>
 
-            <!-- ══ RIGHT: PANELS ══════════════════════════════════════ -->
             <Border Grid.Column="2"
                     Background="{StaticResource PanelBgBrush}"
                     BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="1,0,0,0">
                 <Grid RowDefinitions="Auto,Auto,*">
 
-                    <!-- ── (a) COLOR ────────────────────────────────── -->
                     <Border Grid.Row="0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
                         <StackPanel>
                             <Border Classes="panel-section-header">
                                 <TextBlock Classes="panel-title" Text="COLOR"/>
                             </Border>
                             <StackPanel Spacing="8" Margin="16,12">
-                                <!-- R -->
                                 <Grid ColumnDefinitions="14,*,40">
                                     <TextBlock Grid.Column="0" Text="R" Foreground="#ff5555" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
                                     <Slider Grid.Column="1" x:Name="RedSlider" Minimum="0" Maximum="255" Margin="8,0" ValueChanged="OnRgbSliderChanged"/>
                                     <TextBlock Grid.Column="2" x:Name="RedValue" Text="0" Classes="status" HorizontalAlignment="Right" Foreground="{StaticResource TextBrush}"/>
                                 </Grid>
-                                <!-- G -->
                                 <Grid ColumnDefinitions="14,*,40">
                                     <TextBlock Grid.Column="0" Text="G" Foreground="#55ff55" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
                                     <Slider Grid.Column="1" x:Name="GreenSlider" Minimum="0" Maximum="255" Margin="8,0" ValueChanged="OnRgbSliderChanged"/>
                                     <TextBlock Grid.Column="2" x:Name="GreenValue" Text="0" Classes="status" HorizontalAlignment="Right" Foreground="{StaticResource TextBrush}"/>
                                 </Grid>
-                                <!-- B -->
                                 <Grid ColumnDefinitions="14,*,40">
                                     <TextBlock Grid.Column="0" Text="B" Foreground="#55aaff" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
                                     <Slider Grid.Column="1" x:Name="BlueSlider" Minimum="0" Maximum="255" Margin="8,0" ValueChanged="OnRgbSliderChanged"/>
@@ -309,13 +275,12 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ── (b) ADJUSTMENTS ────────────────────────────── -->
                     <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
                         <StackPanel>
                             <Border Classes="panel-section-header">
                                 <TextBlock Classes="panel-title" Text="ADJUSTMENTS"/>
                             </Border>
-                            <UniformGrid Columns="4" Margin="12">
+                            <UniformGrid Columns="5" Margin="12">
                                 <Button Classes="tb" ToolTip.Tip="Brightness/Contrast" Click="OnBrightnessContrastClicked">
                                     <Path Fill="{StaticResource TextDimBrush}" Data="M10,2 A8,8 0 1,0 10,18 A8,8 0 1,0 10,2 M10,4 V16 A6,6 0 1,1 10,4" Stretch="Uniform" Width="14" Height="14"/>
                                 </Button>
@@ -328,11 +293,13 @@
                                 <Button Classes="tb" ToolTip.Tip="Hue/Saturation" Click="OnHueSaturationClicked">
                                     <Path Fill="{StaticResource TextDimBrush}" Data="M10,2 L18,10 L10,18 L2,10 Z" Stretch="Uniform" Width="14" Height="14"/>
                                 </Button>
+                                <Button Classes="tb" ToolTip.Tip="Color Balance" Click="OnColorBalanceClicked">
+                                    <Path Fill="{StaticResource TextDimBrush}" Data="M10,2 A8,8 0 1,0 10,18 A8,8 0 1,0 10,2 M10,4 A6,6 0 1,1 10,16 M6,10 A4,4 0 1,0 14,10" Stretch="Uniform" Width="14" Height="14"/>
+                                </Button>
                             </UniformGrid>
                         </StackPanel>
                     </Border>
 
-                    <!-- ── (c) LAYERS ─────────────────────────────────── -->
                     <DockPanel Grid.Row="2">
                         <Border DockPanel.Dock="Top" Classes="panel-section-header">
                             <TextBlock Classes="panel-title" Text="LAYERS"/>
@@ -349,9 +316,7 @@
                             </StackPanel>
                         </Border>
 
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="LayersStack"/>
-                        </ScrollViewer>
+                        <views:LayersPanel x:Name="LayersPanelControl"/>
                     </DockPanel>
                 </Grid>
             </Border>

@@ -17,7 +17,7 @@ namespace Pixellum.Views
     public partial class LayersPanel : UserControl
     {
         private CanvasView? _canvas;
-        private int _layerCounter = 2;   // Layer 1 is created at startup
+        private int _layerCounter = 2;
 
         public LayersPanel()
         {
@@ -37,9 +37,6 @@ namespace Pixellum.Views
                 }
             };
         }
-
-        // ── Layer commands ────────────────────────────────────────────────
-
         private void OnAddLayerClicked(object? sender, RoutedEventArgs e)
         {
             if (_canvas == null) return;
@@ -53,8 +50,7 @@ namespace Pixellum.Views
         private void OnAddFillLayerClicked(object? sender, RoutedEventArgs e)
         {
             if (_canvas == null) return;
-            // Use the currently selected foreground color from the brush/tools
-            uint color = _canvas.ActiveColor | 0xFF000000; // Force opaque fill
+            uint color = _canvas.ActiveColor | 0xFF000000;
             _canvas.AddSolidColorLayer($"Color Fill {_layerCounter++}", color);
             RefreshLayersList();
         }
@@ -70,7 +66,6 @@ namespace Pixellum.Views
             var source = layers[activeIndex];
             _canvas.AddLayer($"{source.Name} Copy");
 
-            // Copy pixels
             var newLayer = _canvas.GetLayers().Last();
             Array.Copy(source.GetPixels(), newLayer.GetPixels(), source.GetPixels().Length);
             RefreshLayersList();
@@ -96,7 +91,6 @@ namespace Pixellum.Views
             var srcPixels   = activeLayer.GetPixels();
             var dstPixels   = belowLayer.GetPixels();
 
-            // Merge using shared alpha compositing
             for (int i = 0; i < srcPixels.Length; i++)
             {
                 dstPixels[i] = ColorMath.AlphaComposite(srcPixels[i], dstPixels[i]);
@@ -110,7 +104,6 @@ namespace Pixellum.Views
         {
             if (_canvas == null) return;
 
-            // Update label
             var opacityText = this.FindControl<TextBlock>("OpacityValueText");
             if (opacityText != null)
                 opacityText.Text = $"{(int)e.NewValue}%";
@@ -121,7 +114,6 @@ namespace Pixellum.Views
 
             layers[activeIndex].Opacity = (float)e.NewValue / 100.0f;
 
-            // ✅ Fixed: actually trigger redraw after opacity change
             _canvas.TriggerRedraw();
         }
 
@@ -165,10 +157,7 @@ namespace Pixellum.Views
                 activeLayer.IsClippingMask = toggle.IsChecked ?? false;
 
             _canvas.TriggerRedraw();
-            RefreshLayersList(); // Refresh list to show clipping mask visual indicator
-        }
-
-        // ── Layer reorder ─────────────────────────────────────────────────
+            RefreshLayersList(); 
 
         private void MoveLayerUp(int index)
         {
@@ -202,7 +191,6 @@ namespace Pixellum.Views
             RefreshLayersList();
         }
 
-        // ── Refresh ───────────────────────────────────────────────────────
 
         public void RefreshLayersList()
         {
@@ -215,13 +203,11 @@ namespace Pixellum.Views
             var layers     = _canvas.GetLayers();
             int activeIndex = _canvas.GetActiveLayerIndex();
 
-            // Sync main-window blend combo + opacity label
-            var window = this.GetVisualRoot() as Window;
-            if (window != null && activeIndex >= 0 && activeIndex < layers.Count)
+            if (activeIndex >= 0 && activeIndex < layers.Count)
             {
                 var layer = layers[activeIndex];
 
-                var blendCombo = window.FindControl<ComboBox>("BlendModeComboBox");
+                var blendCombo = this.FindControl<ComboBox>("BlendModeComboBox");
                 if (blendCombo != null)
                 {
                     string modeName = layer.Mode.ToString();
@@ -233,12 +219,27 @@ namespace Pixellum.Views
                     }
                 }
 
-                var opacityLabel = window.FindControl<TextBlock>("LayerOpacityLabel");
+                var opacityLabel = this.FindControl<TextBlock>("LayerOpacityLabel");
                 if (opacityLabel != null)
                     opacityLabel.Text = $"{(int)(layer.Opacity * 100)}%";
+                    
+                var opacitySlider = this.FindControl<Slider>("LayerOpacitySlider");
+                if (opacitySlider != null)
+                    opacitySlider.Value = layer.Opacity * 100;
+                    
+                var transToggle = this.FindControl<ToggleButton>("LockTransToggle");
+                if (transToggle != null) transToggle.IsChecked = layer.LockTransparency;
+                
+                var pixToggle = this.FindControl<ToggleButton>("LockPixToggle");
+                if (pixToggle != null) pixToggle.IsChecked = layer.LockPixels;
+                
+                var posToggle = this.FindControl<ToggleButton>("LockPosToggle");
+                if (posToggle != null) posToggle.IsChecked = layer.LockPosition;
+                
+                var clipToggle = this.FindControl<ToggleButton>("ClipMaskToggle");
+                if (clipToggle != null) clipToggle.IsChecked = layer.IsClippingMask;
             }
 
-            // Build layer rows top-to-bottom (highest index first = top of stack)
             for (int i = layers.Count - 1; i >= 0; i--)
             {
                 stack.Children.Add(CreateLayerItem(layers[i], i, i == activeIndex, layers.Count));
@@ -247,11 +248,10 @@ namespace Pixellum.Views
 
         private Border CreateLayerItem(Layer layer, int layerIndex, bool isActive, int totalLayers)
         {
-            // Row border — highlighted when active
             var border = new Border
             {
                 Background      = isActive
-                    ? new SolidColorBrush(Color.Parse("#2d2d2d")) // Slightly lighter than panel
+                    ? new SolidColorBrush(Color.Parse("#2d2d2d")) 
                     : Brushes.Transparent,
                 BorderBrush     = new SolidColorBrush(Color.Parse("#1a1a1a")),
                 BorderThickness = new Thickness(0, 0, 0, 1),
@@ -262,18 +262,15 @@ namespace Pixellum.Views
 
             if (isActive)
             {
-                // Add a left accent bar for the active layer
                 border.BorderThickness = new Thickness(3, 0, 0, 1);
                 border.BorderBrush = new SolidColorBrush(Color.Parse("#007acc"));
             }
 
-            // Main row grid: eye | thumb | [name + info] | type-badge | rename | delete
             var row = new Grid
             {
                 ColumnDefinitions = new ColumnDefinitions("32,44,*,Auto,Auto,Auto")
             };
 
-            // ── Eye (visibility toggle) ─────────────────────────────
             var eyeIcon = new Path
             {
                 Data = layer.Visible 
@@ -309,7 +306,6 @@ namespace Pixellum.Views
                 RefreshLayersList();
             };
 
-            // ── Thumbnail ───────────────────────────────────────────
             var thumb = CreateThumbnail(layer);
             thumb.Width = 36;
             thumb.Height = 36;
@@ -317,7 +313,6 @@ namespace Pixellum.Views
             thumb.VerticalAlignment = VerticalAlignment.Center;
             Grid.SetColumn(thumb, 1);
 
-            // ── Name + sub-info ─────────────────────────────────────
             var nameStack = new StackPanel
             {
                 Spacing = 0,
@@ -341,7 +336,6 @@ namespace Pixellum.Views
             });
             Grid.SetColumn(nameStack, 2);
 
-            // ── Type badge ──────────────────────────────────────────
             var typeBadge = new TextBlock
             {
                 Text              = GetLayerTypeBadge(layer),
@@ -352,7 +346,6 @@ namespace Pixellum.Views
             };
             Grid.SetColumn(typeBadge, 3);
 
-            // ── Rename ──────────────────────────────────────────────
             var renameBtn = MakeSmallButton("M3,17.25V21h3.75L17.81,9.94l-3.75-3.75L3,17.25z M20.71,7.04c0.39-0.39,0.39-1.02,0-1.41l-2.34-2.34c-0.39-0.39-1.02-0.39-1.41,0l-1.83,1.83l3.75,3.75L20.71,7.04z", "Transparent", "#888");
             ToolTip.SetTip(renameBtn, "Rename");
             Grid.SetColumn(renameBtn, 4);
@@ -362,7 +355,6 @@ namespace Pixellum.Views
                 await ShowRenameDialog(layerIndex, layer.Name);
             };
 
-            // ── Delete ──────────────────────────────────────────────
             var deleteBtn = MakeSmallButton("M6,19c0,1.1,0.9,2,2,2h8c1.1,0,2-0.9,2-2V7H6V19z M19,4h-3.5l-1-1h-5l-1,1H5v2h14V4z", "Transparent", "#e05555");
             ToolTip.SetTip(deleteBtn, "Delete Layer");
             deleteBtn.IsEnabled = totalLayers > 1;
@@ -374,7 +366,6 @@ namespace Pixellum.Views
                 RefreshLayersList();
             };
 
-            // Click to activate
             border.PointerPressed += (_, _) =>
             {
                 _canvas?.SetActiveLayer(layerIndex);
@@ -421,11 +412,9 @@ namespace Pixellum.Views
             Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
         };
 
-        // ── Thumbnail ─────────────────────────────────────────────────────
 
         private static Border CreateThumbnail(Layer layer)
         {
-            // Checkerboard background for transparent layers
             var checkerBrush = CreateCheckerBrush();
 
             var thumbnailBorder = new Border
@@ -442,7 +431,6 @@ namespace Pixellum.Views
             try
             {
                 const int thumbSize = 36;
-                // ✅ Fixed: use Unpremul to match rest of the app
                 var bitmap = new WriteableBitmap(
                     new PixelSize(thumbSize, thumbSize),
                     new Vector(96, 96),
@@ -497,7 +485,6 @@ namespace Pixellum.Views
             };
         }
 
-        // ── Rename dialog ─────────────────────────────────────────────────
 
         private async System.Threading.Tasks.Task ShowRenameDialog(int layerIndex, string currentName)
         {
